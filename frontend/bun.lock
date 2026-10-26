@@ -5,6 +5,7 @@
     "": {
       "name": "lv-frontend",
       "dependencies": {
+        "aladin-lite": "^3.9.2-beta",
         "react": "^19.2.8",
         "react-dom": "^19.2.8",
       },
@@ -140,6 +141,8 @@
     "@types/react-dom": ["@types/react-dom@19.3.0", "", { "peerDependencies": { "@types/react": "^19.3.0" } }, "sha512-ZI7bU42mZXXKHn/qNLEw2IrbiINU7X5+vfgdixBHkCNpYWXjKgfQ/P+uyGb5CjOLB9UcnTeg3rylQtV2hym44Q=="],
 
     "@vitejs/plugin-react-swc": ["@vitejs/plugin-react-swc@4.3.3", "", { "dependencies": { "@rolldown/pluginutils": "^1.0.1", "@swc/core": "^1.15.46" }, "peerDependencies": { "vite": "^4 || ^5 || ^6 || ^7 || ^8" } }, "sha512-bti8ZAcvz4Lh6/e4Uk2k3aa1TiUXbbMsahuqOHvd3MveFTkKDZOA6wQVkpj7J/+tepX/wGfe+lsGh/t24HTXMQ=="],
+
+    "aladin-lite": ["aladin-lite@3.9.2-beta", "", {}, "sha512-jhz96qFhGz5Yvyyp/yZtcpv4gOVoBbKJoTZz0mEVn+hgiDVOrfEL1yAaBaASngjmCaoyG//tSe4noPwD3cSywA=="],
 
     "csstype": ["csstype@3.2.3", "", {}, "sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ=="],
 
