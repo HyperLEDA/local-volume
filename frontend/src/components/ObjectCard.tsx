@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import type { CatalogObject } from "../api/objects.ts";
 
 type ObjectCardProps = {
@@ -32,7 +33,9 @@ export function ObjectCard({ object, onLocate }: ObjectCardProps) {
 
   return (
     <article className="object-card">
-      <span className="object-card-name">{object.name}</span>
+      <Link className="object-card-name" to={`/object/${object.pgc}`}>
+        {object.name}
+      </Link>
       {canLocate ? (
         <button
           type="button"

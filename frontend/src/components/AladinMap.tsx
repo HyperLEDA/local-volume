@@ -11,6 +11,7 @@ export type SkyFocus = {
 type AladinMapProps = {
   objects: CatalogObject[];
   focus: SkyFocus | null;
+  fov?: number;
 };
 
 function setCatalogSources(
@@ -39,7 +40,7 @@ function setCatalogSources(
   catalog.addSources(sources);
 }
 
-export function AladinMap({ objects, focus }: AladinMapProps) {
+export function AladinMap({ objects, focus, fov = 180 }: AladinMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const catalogRef = useRef<AladinCatalog | null>(null);
   const viewRef = useRef<AladinView | null>(null);
@@ -58,7 +59,7 @@ export function AladinMap({ objects, focus }: AladinMapProps) {
         return;
       }
       const view = A.aladin(element, {
-        fov: 180,
+        fov,
         projection: "SIN",
         cooFrame: "equatorial",
         target: "180 +0",
@@ -71,7 +72,7 @@ export function AladinMap({ objects, focus }: AladinMapProps) {
         sourceSize: 8,
         color: "#f2c14e",
       });
-      view.setFoV(180);
+      view.setFoV(fov);
       view.addCatalog(catalog);
       viewRef.current = view;
       catalogRef.current = catalog;
@@ -87,7 +88,7 @@ export function AladinMap({ objects, focus }: AladinMapProps) {
       setReady(false);
       container.replaceChildren();
     };
-  }, []);
+  }, [fov]);
 
   useEffect(() => {
     const catalog = catalogRef.current;
