@@ -11,6 +11,7 @@ declare module "aladin-lite" {
   export type MarkerOptions = {
     popupTitle?: string;
     popupDesc?: string;
+    useMarkerDefaultIcon?: boolean;
   };
 
   export type CatalogOptions = {
@@ -45,6 +46,12 @@ declare module "aladin-lite" {
       dec: number,
       data?: Record<string, string>,
       options?: MarkerOptions,
+    ) => AladinSource;
+    marker: (
+      ra: number,
+      dec: number,
+      options?: MarkerOptions,
+      data?: Record<string, string>,
     ) => AladinSource;
   };
 

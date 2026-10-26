@@ -152,6 +152,26 @@ h1 {
   background: #0b1220;
 }
 
+.aladin-object-link {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 4px;
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.3;
+  text-decoration: none;
+}
+
+.aladin-object-link:hover {
+  background: rgb(12 95 104 / 10%);
+}
+
 @media (max-width: 700px) {
   .aladin-frame {
     height: 280px;

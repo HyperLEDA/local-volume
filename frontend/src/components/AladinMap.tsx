@@ -14,6 +14,14 @@ type AladinMapProps = {
   fov?: number;
 };
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 function setCatalogSources(
   catalog: AladinCatalog,
   objects: CatalogObject[],
@@ -23,15 +31,13 @@ function setCatalogSources(
     if (object.ra === null || object.dec === null) {
       return [];
     }
+    const name = escapeHtml(object.name);
     return [
-      A.source(
-        object.ra,
-        object.dec,
-        { name: object.name },
-        {
-          popupTitle: object.name,
-        },
-      ),
+      A.marker(object.ra, object.dec, {
+        popupTitle: name,
+        popupDesc: `<a class="aladin-object-link" href="/object/${object.pgc}">Open object page</a>`,
+        useMarkerDefaultIcon: false,
+      }),
     ];
   });
   if (sources.length === 0) {
