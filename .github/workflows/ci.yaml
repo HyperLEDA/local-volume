@@ -93,9 +93,24 @@ jobs:
 
       - name: Push image
         run: |
-          
           docker tag local/app:latest ${{ env.IMAGE_NAME }}:${{ env.SHORT_SHA }}
           docker tag local/app:latest ${{ env.IMAGE_NAME }}:latest
           docker push ${{ env.IMAGE_NAME }}:${{ env.SHORT_SHA }}
           docker push ${{ env.IMAGE_NAME }}:latest
-          
+
+      - name: Generate Token
+        id: generate-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.DEPLOYMENT_APP_ID }}
+          private-key: ${{ secrets.DEPLOYMENT_APP_PRIVATE_KEY }}
+          owner: HyperLEDA
+          repositories: deployment
+
+      - name: Dispatch lv release event
+        uses: peter-evans/repository-dispatch@v4
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
+          repository: HyperLEDA/deployment
+          event-type: lv-release
+
