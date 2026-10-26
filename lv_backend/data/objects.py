@@ -4,8 +4,19 @@ from typing import Any
 from lv_backend.data.storage import Storage
 from lv_backend.presentation import schemas
 
-SUMMARY_COLUMNS: tuple[str, ...] = ("pgc", "name", "ra", "dec")
-DETAIL_COLUMNS: tuple[str, ...] = ("pgc", "name", "ra", "e_ra", "dec", "e_dec", "cz", "e_cz", "type_name")
+SUMMARY_COLUMNS: tuple[str, ...] = ("pgc", "name", "ra", "dec", "names")
+DETAIL_COLUMNS: tuple[str, ...] = (
+    "pgc",
+    "name",
+    "ra",
+    "e_ra",
+    "dec",
+    "e_dec",
+    "cz",
+    "e_cz",
+    "type_name",
+    "names",
+)
 
 _SCHEMA_QUERY = """
 SELECT column_name, param
@@ -15,23 +26,58 @@ WHERE schema_name = 'lv'
   AND column_name = ANY(%s)
 """
 
-_OBJECTS_QUERY = """
-SELECT pgc, name, ra, dec
-FROM lv.objects
-ORDER BY pgc
+_NAMES_SCHEMA_QUERY = """
+SELECT param
+FROM meta.column_info
+WHERE schema_name = 'lv'
+  AND table_name = 'names'
+  AND column_name = 'name'
 """
 
-_OBJECT_QUERY = """
-SELECT pgc, name, ra, e_ra, dec, e_dec, cz, e_cz, type_name
-FROM lv.objects
-WHERE pgc = %s
+_NAMES_AGG = """
+COALESCE(
+    array_agg(n.name ORDER BY n.name) FILTER (WHERE n.name IS NOT NULL),
+    '{}'
+) AS names
+"""
+
+_OBJECTS_QUERY = f"""
+SELECT o.pgc, o.name, o.ra, o.dec, {_NAMES_AGG}
+FROM lv.objects AS o
+LEFT JOIN lv.names AS n ON n.pgc = o.pgc
+GROUP BY o.pgc
+ORDER BY o.pgc
+"""
+
+_OBJECT_QUERY = f"""
+SELECT
+    o.pgc,
+    o.name,
+    o.ra,
+    o.e_ra,
+    o.dec,
+    o.e_dec,
+    o.cz,
+    o.e_cz,
+    o.type_name,
+    {_NAMES_AGG}
+FROM lv.objects AS o
+LEFT JOIN lv.names AS n ON n.pgc = o.pgc
+WHERE o.pgc = %s
+GROUP BY o.pgc
 """
 
 
 def select_schema(storage: Storage, columns: Sequence[str]) -> dict[str, schemas.ColumnMeta]:
-    rows = storage.query(_SCHEMA_QUERY, [list(columns)])
+    object_columns = [column for column in columns if column != "names"]
+    rows = storage.query(_SCHEMA_QUERY, [object_columns])
     by_name = {row["column_name"]: _as_param(row["param"]) for row in rows}
-    return {name: _column_meta(by_name.get(name, {})) for name in columns}
+    result = {column: _column_meta(by_name.get(column, {})) for column in object_columns}
+    if "names" in columns:
+        meta_rows = storage.query(_NAMES_SCHEMA_QUERY)
+        param = _as_param(meta_rows[0]["param"]) if meta_rows else {}
+        result["names"] = _column_meta(param)
+    return {name: result[name] for name in columns}
 
 
 def select_objects(storage: Storage) -> list[dict[str, Any]]:

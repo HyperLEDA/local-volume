@@ -15,6 +15,7 @@ import lv_backend.presentation.app as app_module
 _ROOT = Path(__file__).resolve().parents[1]
 _MIGRATIONS_DIR = _ROOT / "postgres" / "migrations"
 _SAMPLE_CSV = _ROOT / "tests" / "fixtures" / "lv_objects.csv"
+_NAMES_CSV = _ROOT / "tests" / "fixtures" / "lv_names.csv"
 _READY_MESSAGE = "database system is ready to accept connections"
 _STORAGE_ENV = {
     "STORAGE_DBNAME": "lv",
@@ -73,8 +74,11 @@ def test_list_objects(client: fastapi.testclient.TestClient) -> None:
     assert body["data"]["name"] == [row["name"] for row in rows]
     assert body["data"]["ra"] == pytest.approx([row["ra"] for row in rows])
     assert body["data"]["dec"] == pytest.approx([row["dec"] for row in rows])
+    names = _sample_names()
+    assert body["data"]["names"] == [names.get(row["pgc"], []) for row in rows]
     assert body["schema"]["pgc"]["description"] == "PGC identifier"
     assert body["schema"]["ra"]["unit"] == "deg"
+    assert body["schema"]["names"]["description"] == "Additional name"
 
 
 def test_get_object_with_redshift(client: fastapi.testclient.TestClient) -> None:
@@ -84,6 +88,7 @@ def test_get_object_with_redshift(client: fastapi.testclient.TestClient) -> None
     data = response.json()["data"]
     cz = _row(29146)["cz"]
     assert data["name"] == "NGC 3077"
+    assert data["names"] == _sample_names()[29146]
     assert cz is not None
     assert data["cz"] == pytest.approx(cz)
 
@@ -95,8 +100,10 @@ def test_get_object_without_redshift_omits_nulls(client: fastapi.testclient.Test
     body = response.json()
     assert "cz" not in body["data"]
     assert "e_cz" not in body["data"]
+    assert body["data"]["names"] == []
     assert "cz" in body["schema"]
     assert "e_cz" in body["schema"]
+    assert "names" in body["schema"]
 
 
 def test_get_missing_object(client: fastapi.testclient.TestClient) -> None:
@@ -122,11 +129,21 @@ def _apply_migrations(container_id: str) -> None:
 
 
 def _load_sample(container_id: str) -> None:
-    statement = (
+    _copy_csv(
+        container_id,
         "COPY lv.objects (pgc, name, ra, e_ra, dec, e_dec, cz, e_cz, type_name) "
-        "FROM STDIN WITH (FORMAT csv, HEADER true);\n"
+        "FROM STDIN WITH (FORMAT csv, HEADER true);\n",
+        _SAMPLE_CSV,
     )
-    csv_bytes = _SAMPLE_CSV.read_bytes()
+    _copy_csv(
+        container_id,
+        "COPY lv.names (pgc, name) FROM STDIN WITH (FORMAT csv, HEADER true);\n",
+        _NAMES_CSV,
+    )
+
+
+def _copy_csv(container_id: str, statement: str, path: Path) -> None:
+    csv_bytes = path.read_bytes()
     if not csv_bytes.endswith(b"\n"):
         csv_bytes += b"\n"
     _psql(container_id, statement.encode() + csv_bytes + b"\\.\n")
@@ -158,6 +175,17 @@ def _sample_rows() -> list[_SampleRow]:
     ]
     rows.sort(key=lambda row: row["pgc"])
     return rows
+
+
+def _sample_names() -> dict[int, list[str]]:
+    with _NAMES_CSV.open(newline="") as handle:
+        raw_rows = list(csv.DictReader(handle))
+    grouped: dict[int, list[str]] = {}
+    for row in raw_rows:
+        grouped.setdefault(int(row["pgc"]), []).append(row["name"])
+    for names in grouped.values():
+        names.sort()
+    return grouped
 
 
 def _row(pgc: int) -> _SampleRow:

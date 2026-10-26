@@ -12,6 +12,7 @@ def list_objects(storage: Storage) -> schemas.ObjectsListResponse:
             name=[row["name"] for row in rows],
             ra=[row["ra"] for row in rows],
             dec=[row["dec"] for row in rows],
+            names=[row["names"] for row in rows],
         ),
         schema=column_schema,
     )
@@ -33,6 +34,7 @@ def get_object(storage: Storage, pgc: int) -> schemas.ObjectGetResponse | None:
             cz=row["cz"],
             e_cz=row["e_cz"],
             type_name=row["type_name"],
+            names=row["names"],
         ),
         schema=column_schema,
     )

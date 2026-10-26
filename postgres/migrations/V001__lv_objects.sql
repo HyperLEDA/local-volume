@@ -201,3 +201,13 @@ SELECT meta.setparams('lv', 'objects', 'e_dec', '{"description": "Declination er
 SELECT meta.setparams('lv', 'objects', 'cz', '{"description": "Heliocentric redshift (cz)", "unit": "km/s"}');
 SELECT meta.setparams('lv', 'objects', 'e_cz', '{"description": "Redshift measurement error", "unit": "km/s"}');
 SELECT meta.setparams('lv', 'objects', 'type_name', '{"description": "Object type code", "ucd": "src.class"}');
+
+CREATE TABLE lv.names (
+    pgc integer NOT NULL REFERENCES lv.objects (pgc),
+    name text NOT NULL,
+    PRIMARY KEY (pgc, name)
+);
+
+SELECT meta.setparams('lv', 'names', '{"description": "Additional names for Local Volume objects"}');
+SELECT meta.setparams('lv', 'names', 'pgc', '{"description": "PGC identifier", "ucd": "meta.id"}');
+SELECT meta.setparams('lv', 'names', 'name', '{"description": "Additional name", "ucd": "meta.id"}');

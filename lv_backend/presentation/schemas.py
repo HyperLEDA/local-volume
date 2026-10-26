@@ -12,6 +12,7 @@ class ObjectSummaryColumns(pydantic.BaseModel):
     name: list[str]
     ra: list[float | None]
     dec: list[float | None]
+    names: list[list[str]]
 
 
 class ObjectDetail(pydantic.BaseModel):
@@ -24,6 +25,7 @@ class ObjectDetail(pydantic.BaseModel):
     cz: float | None
     e_cz: float | None
     type_name: str | None
+    names: list[str]
 
 
 class ObjectsListResponse(pydantic.BaseModel):
