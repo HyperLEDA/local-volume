@@ -3,6 +3,7 @@ install:
 
 install-dev:
 	uv sync --all-extras
+	cd frontend && bun install
 
 MIGRATIONS_DIR = postgres/migrations
 
@@ -76,6 +77,12 @@ check:
 		--config-file=pyproject.toml
 	@echo "Testing ok."
 
+	@cd frontend && bun --silent run prettier --check src
+	@echo "Frontend formatting ok."
+
+	@cd frontend && bun --silent run lint
+	@echo "Frontend linter ok."
+
 fix:
 	@uv run ruff format \
 		--quiet \
@@ -85,6 +92,9 @@ fix:
 		--quiet \
 		--config=pyproject.toml \
 		--fix
+
+	@cd frontend && bun --silent run prettier --write src
+	@cd frontend && bun --silent run oxlint --fix
 
 wheel:
 	uv build --wheel
@@ -113,3 +123,6 @@ stop-db:
 restart-db:
 	make stop-db
 	make start-db
+
+run-frontend:
+	bun run --cwd frontend dev

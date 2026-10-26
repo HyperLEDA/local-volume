@@ -1,0 +1,27 @@
+{
+  "name": "lv-frontend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "lint": "oxlint",
+    "format": "prettier --write src"
+  },
+  "dependencies": {
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react-swc": "^4.3.3",
+    "oxlint": "1.79.0",
+    "oxlint-tsgolint": "7.0.2001",
+    "prettier": "3.9.6",
+    "typescript": "^6.0.3",
+    "vite": "^8.2.1"
+  }
+}

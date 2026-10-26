@@ -63,7 +63,7 @@ def client() -> Iterator[fastapi.testclient.TestClient]:
 
 
 def test_list_objects(client: fastapi.testclient.TestClient) -> None:
-    response = client.get("/v1/objects")
+    response = client.get("/api/v1/objects")
 
     assert response.status_code == 200
     body = response.json()
@@ -78,7 +78,7 @@ def test_list_objects(client: fastapi.testclient.TestClient) -> None:
 
 
 def test_get_object_with_redshift(client: fastapi.testclient.TestClient) -> None:
-    response = client.get("/v1/object/29146")
+    response = client.get("/api/v1/object/29146")
 
     assert response.status_code == 200
     data = response.json()["data"]
@@ -89,7 +89,7 @@ def test_get_object_with_redshift(client: fastapi.testclient.TestClient) -> None
 
 
 def test_get_object_without_redshift_omits_nulls(client: fastapi.testclient.TestClient) -> None:
-    response = client.get("/v1/object/12676")
+    response = client.get("/api/v1/object/12676")
 
     assert response.status_code == 200
     body = response.json()
@@ -100,7 +100,7 @@ def test_get_object_without_redshift_omits_nulls(client: fastapi.testclient.Test
 
 
 def test_get_missing_object(client: fastapi.testclient.TestClient) -> None:
-    response = client.get("/v1/object/999999999")
+    response = client.get("/api/v1/object/999999999")
 
     assert response.status_code == 404
 
