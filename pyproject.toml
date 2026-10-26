@@ -26,6 +26,8 @@ dev = [
     "ruff~=0.15.0",
     "pytest~=9.0.2",
     "basedpyright~=1.38.3",
+    "testcontainers>=4.15.0",
+    "httpx>=0.28.1",
 ]
 
 [tool.pytest.ini_options]
