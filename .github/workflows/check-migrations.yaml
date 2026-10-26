@@ -1,0 +1,35 @@
+name: Check migrations
+
+on:
+  push:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check-migrations:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check migration file names
+        run: make check-migrations
+
+      - name: Start database and apply migrations
+        run: docker compose up -d lvdb migrate wait-for-migrate
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Lint database schema
+        env:
+          PGHOST: localhost
+          PGPORT: 6433
+          PGUSER: lv
+          PGPASSWORD: password
+          PGDATABASE: lv
+        run: bunx schemalint@2.3.2
