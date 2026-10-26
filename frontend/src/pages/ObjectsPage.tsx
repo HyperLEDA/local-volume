@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   fetchObjects,
   matchesQuery,
   type CatalogObject,
 } from "../api/objects.ts";
 import { AladinMap, type SkyFocus } from "../components/AladinMap.tsx";
+import { CatalogHeader } from "../components/CatalogHeader.tsx";
 import { ObjectCard } from "../components/ObjectCard.tsx";
-import saoLogo from "../images/sao.png";
 
 export function ObjectsPage() {
   const [query, setQuery] = useState("");
@@ -63,12 +64,7 @@ export function ObjectsPage() {
 
   return (
     <main className="catalog">
-      <header className="catalog-header">
-        <h1>Catalog & Atlas of the LV galaxies</h1>
-        <a className="catalog-logo" href="https://www.sao.ru">
-          <img src={saoLogo} alt="SAO" />
-        </a>
-      </header>
+      <CatalogHeader />
       <input
         className="catalog-search"
         type="search"
@@ -79,6 +75,9 @@ export function ObjectsPage() {
           setQuery(event.target.value);
         }}
       />
+      <Link className="catalog-publications" to="/publications">
+        Publications
+      </Link>
       {error !== null ? (
         <p className="catalog-status catalog-status-error">{error}</p>
       ) : null}

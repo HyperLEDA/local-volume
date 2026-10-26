@@ -44,6 +44,15 @@ h1 {
   padding-inline: 52px;
 }
 
+.catalog-header h1 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.catalog-header h1 a:hover {
+  text-decoration: underline;
+}
+
 .catalog-logo {
   position: absolute;
   right: 0;
@@ -78,6 +87,52 @@ h1 {
 .catalog-search:focus {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
+}
+
+.catalog-publications {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  color: inherit;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  line-height: 1.3;
+  text-decoration: none;
+}
+
+.catalog-publications:hover {
+  background: rgb(12 95 104 / 10%);
+}
+
+.publications {
+  line-height: 1.55;
+}
+
+.publications p {
+  margin: 0;
+}
+
+.publications a {
+  color: var(--accent);
+}
+
+.publications pre {
+  margin: 0;
+  padding: 14px 16px;
+  overflow-x: auto;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.publications code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
 .catalog-status {
