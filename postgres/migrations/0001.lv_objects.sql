@@ -1,4 +1,4 @@
-/* pgmigrate-encoding: utf-8 */
+-- depends:
 
 CREATE SCHEMA IF NOT EXISTS meta;
 COMMENT ON SCHEMA meta IS 'Some views and functions for convenient metadata management';

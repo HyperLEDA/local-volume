@@ -13,7 +13,6 @@ import testcontainers.core.container
 import lv_backend.presentation.app as app_module
 
 _ROOT = Path(__file__).resolve().parents[1]
-_MIGRATIONS_DIR = _ROOT / "postgres" / "migrations"
 _SAMPLE_CSV = _ROOT / "tests" / "fixtures" / "lv_objects.csv"
 _NAMES_CSV = _ROOT / "tests" / "fixtures" / "lv_names.csv"
 _READY_MESSAGE = "database system is ready to accept connections"
@@ -50,9 +49,8 @@ def client() -> Iterator[fastapi.testclient.TestClient]:
         os.environ["STORAGE_PORT"] = str(container.get_exposed_port(5432))
         os.environ.update(_STORAGE_ENV)
         container_id = container.get_container_id()
-        _apply_migrations(container_id)
-        _load_sample(container_id)
         with fastapi.testclient.TestClient(app_module.app) as test_client:
+            _load_sample(container_id)
             yield test_client
     finally:
         for key, value in previous.items():
@@ -121,11 +119,6 @@ def _wait_until_ready(container: testcontainers.core.container.DockerContainer) 
             return
         time.sleep(0.5)
     raise RuntimeError("postgres did not become ready")
-
-
-def _apply_migrations(container_id: str) -> None:
-    for path in sorted(_MIGRATIONS_DIR.glob("V*.sql")):
-        _psql(container_id, path.read_bytes())
 
 
 def _load_sample(container_id: str) -> None:

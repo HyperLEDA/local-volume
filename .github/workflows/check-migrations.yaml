@@ -19,8 +19,19 @@ jobs:
       - name: Check migration file names
         run: make check-migrations
 
-      - name: Start database and apply migrations
-        run: docker compose up -d lvdb migrate wait-for-migrate
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Start database
+        run: docker compose up -d --wait lvdb
+
+      - name: Apply migrations
+        run: uv run lv-backend migrate
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2

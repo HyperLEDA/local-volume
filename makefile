@@ -10,12 +10,12 @@ MIGRATIONS_DIR = postgres/migrations
 check-migrations:
 	@invalid=$$( \
 		ls $(MIGRATIONS_DIR) \
-		| grep -vE '^V[0-9]{3}__[A-Za-z0-9_]+\.sql$$' \
+		| grep -vE '^[0-9]{4}\.[A-Za-z0-9_]+\.sql$$' \
 		|| true \
 	); \
 	dups=$$( \
 		ls $(MIGRATIONS_DIR) \
-		| sed -n 's/^V\([0-9]\{3\}\)__.*/\1/p' \
+		| sed -n 's/^\([0-9]\{4\}\)\..*/\1/p' \
 		| sort \
 		| uniq -d \
 	); \
@@ -31,9 +31,10 @@ check-migrations:
 	fi
 
 check-schema:
-	docker compose stop lvdb migrate wait-for-migrate
-	docker compose rm -f -v lvdb migrate wait-for-migrate
-	docker compose up -d lvdb migrate wait-for-migrate
+	docker compose stop lvdb
+	docker compose rm -f -v lvdb
+	docker compose up -d --wait lvdb
+	uv run lv-backend migrate
 	bunx schemalint@2.3.2
 
 check:

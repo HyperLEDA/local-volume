@@ -6,6 +6,7 @@ import fastapi
 import fastapi.responses
 import fastapi.staticfiles
 
+from lv_backend.data import migrations as data_migrations
 from lv_backend.data import storage as data_storage
 from lv_backend.domain import objects
 from lv_backend.presentation import schemas
@@ -15,10 +16,12 @@ _DIST_DIR = pathlib.Path(__file__).resolve().parents[2] / "frontend" / "dist"
 
 @asynccontextmanager
 async def lifespan(app: fastapi.FastAPI) -> AsyncIterator[None]:
-    storage = data_storage.Storage(data_storage.StorageConfig())
+    config = data_storage.StorageConfig()
+    storage = data_storage.Storage(config)
     storage.connect()
-    app.state.storage = storage
     try:
+        data_migrations.apply(config)
+        app.state.storage = storage
         yield
     finally:
         storage.close()

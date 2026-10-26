@@ -13,6 +13,6 @@ module.exports = {
     "prefer-text-to-varchar": ["error"],
   },
   ignores: [
-    { identifierPattern: "public\\.schema_version.*", rulePattern: ".*" },
+    { identifierPattern: "public\\.(yoyo_lock|_yoyo_).*", rulePattern: ".*" },
   ],
 };
