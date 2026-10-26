@@ -7,11 +7,11 @@ class ColumnMeta(pydantic.BaseModel):
     ucd: str | None = None
 
 
-class ObjectSummary(pydantic.BaseModel):
-    pgc: int
-    name: str
-    ra: float | None
-    dec: float | None
+class ObjectSummaryColumns(pydantic.BaseModel):
+    pgc: list[int]
+    name: list[str]
+    ra: list[float | None]
+    dec: list[float | None]
 
 
 class ObjectDetail(pydantic.BaseModel):
@@ -29,7 +29,7 @@ class ObjectDetail(pydantic.BaseModel):
 class ObjectsListResponse(pydantic.BaseModel):
     model_config = pydantic.ConfigDict(populate_by_name=True)
 
-    data: list[ObjectSummary]
+    data: ObjectSummaryColumns
     schema_: dict[str, ColumnMeta] = pydantic.Field(alias="schema")
 
 
