@@ -63,7 +63,7 @@ export function ObjectsPage() {
   }, [objects, query]);
 
   return (
-    <main className="catalog">
+    <main className="catalog catalog--overview">
       <CatalogHeader />
       <input
         className="catalog-search"

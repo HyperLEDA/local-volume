@@ -47,6 +47,8 @@ function setCatalogSources(
 }
 
 export function AladinMap({ objects, focus, fov = 180 }: AladinMapProps) {
+  const isOverview = fov >= 180;
+  const mapFov = isOverview ? 360 : fov;
   const containerRef = useRef<HTMLDivElement>(null);
   const catalogRef = useRef<AladinCatalog | null>(null);
   const viewRef = useRef<AladinView | null>(null);
@@ -65,20 +67,24 @@ export function AladinMap({ objects, focus, fov = 180 }: AladinMapProps) {
         return;
       }
       const view = A.aladin(element, {
-        fov,
-        projection: "SIN",
+        fov: mapFov,
+        projection: isOverview ? "AIT" : "SIN",
         cooFrame: "equatorial",
         target: "180 +0",
+        showReticle: !isOverview,
         showSimbadPointerControl: false,
         showFullscreenControl: false,
       });
       const catalog = A.catalog({
         name: "Local volume",
-        shape: "cross",
-        sourceSize: 8,
+        shape: "circle",
+        sourceSize: 4,
         color: "#f2c14e",
       });
-      view.setFoV(fov);
+      view.setFoV(mapFov);
+      if (isOverview) {
+        view.setZoomFactor(1.25);
+      }
       view.addCatalog(catalog);
       viewRef.current = view;
       catalogRef.current = catalog;
@@ -94,7 +100,7 @@ export function AladinMap({ objects, focus, fov = 180 }: AladinMapProps) {
       setReady(false);
       container.replaceChildren();
     };
-  }, [fov]);
+  }, [isOverview, mapFov]);
 
   useEffect(() => {
     const catalog = catalogRef.current;
@@ -112,5 +118,12 @@ export function AladinMap({ objects, focus, fov = 180 }: AladinMapProps) {
     view.gotoRaDec(focus.ra, focus.dec);
   }, [focus, ready]);
 
-  return <div ref={containerRef} className="aladin-frame" />;
+  return (
+    <div
+      ref={containerRef}
+      className={
+        isOverview ? "aladin-frame aladin-frame--overview" : "aladin-frame"
+      }
+    />
+  );
 }
