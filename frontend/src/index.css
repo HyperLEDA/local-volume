@@ -223,11 +223,29 @@ h1 {
   gap: 8px;
 }
 
+.object-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px;
+}
+
 .object-title {
   margin: 0;
   font-size: 1.25rem;
   font-weight: 600;
   line-height: 1.3;
+}
+
+.object-hyperleda-link {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.object-hyperleda-link:hover {
+  text-decoration: underline;
 }
 
 .object-aliases {
