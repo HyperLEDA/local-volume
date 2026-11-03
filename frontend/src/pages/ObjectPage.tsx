@@ -99,7 +99,17 @@ export function ObjectPage() {
       {data !== null ? (
         <>
           <section className="object-identity" aria-label="Object">
-            <h2 className="object-title">{data.name}</h2>
+            <div className="object-title-row">
+              <h2 className="object-title">{data.name}</h2>
+              <a
+                className="object-hyperleda-link"
+                href={`https://leda.sao.ru/object/${data.pgc}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                HyperLEDA
+              </a>
+            </div>
             {data.names.length > 0 ? (
               <ul className="object-aliases">
                 {data.names.map((alias) => (
