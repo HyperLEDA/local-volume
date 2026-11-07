@@ -28,7 +28,7 @@ class _SampleRow(TypedDict):
     name: str
     ra: float
     dec: float
-    cz: float | None
+    v_hel: float | None
 
 
 @pytest.fixture(scope="module")
@@ -79,28 +79,28 @@ def test_list_objects(client: fastapi.testclient.TestClient) -> None:
     assert body["schema"]["names"]["description"] == "Additional name"
 
 
-def test_get_object_with_redshift(client: fastapi.testclient.TestClient) -> None:
+def test_get_object_with_heliocentric_velocity(client: fastapi.testclient.TestClient) -> None:
     response = client.get("/api/v1/object/29146")
 
     assert response.status_code == 200
     data = response.json()["data"]
-    cz = _row(29146)["cz"]
+    v_hel = _row(29146)["v_hel"]
     assert data["name"] == "NGC 3077"
     assert data["names"] == _sample_names()[29146]
-    assert cz is not None
-    assert data["cz"] == pytest.approx(cz)
+    assert v_hel is not None
+    assert data["v_hel"] == pytest.approx(v_hel)
 
 
-def test_get_object_without_redshift_omits_nulls(client: fastapi.testclient.TestClient) -> None:
+def test_get_object_without_velocity_omits_nulls(client: fastapi.testclient.TestClient) -> None:
     response = client.get("/api/v1/object/12676")
 
     assert response.status_code == 200
     body = response.json()
-    assert "cz" not in body["data"]
-    assert "e_cz" not in body["data"]
+    assert "v_hel" not in body["data"]
+    assert "e_v_hel" not in body["data"]
     assert body["data"]["names"] == []
-    assert "cz" in body["schema"]
-    assert "e_cz" in body["schema"]
+    assert "v_hel" in body["schema"]
+    assert "e_v_hel" in body["schema"]
     assert "names" in body["schema"]
 
 
@@ -124,7 +124,8 @@ def _wait_until_ready(container: testcontainers.core.container.DockerContainer) 
 def _load_sample(container_id: str) -> None:
     _copy_csv(
         container_id,
-        "COPY lv.objects (pgc, name, ra, e_ra, dec, e_dec, cz, e_cz, type_name) "
+        "COPY lv.objects (pgc, name, ra, e_ra, dec, e_dec, bt, e_bt, kt, e_kt, "
+        "v_hel, e_v_hel, v_lg, e_v_lg, a50, e_a50, b50, e_b50, type_name) "
         "FROM STDIN WITH (FORMAT csv, HEADER true);\n",
         _SAMPLE_CSV,
     )
@@ -162,7 +163,7 @@ def _sample_rows() -> list[_SampleRow]:
             name=row["name"],
             ra=float(row["ra"]),
             dec=float(row["dec"]),
-            cz=float(row["cz"]) if row["cz"] else None,
+            v_hel=float(row["v_hel"]) if row["v_hel"] else None,
         )
         for row in raw_rows
     ]
