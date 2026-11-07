@@ -2,7 +2,7 @@ WITH catalog_pgcs AS (
     SELECT DISTINCT r.pgc
     FROM layer0.records AS r
     JOIN layer0.tables AS t ON t.id = r.table_id
-    WHERE t.table_name = 'nearby_galaxy_catalog_2026-02-22'
+    WHERE t.table_name = 'nearby_galaxy_catalog_2026-09-03'
       AND r.pgc IS NOT NULL
 )
 SELECT DISTINCT

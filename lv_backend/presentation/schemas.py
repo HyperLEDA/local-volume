@@ -22,8 +22,18 @@ class ObjectDetail(pydantic.BaseModel):
     e_ra: float | None
     dec: float | None
     e_dec: float | None
-    cz: float | None
-    e_cz: float | None
+    bt: float | None
+    e_bt: float | None
+    kt: float | None
+    e_kt: float | None
+    v_hel: float | None
+    e_v_hel: float | None
+    v_lg: float | None
+    e_v_lg: float | None
+    a50: float | None
+    e_a50: float | None
+    b50: float | None
+    e_b50: float | None
     type_name: str | None
     names: list[str]
 
