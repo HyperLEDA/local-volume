@@ -3,6 +3,7 @@ declare module "aladin-lite" {
     fov?: number;
     projection?: string;
     cooFrame?: string;
+    showReticle?: boolean;
     showSimbadPointerControl?: boolean;
     showFullscreenControl?: boolean;
     target?: string;
@@ -32,6 +33,7 @@ declare module "aladin-lite" {
     addCatalog: (catalog: AladinCatalog) => void;
     gotoRaDec: (ra: number, dec: number) => void;
     setFoV: (fov: number) => void;
+    setZoomFactor: (zoomFactor: number) => void;
   };
 
   export type AladinApi = {

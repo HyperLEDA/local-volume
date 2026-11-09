@@ -73,6 +73,10 @@ h1 {
   gap: 18px;
 }
 
+.catalog--overview {
+  max-width: 1400px;
+}
+
 .catalog-search {
   width: 100%;
   box-sizing: border-box;
@@ -150,6 +154,11 @@ h1 {
   border-radius: 10px;
   overflow: hidden;
   background: #0b1220;
+}
+
+.aladin-frame.aladin-frame--overview {
+  aspect-ratio: 2 / 1;
+  height: auto;
 }
 
 .aladin-object-link {
