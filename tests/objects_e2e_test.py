@@ -137,7 +137,7 @@ def _load_sample(container_id: str) -> None:
 
 
 def _copy_csv(container_id: str, statement: str, path: Path) -> None:
-    csv_bytes = path.read_bytes()
+    csv_bytes = path.read_bytes().replace(b"\r\n", b"\n")
     if not csv_bytes.endswith(b"\n"):
         csv_bytes += b"\n"
     _psql(container_id, statement.encode() + csv_bytes + b"\\.\n")
