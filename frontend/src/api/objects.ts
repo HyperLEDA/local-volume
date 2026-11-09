@@ -32,6 +32,7 @@ export type CatalogObjectDetail = {
   b50?: number | null;
   e_b50?: number | null;
   type_name?: string | null;
+  dist?: number | null;
   names: string[];
 };
 

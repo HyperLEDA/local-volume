@@ -25,6 +25,7 @@ DETAIL_COLUMNS: tuple[str, ...] = (
     "b50",
     "e_b50",
     "type_name",
+    "dist",
     "names",
 )
 
@@ -80,6 +81,7 @@ SELECT
     o.b50,
     o.e_b50,
     o.type_name,
+    o.dist,
     {_NAMES_AGG}
 FROM lv.objects AS o
 LEFT JOIN lv.names AS n ON n.pgc = o.pgc
