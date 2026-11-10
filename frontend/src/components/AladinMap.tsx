@@ -2,6 +2,8 @@ import A, { type AladinCatalog, type AladinView } from "aladin-lite";
 import { useEffect, useRef, useState } from "react";
 import type { CatalogObject } from "../api/objects.ts";
 
+const DEFAULT_HIPS_SURVEY = "https://skies.esac.esa.int/DSSColor";
+
 export type SkyFocus = {
   ra: number;
   dec: number;
@@ -70,6 +72,7 @@ export function AladinMap({ objects, focus, fov = 180 }: AladinMapProps) {
         fov: mapFov,
         projection: isOverview ? "AIT" : "SIN",
         cooFrame: "equatorial",
+        survey: DEFAULT_HIPS_SURVEY,
         target: "180 +0",
         showReticle: !isOverview,
         showSimbadPointerControl: false,
