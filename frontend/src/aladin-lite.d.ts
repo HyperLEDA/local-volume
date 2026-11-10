@@ -6,6 +6,7 @@ declare module "aladin-lite" {
     showReticle?: boolean;
     showSimbadPointerControl?: boolean;
     showFullscreenControl?: boolean;
+    survey?: string;
     target?: string;
   };
 
