@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
   fetchObject,
+  nameIncludesPgc,
   parameterRows,
   type CatalogObjectDetail,
   type ColumnMeta,
@@ -93,7 +94,7 @@ export function ObjectPage() {
   }, [data]);
 
   return (
-    <main className="catalog">
+    <main className="catalog catalog--object">
       <CatalogHeader titleLinksHome />
       {error !== null ? (
         <p className="catalog-status catalog-status-error">{error}</p>
@@ -103,55 +104,82 @@ export function ObjectPage() {
       ) : null}
       {data !== null ? (
         <>
-          <section className="object-identity" aria-label="Object">
-            <div className="object-title-row">
-              <h2 className="object-title">{data.name}</h2>
-              <a
-                className="object-hyperleda-link"
-                href={`https://leda.sao.ru/object/${data.pgc}`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                HyperLEDA
-              </a>
-            </div>
-            {data.names.length > 0 ? (
-              <ul className="object-aliases">
-                {data.names.map((alias) => (
-                  <li key={alias}>{alias}</li>
-                ))}
-              </ul>
+          <div
+            className={
+              focus === null
+                ? "object-layout object-layout--no-map"
+                : "object-layout"
+            }
+          >
+            {focus !== null ? (
+              <section className="catalog-sky" aria-label="Sky">
+                <AladinMap objects={mapObjects} focus={focus} fov={1} />
+              </section>
             ) : null}
-          </section>
-          {focus !== null ? (
-            <section className="catalog-sky" aria-label="Sky">
-              <AladinMap objects={mapObjects} focus={focus} fov={2} />
-            </section>
-          ) : null}
-          <section className="object-params" aria-label="Parameters">
-            <table className="params-table">
-              <thead>
-                <tr>
-                  <th scope="col">Parameter</th>
-                  <th scope="col">Unit</th>
-                  <th scope="col">Value</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row) => (
-                  <tr key={row.name}>
-                    <th scope="row">
-                      <span className="param-name" title={row.description}>
-                        {row.name}
-                      </span>
-                    </th>
-                    <td className="param-unit">{row.unit ?? "—"}</td>
-                    <td className="param-value">{row.value}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </section>
+            <div className="object-details">
+              <section className="object-identity" aria-label="Object">
+                <div className="object-title-row">
+                  <h2 className="object-title">{data.name}</h2>
+                  <a
+                    className="object-hyperleda-link"
+                    href={`https://leda.sao.ru/object/${data.pgc}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    HyperLEDA
+                  </a>
+                  {data.type_name?.trim() ? (
+                    <span className="object-nature" title="Object type">
+                      {data.type_name}
+                    </span>
+                  ) : null}
+                </div>
+                {!nameIncludesPgc(data.name, data.pgc) ? (
+                  <p className="object-pgc">PGC {data.pgc}</p>
+                ) : null}
+                {data.names.length > 0 ? (
+                  <ul className="object-aliases">
+                    {data.names.map((alias) => (
+                      <li key={alias}>{alias}</li>
+                    ))}
+                  </ul>
+                ) : null}
+              </section>
+              <section className="object-params" aria-label="Parameters">
+                <table className="params-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Parameter</th>
+                      <th scope="col">Value</th>
+                      <th scope="col">Error</th>
+                      <th scope="col">Unit</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.map((row) => (
+                      <tr key={row.name}>
+                        <th scope="row">
+                          <span className="param-name" title={row.description}>
+                            {row.name}
+                          </span>
+                        </th>
+                        <td className="param-value">{row.value || "—"}</td>
+                        <td className="param-error">
+                          {row.error ?? "—"}
+                          {row.error !== null && row.errorUnit !== null ? (
+                            <span className="param-error-unit">
+                              {` ${row.errorUnit}`}
+                            </span>
+                          ) : null}
+                        </td>
+                        <td className="param-unit">{row.unit ?? "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </section>
+            </div>
+          </div>
         </>
       ) : null}
     </main>

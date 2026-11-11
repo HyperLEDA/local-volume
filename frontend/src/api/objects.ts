@@ -62,7 +62,7 @@ export type ObjectGetResponse = {
   schema: Record<string, ColumnMeta>;
 };
 
-const TABLE_EXCLUDED = new Set(["name", "names"]);
+const TABLE_EXCLUDED = new Set(["pgc", "name", "names", "type_name"]);
 
 export async function fetchObjects(): Promise<CatalogObject[]> {
   const response = await fetch("/api/v1/objects");
@@ -121,11 +121,19 @@ export function matchesQuery(object: CatalogObject, query: string): boolean {
   );
 }
 
+export function nameIncludesPgc(name: string, pgc: number): boolean {
+  return Array.from(name.matchAll(/\bPGC[\s-]*0*(\d+)\b/gi)).some(
+    ([, identifier]) => Number(identifier) === pgc,
+  );
+}
+
 export type ParameterRow = {
   name: string;
   description: string;
   unit: string | null;
   value: string;
+  error: string | null;
+  errorUnit: string | null;
 };
 
 function formatValue(value: unknown): string {
@@ -147,15 +155,38 @@ export function parameterRows(
 ): ParameterRow[] {
   const record = data as Record<string, unknown>;
   const rows: ParameterRow[] = [];
+
   for (const [key, meta] of Object.entries(schema)) {
     if (TABLE_EXCLUDED.has(key) || !(key in record)) {
       continue;
     }
+
+    const counterpart = key.startsWith("e_") ? key.slice(2) : null;
+    if (
+      counterpart !== null &&
+      counterpart in schema &&
+      counterpart in record
+    ) {
+      continue;
+    }
+
+    const errorKey = `e_${key}`;
+    const errorMeta = Object.prototype.hasOwnProperty.call(schema, errorKey)
+      ? schema[errorKey]
+      : null;
+    const rawError = record[errorKey];
+    const hasError =
+      errorMeta !== null && rawError !== null && rawError !== undefined;
+    const errorUnit = errorMeta?.unit ?? null;
+
     rows.push({
       name: key,
       description: meta.description,
       unit: meta.unit ?? null,
       value: formatValue(record[key]),
+      error: hasError ? formatValue(rawError) : null,
+      errorUnit:
+        hasError && errorUnit !== (meta.unit ?? null) ? errorUnit : null,
     });
   }
   return rows;
