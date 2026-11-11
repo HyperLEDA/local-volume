@@ -36,6 +36,7 @@ declare module "aladin-lite" {
     addCatalog: (catalog: AladinCatalog) => void;
     gotoRaDec: (ra: number, dec: number) => void;
     setFoV: (fov: number) => void;
+    getFov: () => [number, number];
     setZoomFactor: (zoomFactor: number) => void;
     getSize: () => [number, number];
     world2pix: (ra: number, dec: number) => [number, number] | null;

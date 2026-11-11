@@ -6,6 +6,7 @@ import A, {
 import { useEffect, useRef, useState } from "react";
 import type { CatalogObject } from "../api/objects.ts";
 import { findReticleTarget, markerDiameter } from "../lib/reticle.ts";
+import { needsInitialFovCorrection } from "../lib/objectFov.ts";
 
 const DEFAULT_HIPS_SURVEY = "https://skies.esac.esa.int/DSSColor";
 
@@ -144,6 +145,7 @@ export function AladinMap({
     }
     let cancelled = false;
     const listeners = { detach: null as (() => void) | null };
+    const initialFovCleanup = { detach: null as (() => void) | null };
 
     async function mount(element: HTMLDivElement): Promise<void> {
       await A.init;
@@ -171,6 +173,52 @@ export function AladinMap({
         view.setZoomFactor(1.25);
       }
       view.addCatalog(catalog);
+
+      // Aladin can rescale the initial FoV while the square map is settling.
+      // Correct it only once after layout, never after a user zooms or drags.
+      let calibrationTimer: ReturnType<typeof setTimeout> | null = null;
+      let calibrationObserver: ResizeObserver | null = null;
+      let userInteracted = false;
+
+      function endInitialFovCalibration(event?: Event): void {
+        if (event !== undefined) {
+          userInteracted = true;
+        }
+        if (calibrationTimer !== null) {
+          clearTimeout(calibrationTimer);
+          calibrationTimer = null;
+        }
+        calibrationObserver?.disconnect();
+        element.removeEventListener("pointerdown", endInitialFovCalibration);
+        element.removeEventListener("wheel", endInitialFovCalibration);
+      }
+
+      if (!isOverview && typeof ResizeObserver !== "undefined") {
+        calibrationObserver = new ResizeObserver(() => {
+          if (cancelled || userInteracted) {
+            return;
+          }
+          if (calibrationTimer !== null) {
+            clearTimeout(calibrationTimer);
+          }
+          calibrationTimer = setTimeout(() => {
+            calibrationTimer = null;
+            if (!cancelled && !userInteracted) {
+              const actualFov = view.getFov()[0];
+              if (needsInitialFovCorrection(actualFov, mapFov)) {
+                view.setFoV(mapFov);
+              }
+            }
+            endInitialFovCalibration();
+          }, 250);
+        });
+        element.addEventListener("pointerdown", endInitialFovCalibration);
+        element.addEventListener("wheel", endInitialFovCalibration, {
+          passive: true,
+        });
+        calibrationObserver.observe(element);
+        initialFovCleanup.detach = endInitialFovCalibration;
+      }
 
       let autoPopupPgc: number | null = null;
       let manualPopup = false;
@@ -265,6 +313,7 @@ export function AladinMap({
 
     return () => {
       cancelled = true;
+      initialFovCleanup.detach?.();
       listeners.detach?.();
       clearReticlePopupRef.current = null;
       refreshReticlePopupRef.current = null;
