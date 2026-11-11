@@ -1,6 +1,11 @@
-import A, { type AladinCatalog, type AladinView } from "aladin-lite";
+import A, {
+  type AladinCatalog,
+  type AladinSource,
+  type AladinView,
+} from "aladin-lite";
 import { useEffect, useRef, useState } from "react";
 import type { CatalogObject } from "../api/objects.ts";
+import { findReticleTarget, markerDiameter } from "../lib/reticle.ts";
 
 const DEFAULT_HIPS_SURVEY = "https://skies.esac.esa.int/DSSColor";
 
@@ -14,6 +19,7 @@ type AladinMapProps = {
   objects: CatalogObject[];
   focus: SkyFocus | null;
   fov?: number;
+  enableReticlePopups?: boolean;
 };
 
 function escapeHtml(value: string): string {
@@ -87,13 +93,6 @@ function popupDescription(object: CatalogObject): string {
   return `<div class="lv-popup-grid">${fields.join("")}</div>`;
 }
 
-function markerDiameter(bt: number | null): number {
-  if (bt === null || !Number.isFinite(bt)) {
-    return 7;
-  }
-  const logFluxRatio = 0.4 * (17 - bt);
-  return Math.round(Math.min(18, Math.max(7, 7 + 3 * logFluxRatio)));
-}
 function setCatalogSources(
   catalog: AladinCatalog,
   objects: CatalogObject[],
@@ -122,12 +121,20 @@ function setCatalogSources(
   catalog.addSources(sources);
 }
 
-export function AladinMap({ objects, focus, fov = 180 }: AladinMapProps) {
+export function AladinMap({
+  objects,
+  focus,
+  fov = 180,
+  enableReticlePopups = false,
+}: AladinMapProps) {
   const isOverview = fov >= 180;
   const mapFov = isOverview ? 360 : fov;
   const containerRef = useRef<HTMLDivElement>(null);
   const catalogRef = useRef<AladinCatalog | null>(null);
   const viewRef = useRef<AladinView | null>(null);
+  const objectsRef = useRef(objects);
+  const refreshReticlePopupRef = useRef<(() => void) | null>(null);
+  const clearReticlePopupRef = useRef<(() => void) | null>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -136,6 +143,7 @@ export function AladinMap({ objects, focus, fov = 180 }: AladinMapProps) {
       return;
     }
     let cancelled = false;
+    const listeners = { detach: null as (() => void) | null };
 
     async function mount(element: HTMLDivElement): Promise<void> {
       await A.init;
@@ -163,6 +171,91 @@ export function AladinMap({ objects, focus, fov = 180 }: AladinMapProps) {
         view.setZoomFactor(1.25);
       }
       view.addCatalog(catalog);
+
+      let autoPopupPgc: number | null = null;
+      let manualPopup = false;
+      let pendingUpdate: ReturnType<typeof setTimeout> | null = null;
+
+      function clearAutoPopup(): void {
+        if (autoPopupPgc !== null) {
+          view.hidePopup();
+          autoPopupPgc = null;
+        }
+      }
+
+      function showReticlePopup(): void {
+        if (manualPopup) {
+          return;
+        }
+        const candidate = findReticleTarget(
+          objectsRef.current,
+          view.getSize(),
+          (ra, dec) => view.world2pix(ra, dec),
+          autoPopupPgc,
+        );
+        if (candidate?.pgc === autoPopupPgc) {
+          return;
+        }
+        clearAutoPopup();
+        if (
+          candidate !== null &&
+          candidate.ra !== null &&
+          candidate.dec !== null
+        ) {
+          view.showPopup(
+            candidate.ra,
+            candidate.dec,
+            popupTitle(candidate),
+            popupDescription(candidate),
+          );
+          autoPopupPgc = candidate.pgc;
+        }
+      }
+
+      function scheduleReticlePopup(): void {
+        if (pendingUpdate !== null) {
+          clearTimeout(pendingUpdate);
+        }
+        pendingUpdate = setTimeout(() => {
+          pendingUpdate = null;
+          showReticlePopup();
+        }, 150);
+      }
+
+      function onViewChanged(): void {
+        if (manualPopup) {
+          manualPopup = false;
+          view.hidePopup();
+        }
+        scheduleReticlePopup();
+      }
+      function onObjectClicked(source: AladinSource | null): void {
+        if (source !== null) {
+          manualPopup = true;
+          autoPopupPgc = null;
+          if (pendingUpdate !== null) {
+            clearTimeout(pendingUpdate);
+            pendingUpdate = null;
+          }
+        }
+      }
+
+      if (enableReticlePopups) {
+        view.on("positionChanged", onViewChanged);
+        view.on("zoomChanged", onViewChanged);
+        view.on("objectClicked", onObjectClicked);
+        refreshReticlePopupRef.current = showReticlePopup;
+        clearReticlePopupRef.current = clearAutoPopup;
+        listeners.detach = () => {
+          if (pendingUpdate !== null) {
+            clearTimeout(pendingUpdate);
+          }
+          view.off("positionChanged");
+          view.off("zoomChanged");
+          view.off("objectClicked");
+        };
+      }
+
       viewRef.current = view;
       catalogRef.current = catalog;
       setReady(true);
@@ -172,19 +265,25 @@ export function AladinMap({ objects, focus, fov = 180 }: AladinMapProps) {
 
     return () => {
       cancelled = true;
+      listeners.detach?.();
+      clearReticlePopupRef.current = null;
+      refreshReticlePopupRef.current = null;
       catalogRef.current = null;
       viewRef.current = null;
       setReady(false);
       container.replaceChildren();
     };
-  }, [isOverview, mapFov]);
+  }, [isOverview, mapFov, enableReticlePopups]);
 
   useEffect(() => {
+    objectsRef.current = objects;
     const catalog = catalogRef.current;
     if (!ready || catalog === null) {
       return;
     }
+    clearReticlePopupRef.current?.();
     setCatalogSources(catalog, objects);
+    refreshReticlePopupRef.current?.();
   }, [objects, ready]);
 
   useEffect(() => {
