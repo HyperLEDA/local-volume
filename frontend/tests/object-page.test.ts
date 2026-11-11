@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
+  formatUncertainty,
   nameIncludesPgc,
   parameterRows,
   type CatalogObjectDetail,
@@ -94,5 +95,21 @@ describe("parameterRows", () => {
     const original = { ...data };
     parameterRows(data, schema);
     expect(data).toEqual(original);
+  });
+});
+
+describe("formatUncertainty", () => {
+  test("adds the plus-minus sign to a reported uncertainty", () => {
+    expect(formatUncertainty("0.1")).toBe("± 0.1");
+    expect(formatUncertainty("2.75")).toBe("± 2.75");
+  });
+
+  test("preserves an exact zero uncertainty", () => {
+    expect(formatUncertainty("0")).toBe("± 0");
+  });
+
+  test("renders missing uncertainties as a dash", () => {
+    expect(formatUncertainty(null)).toBe("—");
+    expect(formatUncertainty("")).toBe("—");
   });
 });

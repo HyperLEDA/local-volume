@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import {
   fetchObject,
   fetchObjects,
+  formatUncertainty,
   nameIncludesPgc,
   parameterRows,
   type CatalogObject,
@@ -227,7 +228,7 @@ export function ObjectPage() {
                         </th>
                         <td className="param-value">{row.value || "—"}</td>
                         <td className="param-error">
-                          {row.error ?? "—"}
+                          {formatUncertainty(row.error)}
                           {row.error !== null && row.errorUnit !== null ? (
                             <span className="param-error-unit">
                               {` ${row.errorUnit}`}

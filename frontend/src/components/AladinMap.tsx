@@ -13,6 +13,7 @@ import {
 } from "../lib/reticle.ts";
 import { popupObjectRoute } from "../lib/popupNavigation.ts";
 import { needsInitialFovCorrection } from "../lib/objectFov.ts";
+import { shouldDismissSkyPopup } from "../lib/mapInteraction.ts";
 
 const DEFAULT_HIPS_SURVEY = "https://skies.esac.esa.int/DSSColor";
 
@@ -273,6 +274,7 @@ export function AladinMap({
 
       let autoPopupPgc: number | null = null;
       let manualPopup = false;
+      let markerClickedThisClick = false;
       let pendingUpdate: ReturnType<typeof setTimeout> | null = null;
 
       function clearAutoPopup(): void {
@@ -342,6 +344,7 @@ export function AladinMap({
       }
       function onObjectClicked(source: AladinSource | null): void {
         if (source !== null) {
+          markerClickedThisClick = true;
           manualPopup = true;
           autoPopupPgc = null;
           if (pendingUpdate !== null) {
@@ -351,31 +354,56 @@ export function AladinMap({
         }
       }
 
+      // Aladin emits objectClicked before click for a selected marker.
+      // A plain click without a marker closes any manual or reticle popup.
+      function onSkyClick(event: { isDragging: boolean }): void {
+        const clickedMarker = markerClickedThisClick;
+        markerClickedThisClick = false;
+        if (!shouldDismissSkyPopup(clickedMarker, event.isDragging)) {
+          return;
+        }
+        if (pendingUpdate !== null) {
+          clearTimeout(pendingUpdate);
+          pendingUpdate = null;
+        }
+        manualPopup = false;
+        autoPopupPgc = null;
+        view.hidePopup();
+      }
+
+      view.on("objectClicked", onObjectClicked);
+      view.on("click", onSkyClick);
+
       if (enableReticlePopups) {
         view.on("positionChanged", onViewChanged);
         view.on("zoomChanged", onViewChanged);
-        view.on("objectClicked", onObjectClicked);
         refreshReticlePopupRef.current = showReticlePopup;
         clearReticlePopupRef.current = clearAutoPopup;
+      }
 
-        listeners.detach = () => {
-          if (pendingUpdate !== null) {
-            clearTimeout(pendingUpdate);
-            pendingUpdate = null;
-          }
+      listeners.detach = () => {
+        if (pendingUpdate !== null) {
+          clearTimeout(pendingUpdate);
+          pendingUpdate = null;
+        }
 
-          if (typeof view.off === "function") {
+        if (typeof view.off === "function") {
+          if (enableReticlePopups) {
             view.off("positionChanged");
             view.off("zoomChanged");
-            view.off("objectClicked");
-          } else {
-            // Compatibility fallback for Aladin builds without off().
+          }
+          view.off("objectClicked");
+          view.off("click");
+        } else {
+          // Compatibility fallback for Aladin builds without off().
+          if (enableReticlePopups) {
             view.on("positionChanged", () => {});
             view.on("zoomChanged", () => {});
-            view.on("objectClicked", () => {});
           }
-        };
-      }
+          view.on("objectClicked", () => {});
+          view.on("click", () => {});
+        }
+      };
 
       viewRef.current = view;
       catalogRef.current = catalog;

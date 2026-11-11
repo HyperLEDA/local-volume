@@ -354,12 +354,12 @@ h1 {
 }
 
 .catalog--object {
-  max-width: 1180px;
+  max-width: 1320px;
 }
 
 .object-layout {
   display: grid;
-  grid-template-columns: minmax(0, 460px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
   align-items: start;
   gap: 20px;
 }
@@ -673,7 +673,7 @@ h1 {
 
   .catalog--object .catalog-sky {
     width: 100%;
-    max-width: 480px;
+    max-width: 620px;
   }
 }
 

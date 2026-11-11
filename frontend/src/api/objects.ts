@@ -149,6 +149,10 @@ function formatValue(value: unknown): string {
   return String(value);
 }
 
+export function formatUncertainty(error: string | null): string {
+  return error === null || error.trim() === "" ? "—" : `± ${error}`;
+}
+
 export function parameterRows(
   data: CatalogObjectDetail,
   schema: Record<string, ColumnMeta>,
