@@ -8,7 +8,6 @@ import {
   type ColumnMeta,
 } from "../api/objects.ts";
 import { AladinMap, type SkyFocus } from "../components/AladinMap.tsx";
-import { CatalogHeader } from "../components/CatalogHeader.tsx";
 
 export function ObjectPage() {
   const { pgc: pgcParam } = useParams<{ pgc: string }>();
@@ -95,7 +94,6 @@ export function ObjectPage() {
 
   return (
     <main className="catalog catalog--object">
-      <CatalogHeader titleLinksHome />
       {error !== null ? (
         <p className="catalog-status catalog-status-error">{error}</p>
       ) : null}

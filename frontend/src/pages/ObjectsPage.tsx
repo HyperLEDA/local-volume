@@ -1,12 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
 import {
   fetchObjects,
   matchesQuery,
   type CatalogObject,
 } from "../api/objects.ts";
 import { AladinMap, type SkyFocus } from "../components/AladinMap.tsx";
-import { CatalogHeader } from "../components/CatalogHeader.tsx";
 import { ObjectCard } from "../components/ObjectCard.tsx";
 
 export function ObjectsPage() {
@@ -64,20 +62,6 @@ export function ObjectsPage() {
 
   return (
     <main className="catalog catalog--overview">
-      <CatalogHeader />
-      <input
-        className="catalog-search"
-        type="search"
-        value={query}
-        placeholder="Filter by PGC or name…"
-        aria-label="Filter objects"
-        onChange={(event) => {
-          setQuery(event.target.value);
-        }}
-      />
-      <Link className="catalog-publications" to="/publications">
-        Publications
-      </Link>
       {error !== null ? (
         <p className="catalog-status catalog-status-error">{error}</p>
       ) : null}
@@ -89,6 +73,16 @@ export function ObjectsPage() {
           <section className="catalog-sky" aria-label="Sky">
             <AladinMap objects={filtered} focus={focus} />
           </section>
+          <input
+            className="catalog-search"
+            type="search"
+            value={query}
+            placeholder="Filter by PGC or name…"
+            aria-label="Filter objects"
+            onChange={(event) => {
+              setQuery(event.target.value);
+            }}
+          />
           <section className="catalog-list" aria-label="Objects">
             <p className="catalog-count">
               {filtered.length} of {objects.length}
