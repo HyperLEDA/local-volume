@@ -2,13 +2,16 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
   fetchObject,
+  fetchObjects,
   nameIncludesPgc,
   parameterRows,
+  type CatalogObject,
   type CatalogObjectDetail,
   type ColumnMeta,
 } from "../api/objects.ts";
 import { AladinMap, type SkyFocus } from "../components/AladinMap.tsx";
 import { objectFovDegrees } from "../lib/objectFov.ts";
+import { otherSkyObjects } from "../lib/skyContext.ts";
 
 export function ObjectPage() {
   const { pgc: pgcParam } = useParams<{ pgc: string }>();
@@ -16,6 +19,8 @@ export function ObjectPage() {
   const [data, setData] = useState<CatalogObjectDetail | null>(null);
   const [schema, setSchema] = useState<Record<string, ColumnMeta> | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [skyCatalog, setSkyCatalog] = useState<CatalogObject[]>([]);
+  const [skyCatalogError, setSkyCatalogError] = useState(false);
 
   useEffect(() => {
     if (!Number.isFinite(pgc)) {
@@ -54,6 +59,35 @@ export function ObjectPage() {
       cancelled = true;
     };
   }, [pgc]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadSkyCatalog(): Promise<void> {
+      try {
+        const objects = await fetchObjects();
+        if (!cancelled) {
+          setSkyCatalog(objects);
+          setSkyCatalogError(false);
+        }
+      } catch {
+        if (!cancelled) {
+          setSkyCatalog([]);
+          setSkyCatalogError(true);
+        }
+      }
+    }
+
+    void loadSkyCatalog();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const contextObjects = useMemo(
+    () => otherSkyObjects(skyCatalog, pgc),
+    [skyCatalog, pgc],
+  );
 
   const rows = useMemo(() => {
     if (data === null || schema === null) {
@@ -114,9 +148,34 @@ export function ObjectPage() {
               <section className="catalog-sky" aria-label="Sky">
                 <AladinMap
                   objects={mapObjects}
+                  contextObjects={contextObjects}
                   focus={focus}
                   fov={objectFovDegrees(data)}
                 />
+                <div
+                  className="object-sky-legend"
+                  aria-label="Map marker legend"
+                >
+                  <span className="object-sky-legend-item">
+                    <span
+                      className="object-sky-dot object-sky-dot--target"
+                      aria-hidden="true"
+                    />
+                    Selected object
+                  </span>
+                  <span className="object-sky-legend-item">
+                    <span
+                      className="object-sky-dot object-sky-dot--context"
+                      aria-hidden="true"
+                    />
+                    Other LV catalog objects (sky positions)
+                  </span>
+                </div>
+                {skyCatalogError ? (
+                  <p className="catalog-status" role="status">
+                    Other catalog objects could not be loaded.
+                  </p>
+                ) : null}
               </section>
             ) : null}
             <div className="object-details">

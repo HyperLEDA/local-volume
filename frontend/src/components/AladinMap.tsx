@@ -18,6 +18,7 @@ export type SkyFocus = {
 
 type AladinMapProps = {
   objects: CatalogObject[];
+  contextObjects?: CatalogObject[];
   focus: SkyFocus | null;
   fov?: number;
   enableReticlePopups?: boolean;
@@ -97,6 +98,7 @@ function popupDescription(object: CatalogObject): string {
 function setCatalogSources(
   catalog: AladinCatalog,
   objects: CatalogObject[],
+  sizeScale = 1,
 ): void {
   catalog.removeAll();
   const sources = objects.flatMap((object) => {
@@ -113,7 +115,9 @@ function setCatalogSources(
       popupDesc: popupDescription(object),
       useMarkerDefaultIcon: false,
     });
-    marker.setSize(markerDiameter(object.bt));
+    marker.setSize(
+      Math.max(4, Math.round(markerDiameter(object.bt) * sizeScale)),
+    );
     return [marker];
   });
   if (sources.length === 0) {
@@ -124,6 +128,7 @@ function setCatalogSources(
 
 export function AladinMap({
   objects,
+  contextObjects,
   focus,
   fov = 180,
   enableReticlePopups = false,
@@ -132,6 +137,7 @@ export function AladinMap({
   const mapFov = isOverview ? 360 : fov;
   const containerRef = useRef<HTMLDivElement>(null);
   const catalogRef = useRef<AladinCatalog | null>(null);
+  const contextCatalogRef = useRef<AladinCatalog | null>(null);
   const viewRef = useRef<AladinView | null>(null);
   const objectsRef = useRef(objects);
   const refreshReticlePopupRef = useRef<(() => void) | null>(null);
@@ -171,6 +177,16 @@ export function AladinMap({
       view.setFoV(mapFov);
       if (isOverview) {
         view.setZoomFactor(1.25);
+      }
+      if (!isOverview) {
+        const contextCatalog = A.catalog({
+          name: "Other LV catalog objects",
+          shape: "circle",
+          sourceSize: 6,
+          color: "#55b7c3",
+        });
+        view.addCatalog(contextCatalog);
+        contextCatalogRef.current = contextCatalog;
       }
       view.addCatalog(catalog);
 
@@ -294,13 +310,13 @@ export function AladinMap({
         view.on("objectClicked", onObjectClicked);
         refreshReticlePopupRef.current = showReticlePopup;
         clearReticlePopupRef.current = clearAutoPopup;
-        
+
         listeners.detach = () => {
           if (pendingUpdate !== null) {
             clearTimeout(pendingUpdate);
             pendingUpdate = null;
           }
-        
+
           if (typeof view.off === "function") {
             view.off("positionChanged");
             view.off("zoomChanged");
@@ -328,6 +344,7 @@ export function AladinMap({
       clearReticlePopupRef.current = null;
       refreshReticlePopupRef.current = null;
       catalogRef.current = null;
+      contextCatalogRef.current = null;
       viewRef.current = null;
       setReady(false);
       container.replaceChildren();
@@ -344,6 +361,14 @@ export function AladinMap({
     setCatalogSources(catalog, objects);
     refreshReticlePopupRef.current?.();
   }, [objects, ready]);
+
+  useEffect(() => {
+    const catalog = contextCatalogRef.current;
+    if (!ready || catalog === null) {
+      return;
+    }
+    setCatalogSources(catalog, contextObjects ?? [], 0.72);
+  }, [contextObjects, ready]);
 
   useEffect(() => {
     const view = viewRef.current;
