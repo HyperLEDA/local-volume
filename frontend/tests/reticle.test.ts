@@ -1,5 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { findReticleTarget, markerDiameter } from "../src/lib/reticle.ts";
+import {
+  findReticleTarget,
+  markerDiameter,
+  reticlePopupAllowed,
+} from "../src/lib/reticle.ts";
 import type { CatalogObject } from "../src/api/objects.ts";
 
 function object(
@@ -84,5 +88,26 @@ describe("reticle popup stability", () => {
   test("changes to the new target after leaving the active release radius", () => {
     const sources = [object(7, 415), object(8, 400)];
     expect(findReticleTarget(sources, viewport, project, 7)?.pgc).toBe(8);
+  });
+});
+
+describe("automatic reticle popup FoV threshold", () => {
+  test("allows a narrow field with both angular dimensions at or below 60 degrees", () => {
+    expect(reticlePopupAllowed([60, 40])).toBe(true);
+    expect(reticlePopupAllowed([40, 60])).toBe(true);
+    expect(reticlePopupAllowed([1, 1])).toBe(true);
+  });
+
+  test("disables automatic popups when either dimension exceeds 60 degrees", () => {
+    expect(reticlePopupAllowed([60.0001, 40])).toBe(false);
+    expect(reticlePopupAllowed([40, 60.0001])).toBe(false);
+    expect(reticlePopupAllowed([360, 180])).toBe(false);
+  });
+
+  test("rejects incomplete, invalid and nonpositive fields of view", () => {
+    expect(reticlePopupAllowed([NaN, 20])).toBe(false);
+    expect(reticlePopupAllowed([20, Infinity])).toBe(false);
+    expect(reticlePopupAllowed([0, 20])).toBe(false);
+    expect(reticlePopupAllowed([-1, 20])).toBe(false);
   });
 });
