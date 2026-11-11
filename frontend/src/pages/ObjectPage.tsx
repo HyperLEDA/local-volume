@@ -11,6 +11,7 @@ import {
   type ColumnMeta,
 } from "../api/objects.ts";
 import { AladinMap, type SkyFocus } from "../components/AladinMap.tsx";
+import { ParameterLabel } from "../components/ParameterLabel.tsx";
 import { objectFovDegrees } from "../lib/objectFov.ts";
 import { otherSkyObjects } from "../lib/skyContext.ts";
 
@@ -222,8 +223,16 @@ export function ObjectPage() {
                     {rows.map((row) => (
                       <tr key={row.name}>
                         <th scope="row">
-                          <span className="param-name" title={row.description}>
-                            {row.name}
+                          <span
+                            className="param-name"
+                            title={[row.description, row.name]
+                              .filter(Boolean)
+                              .join(" · ")}
+                          >
+                            <ParameterLabel
+                              nice={row.nice}
+                              fallback={row.name}
+                            />
                           </span>
                         </th>
                         <td className="param-value">{row.value || "—"}</td>

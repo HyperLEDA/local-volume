@@ -5,6 +5,7 @@ class ColumnMeta(pydantic.BaseModel):
     description: str
     unit: str | None = None
     ucd: str | None = None
+    nice: str | None = None
 
 
 class ObjectSummaryColumns(pydantic.BaseModel):

@@ -81,6 +81,7 @@ def test_list_objects(client: fastapi.testclient.TestClient) -> None:
     missing_index = body["data"]["pgc"].index(12676)
     assert body["data"]["v_hel"][missing_index] is None
     assert body["schema"]["bt"]["unit"] == "mag"
+    assert body["schema"]["bt"]["nice"] == "B<sub>T</sub>"
     assert body["schema"]["pgc"]["description"] == "PGC identifier"
     assert body["schema"]["ra"]["unit"] == "deg"
     assert body["schema"]["names"]["description"] == "Additional name"
@@ -93,6 +94,9 @@ def test_get_object_with_heliocentric_velocity(client: fastapi.testclient.TestCl
     data = response.json()["data"]
     v_hel = _row(29146)["v_hel"]
     assert data["name"] == "NGC 3077"
+    assert response.json()["schema"]["v_hel"]["nice"] == "V<sub>hel</sub>"
+    assert response.json()["schema"]["ra"]["nice"] == "α"
+    assert response.json()["schema"]["bt"]["description"] == "Mean total B magnitude"
     assert data["names"] == _sample_names()[29146]
     assert v_hel is not None
     assert data["v_hel"] == pytest.approx(v_hel)

@@ -68,6 +68,7 @@ describe("parameterRows", () => {
     expect(orphan).toEqual([
       {
         name: "e_bt",
+        nice: null,
         description: "B magnitude error",
         unit: "mag",
         value: "0.4",
@@ -111,5 +112,30 @@ describe("formatUncertainty", () => {
   test("renders missing uncertainties as a dash", () => {
     expect(formatUncertainty(null)).toBe("—");
     expect(formatUncertainty("")).toBe("—");
+  });
+});
+
+describe("nice parameter labels", () => {
+  test("forwards preferred names from column metadata without replacing identifiers", () => {
+    const rows = parameterRows(data, {
+      ...schema,
+      bt: { ...schema.bt, nice: "B<sub>T</sub>" },
+      ra: { ...schema.ra, nice: "α" },
+    });
+    expect(rows.find((row) => row.name === "bt")?.nice).toBe("B<sub>T</sub>");
+    expect(rows.find((row) => row.name === "ra")?.nice).toBe("α");
+    expect(rows.find((row) => row.name === "v_hel")?.nice).toBeNull();
+  });
+
+  test("never changes data or reported errors because of a nice label", () => {
+    const rows = parameterRows(data, {
+      ...schema,
+      bt: { ...schema.bt, nice: "B<sub>T</sub>" },
+    });
+    expect(rows.find((row) => row.name === "bt")).toMatchObject({
+      value: "13.20",
+      error: "0.10",
+      name: "bt",
+    });
   });
 });

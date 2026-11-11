@@ -4,6 +4,7 @@ export type ColumnMeta = {
   description: string;
   unit?: string | null;
   ucd?: string | null;
+  nice?: string | null;
 };
 
 export type CatalogObject = {
@@ -131,6 +132,7 @@ export function nameIncludesPgc(name: string, pgc: number): boolean {
 
 export type ParameterRow = {
   name: string;
+  nice: string | null;
   description: string;
   unit: string | null;
   value: string;
@@ -181,6 +183,7 @@ export function parameterRows(
 
     rows.push({
       name: key,
+      nice: meta.nice?.trim() || null,
       description: meta.description,
       unit: meta.unit ?? null,
       value: formatted.value,
