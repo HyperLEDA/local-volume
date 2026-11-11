@@ -121,8 +121,10 @@ def _column_meta(param: dict[str, Any]) -> schemas.ColumnMeta:
     description = param.get("description")
     unit = param.get("unit")
     ucd = param.get("ucd")
+    nice = param.get("nice")
     return schemas.ColumnMeta(
         description=description if isinstance(description, str) else "",
         unit=unit if isinstance(unit, str) else None,
         ucd=ucd if isinstance(ucd, str) else None,
+        nice=nice if isinstance(nice, str) else None,
     )
