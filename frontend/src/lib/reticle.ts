@@ -3,6 +3,20 @@ import type { CatalogObject } from "../api/objects.ts";
 type ReticleObject = Pick<CatalogObject, "pgc" | "ra" | "dec" | "bt">;
 type Pixel = readonly [number, number] | null;
 
+const MAX_AUTOMATIC_POPUP_FOV_DEGREES = 60;
+
+// Aladin's getFov() reports the horizontal and vertical angular extents.
+export function reticlePopupAllowed(fov: readonly [number, number]): boolean {
+  const [horizontal, vertical] = fov;
+  return (
+    Number.isFinite(horizontal) &&
+    Number.isFinite(vertical) &&
+    horizontal > 0 &&
+    vertical > 0 &&
+    Math.max(horizontal, vertical) <= MAX_AUTOMATIC_POPUP_FOV_DEGREES
+  );
+}
+
 export function markerDiameter(bt: number | null): number {
   if (bt === null || !Number.isFinite(bt)) {
     return 7;

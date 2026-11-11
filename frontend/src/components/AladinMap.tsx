@@ -3,9 +3,15 @@ import A, {
   type AladinSource,
   type AladinView,
 } from "aladin-lite";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type MouseEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import type { CatalogObject } from "../api/objects.ts";
-import { findReticleTarget, markerDiameter } from "../lib/reticle.ts";
+import {
+  findReticleTarget,
+  markerDiameter,
+  reticlePopupAllowed,
+} from "../lib/reticle.ts";
+import { popupObjectRoute } from "../lib/popupNavigation.ts";
 import { needsInitialFovCorrection } from "../lib/objectFov.ts";
 
 const DEFAULT_HIPS_SURVEY = "https://skies.esac.esa.int/DSSColor";
@@ -143,6 +149,35 @@ export function AladinMap({
   const refreshReticlePopupRef = useRef<(() => void) | null>(null);
   const clearReticlePopupRef = useRef<(() => void) | null>(null);
   const [ready, setReady] = useState(false);
+  const [mapError, setMapError] = useState<string | null>(null);
+  const navigate = useNavigate();
+
+  function onPopupLinkClick(event: MouseEvent<HTMLDivElement>): void {
+    const target = event.target;
+    if (!(target instanceof Element)) {
+      return;
+    }
+    const anchor = target.closest("a.lv-popup-name");
+    if (!(anchor instanceof HTMLAnchorElement)) {
+      return;
+    }
+    const destination = popupObjectRoute(
+      anchor.getAttribute("href"),
+      {
+        button: event.button,
+        altKey: event.altKey,
+        ctrlKey: event.ctrlKey,
+        metaKey: event.metaKey,
+        shiftKey: event.shiftKey,
+      },
+      anchor.target,
+    );
+    if (destination === null) {
+      return;
+    }
+    event.preventDefault();
+    void navigate(destination);
+  }
 
   useEffect(() => {
     const container = containerRef.current;
@@ -251,6 +286,10 @@ export function AladinMap({
         if (manualPopup) {
           return;
         }
+        if (!reticlePopupAllowed(view.getFov())) {
+          clearAutoPopup();
+          return;
+        }
         const candidate = findReticleTarget(
           objectsRef.current,
           view.getSize(),
@@ -290,6 +329,14 @@ export function AladinMap({
         if (manualPopup) {
           manualPopup = false;
           view.hidePopup();
+        }
+        if (!reticlePopupAllowed(view.getFov())) {
+          if (pendingUpdate !== null) {
+            clearTimeout(pendingUpdate);
+            pendingUpdate = null;
+          }
+          clearAutoPopup();
+          return;
         }
         scheduleReticlePopup();
       }
@@ -332,10 +379,17 @@ export function AladinMap({
 
       viewRef.current = view;
       catalogRef.current = catalog;
+      setMapError(null);
       setReady(true);
     }
 
-    void mount(container);
+    void mount(container).catch(() => {
+      if (!cancelled) {
+        setMapError(
+          "Sky map could not be initialized. Object details remain available.",
+        );
+      }
+    });
 
     return () => {
       cancelled = true;
@@ -379,11 +433,19 @@ export function AladinMap({
   }, [focus, ready]);
 
   return (
-    <div
-      ref={containerRef}
-      className={
-        isOverview ? "aladin-frame aladin-frame--overview" : "aladin-frame"
-      }
-    />
+    <>
+      <div
+        ref={containerRef}
+        onClickCapture={onPopupLinkClick}
+        className={
+          isOverview ? "aladin-frame aladin-frame--overview" : "aladin-frame"
+        }
+      />
+      {mapError !== null ? (
+        <p className="catalog-status catalog-status-error" role="alert">
+          {mapError}
+        </p>
+      ) : null}
+    </>
   );
 }
