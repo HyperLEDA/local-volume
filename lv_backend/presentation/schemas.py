@@ -38,6 +38,7 @@ class ObjectDetail(pydantic.BaseModel):
     e_a50: float | None
     b50: float | None
     e_b50: float | None
+    dist: float | None
     type_name: str | None
     names: list[str]
 

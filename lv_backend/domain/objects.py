@@ -46,6 +46,7 @@ def get_object(storage: Storage, pgc: int) -> schemas.ObjectGetResponse | None:
             e_a50=row["e_a50"],
             b50=row["b50"],
             e_b50=row["e_b50"],
+            dist=row["dist"],
             type_name=row["type_name"],
             names=row["names"],
         ),
