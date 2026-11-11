@@ -12,6 +12,9 @@ class ObjectSummaryColumns(pydantic.BaseModel):
     name: list[str]
     ra: list[float | None]
     dec: list[float | None]
+    bt: list[float | None]
+    v_hel: list[float | None]
+    type_name: list[str | None]
     names: list[list[str]]
 
 

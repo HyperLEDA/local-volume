@@ -9,6 +9,11 @@ export type CatalogObject = {
   name: string;
   ra: number | null;
   dec: number | null;
+  bt: number | null;
+  v_hel: number | null;
+  type_name: string | null;
+  d_26?: number | null;
+  w_50?: number | null;
   names: string[];
 };
 
@@ -32,6 +37,8 @@ export type CatalogObjectDetail = {
   b50?: number | null;
   e_b50?: number | null;
   type_name?: string | null;
+  d_26?: number | null;
+  w_50?: number | null;
   names: string[];
 };
 
@@ -41,6 +48,11 @@ type ObjectsListResponse = {
     name: string[];
     ra: (number | null)[];
     dec: (number | null)[];
+    bt?: (number | null)[];
+    v_hel?: (number | null)[];
+    type_name?: (string | null)[];
+    d_26?: (number | null)[];
+    w_50?: (number | null)[];
     names: string[][];
   };
 };
@@ -58,12 +70,28 @@ export async function fetchObjects(): Promise<CatalogObject[]> {
     throw new Error(`Failed to load objects (${response.status})`);
   }
   const body = (await response.json()) as ObjectsListResponse;
-  const { pgc, name, ra, dec, names } = body.data;
+  const {
+    pgc,
+    name,
+    ra,
+    dec,
+    bt,
+    v_hel: vHel,
+    type_name: typeName,
+    d_26: d26,
+    w_50: w50,
+    names,
+  } = body.data;
   return pgc.map((id, index) => ({
     pgc: id,
     name: name[index] ?? "",
     ra: ra[index] ?? null,
     dec: dec[index] ?? null,
+    bt: bt?.[index] ?? null,
+    v_hel: vHel?.[index] ?? null,
+    type_name: typeName?.[index] ?? null,
+    d_26: d26?.[index] ?? null,
+    w_50: w50?.[index] ?? null,
     names: names[index] ?? [],
   }));
 }

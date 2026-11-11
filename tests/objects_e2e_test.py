@@ -74,6 +74,13 @@ def test_list_objects(client: fastapi.testclient.TestClient) -> None:
     assert body["data"]["dec"] == pytest.approx([row["dec"] for row in rows])
     names = _sample_names()
     assert body["data"]["names"] == [names.get(row["pgc"], []) for row in rows]
+    index = body["data"]["pgc"].index(29146)
+    assert body["data"]["bt"][index] == pytest.approx(10.6175)
+    assert body["data"]["v_hel"][index] == pytest.approx(_row(29146)["v_hel"])
+    assert body["data"]["type_name"][index] == "G"
+    missing_index = body["data"]["pgc"].index(12676)
+    assert body["data"]["v_hel"][missing_index] is None
+    assert body["schema"]["bt"]["unit"] == "mag"
     assert body["schema"]["pgc"]["description"] == "PGC identifier"
     assert body["schema"]["ra"]["unit"] == "deg"
     assert body["schema"]["names"]["description"] == "Additional name"
