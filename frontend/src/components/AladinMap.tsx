@@ -294,13 +294,23 @@ export function AladinMap({
         view.on("objectClicked", onObjectClicked);
         refreshReticlePopupRef.current = showReticlePopup;
         clearReticlePopupRef.current = clearAutoPopup;
+        
         listeners.detach = () => {
           if (pendingUpdate !== null) {
             clearTimeout(pendingUpdate);
+            pendingUpdate = null;
           }
-          view.off("positionChanged");
-          view.off("zoomChanged");
-          view.off("objectClicked");
+        
+          if (typeof view.off === "function") {
+            view.off("positionChanged");
+            view.off("zoomChanged");
+            view.off("objectClicked");
+          } else {
+            // Compatibility fallback for Aladin builds without off().
+            view.on("positionChanged", () => {});
+            view.on("zoomChanged", () => {});
+            view.on("objectClicked", () => {});
+          }
         };
       }
 
