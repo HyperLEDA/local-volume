@@ -56,7 +56,7 @@ describe("parameterRows", () => {
       error: "0",
       errorUnit: null,
     });
-    expect(rows[1]).toMatchObject({ value: "13.2", error: "0.1" });
+    expect(rows[1]).toMatchObject({ value: "13.20", error: "0.10" });
     expect(rows[2]).toMatchObject({ value: "350", error: null });
   });
 
@@ -85,7 +85,7 @@ describe("parameterRows", () => {
     expect(rows[0]).toMatchObject({
       name: "ra",
       value: "12",
-      error: "0.5",
+      error: "0.50",
       errorUnit: "arcsec",
       unit: "deg",
     });
