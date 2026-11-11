@@ -50,11 +50,17 @@ declare module "aladin-lite" {
     on: {
       (event: "positionChanged" | "zoomChanged", listener: () => void): void;
       (
+        event: "click",
+        listener: (position: { isDragging: boolean }) => void,
+      ): void;
+      (
         event: "objectClicked",
         listener: (source: AladinSource | null) => void,
       ): void;
     };
-    off?: (event: "positionChanged" | "zoomChanged" | "objectClicked") => void;
+    off?: (
+      event: "positionChanged" | "zoomChanged" | "objectClicked" | "click",
+    ) => void;
   };
 
   export type AladinApi = {
