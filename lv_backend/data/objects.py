@@ -24,16 +24,21 @@ DETAIL_COLUMNS: tuple[str, ...] = (
     "e_a50",
     "b50",
     "e_b50",
+    "dist",
     "type_name",
     "names",
 )
+
+_OBJECT_COLUMNS = frozenset(("pgc", "name", "ra", "e_ra", "dec", "e_dec", "type_name"))
 
 _SCHEMA_QUERY = """
 SELECT column_name, param
 FROM meta.column_info
 WHERE schema_name = 'lv'
-  AND table_name = 'objects'
-  AND column_name = ANY(%s)
+  AND (
+    (table_name = 'objects' AND column_name = ANY(%s))
+    OR (table_name = 'observed' AND column_name = ANY(%s))
+  )
 """
 
 _NAMES_SCHEMA_QUERY = """
@@ -52,10 +57,11 @@ COALESCE(
 """
 
 _OBJECTS_QUERY = f"""
-SELECT o.pgc, o.name, o.ra, o.dec, o.bt, o.v_hel, o.type_name, {_NAMES_AGG}
+SELECT o.pgc, o.name, o.ra, o.dec, obs.bt, obs.v_hel, o.type_name, {_NAMES_AGG}
 FROM lv.objects AS o
+LEFT JOIN lv.observed AS obs ON obs.pgc = o.pgc
 LEFT JOIN lv.names AS n ON n.pgc = o.pgc
-GROUP BY o.pgc
+GROUP BY o.pgc, obs.pgc
 ORDER BY o.pgc
 """
 
@@ -67,32 +73,36 @@ SELECT
     o.e_ra,
     o.dec,
     o.e_dec,
-    o.bt,
-    o.e_bt,
-    o.kt,
-    o.e_kt,
-    o.v_hel,
-    o.e_v_hel,
-    o.v_lg,
-    o.e_v_lg,
-    o.a50,
-    o.e_a50,
-    o.b50,
-    o.e_b50,
+    obs.bt,
+    obs.e_bt,
+    obs.kt,
+    obs.e_kt,
+    obs.v_hel,
+    obs.e_v_hel,
+    obs.v_lg,
+    obs.e_v_lg,
+    obs.a50,
+    obs.e_a50,
+    obs.b50,
+    obs.e_b50,
+    obs.dist,
     o.type_name,
     {_NAMES_AGG}
 FROM lv.objects AS o
+LEFT JOIN lv.observed AS obs ON obs.pgc = o.pgc
 LEFT JOIN lv.names AS n ON n.pgc = o.pgc
 WHERE o.pgc = %s
-GROUP BY o.pgc
+GROUP BY o.pgc, obs.pgc
 """
 
 
 def select_schema(storage: Storage, columns: Sequence[str]) -> dict[str, schemas.ColumnMeta]:
-    object_columns = [column for column in columns if column != "names"]
-    rows = storage.query(_SCHEMA_QUERY, [object_columns])
+    selected = [column for column in columns if column != "names"]
+    object_columns = [column for column in selected if column in _OBJECT_COLUMNS]
+    observed_columns = [column for column in selected if column not in _OBJECT_COLUMNS]
+    rows = storage.query(_SCHEMA_QUERY, [object_columns, observed_columns])
     by_name = {row["column_name"]: _as_param(row["param"]) for row in rows}
-    result = {column: _column_meta(by_name.get(column, {})) for column in object_columns}
+    result = {column: _column_meta(by_name.get(column, {})) for column in selected}
     if "names" in columns:
         meta_rows = storage.query(_NAMES_SCHEMA_QUERY)
         param = _as_param(meta_rows[0]["param"]) if meta_rows else {}
