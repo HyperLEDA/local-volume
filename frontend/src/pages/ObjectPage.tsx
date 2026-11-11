@@ -71,6 +71,11 @@ export function ObjectPage() {
         name: data.name,
         ra: data.ra ?? null,
         dec: data.dec ?? null,
+        bt: data.bt ?? null,
+        v_hel: data.v_hel ?? null,
+        type_name: data.type_name ?? null,
+        d_26: data.d_26 ?? null,
+        w_50: data.w_50 ?? null,
         names: data.names,
       },
     ];

@@ -4,7 +4,7 @@ from typing import Any
 from lv_backend.data.storage import Storage
 from lv_backend.presentation import schemas
 
-SUMMARY_COLUMNS: tuple[str, ...] = ("pgc", "name", "ra", "dec", "names")
+SUMMARY_COLUMNS: tuple[str, ...] = ("pgc", "name", "ra", "dec", "bt", "v_hel", "type_name", "names")
 DETAIL_COLUMNS: tuple[str, ...] = (
     "pgc",
     "name",
@@ -52,7 +52,7 @@ COALESCE(
 """
 
 _OBJECTS_QUERY = f"""
-SELECT o.pgc, o.name, o.ra, o.dec, {_NAMES_AGG}
+SELECT o.pgc, o.name, o.ra, o.dec, o.bt, o.v_hel, o.type_name, {_NAMES_AGG}
 FROM lv.objects AS o
 LEFT JOIN lv.names AS n ON n.pgc = o.pgc
 GROUP BY o.pgc
