@@ -380,6 +380,40 @@ h1 {
   aspect-ratio: 1 / 1;
 }
 
+.object-sky-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin-top: 9px;
+  color: var(--muted);
+  font-size: 0.77rem;
+  line-height: 1.35;
+}
+
+.object-sky-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.object-sky-dot {
+  display: inline-block;
+  box-sizing: border-box;
+  width: 9px;
+  height: 9px;
+  flex: none;
+  border: 2px solid;
+  border-radius: 50%;
+}
+
+.object-sky-dot--target {
+  border-color: #f2c14e;
+}
+
+.object-sky-dot--context {
+  border-color: #55b7c3;
+}
+
 .object-params {
   min-width: 0;
   overflow-x: auto;
