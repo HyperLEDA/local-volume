@@ -23,7 +23,9 @@ declare module "aladin-lite" {
     color?: string;
   };
 
-  export type AladinSource = object;
+  export type AladinSource = {
+    setSize: (size: number) => void;
+  };
 
   export type AladinCatalog = {
     addSources: (sources: AladinSource[]) => void;

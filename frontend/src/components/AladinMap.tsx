@@ -87,6 +87,13 @@ function popupDescription(object: CatalogObject): string {
   return `<div class="lv-popup-grid">${fields.join("")}</div>`;
 }
 
+function markerDiameter(bt: number | null): number {
+  if (bt === null || !Number.isFinite(bt)) {
+    return 7;
+  }
+  const logFluxRatio = 0.4 * (17 - bt);
+  return Math.round(Math.min(18, Math.max(7, 7 + 3 * logFluxRatio)));
+}
 function setCatalogSources(
   catalog: AladinCatalog,
   objects: CatalogObject[],
@@ -101,13 +108,13 @@ function setCatalogSources(
     ) {
       return [];
     }
-    return [
-      A.marker(object.ra, object.dec, {
-        popupTitle: popupTitle(object),
-        popupDesc: popupDescription(object),
-        useMarkerDefaultIcon: false,
-      }),
-    ];
+    const marker = A.marker(object.ra, object.dec, {
+      popupTitle: popupTitle(object),
+      popupDesc: popupDescription(object),
+      useMarkerDefaultIcon: false,
+    });
+    marker.setSize(markerDiameter(object.bt));
+    return [marker];
   });
   if (sources.length === 0) {
     return;
@@ -141,14 +148,14 @@ export function AladinMap({ objects, focus, fov = 180 }: AladinMapProps) {
         cooFrame: "equatorial",
         survey: DEFAULT_HIPS_SURVEY,
         target: "180 +0",
-        showReticle: !isOverview,
+        showReticle: true,
         showSimbadPointerControl: false,
         showFullscreenControl: false,
       });
       const catalog = A.catalog({
         name: "Local volume",
         shape: "circle",
-        sourceSize: 4,
+        sourceSize: 7,
         color: "#f2c14e",
       });
       view.setFoV(mapFov);
