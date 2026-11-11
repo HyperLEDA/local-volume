@@ -54,7 +54,7 @@ declare module "aladin-lite" {
         listener: (source: AladinSource | null) => void,
       ): void;
     };
-    off: (event: "positionChanged" | "zoomChanged" | "objectClicked") => void;
+    off?: (event: "positionChanged" | "zoomChanged" | "objectClicked") => void;
   };
 
   export type AladinApi = {
