@@ -8,6 +8,7 @@ import {
   type ColumnMeta,
 } from "../api/objects.ts";
 import { AladinMap, type SkyFocus } from "../components/AladinMap.tsx";
+import { objectFovDegrees } from "../lib/objectFov.ts";
 
 export function ObjectPage() {
   const { pgc: pgcParam } = useParams<{ pgc: string }>();
@@ -111,7 +112,11 @@ export function ObjectPage() {
           >
             {focus !== null ? (
               <section className="catalog-sky" aria-label="Sky">
-                <AladinMap objects={mapObjects} focus={focus} fov={1} />
+                <AladinMap
+                  objects={mapObjects}
+                  focus={focus}
+                  fov={objectFovDegrees(data)}
+                />
               </section>
             ) : null}
             <div className="object-details">
