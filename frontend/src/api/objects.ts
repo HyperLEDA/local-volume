@@ -1,3 +1,5 @@
+import { formatParameterDisplay } from "../lib/precision.ts";
+
 export type ColumnMeta = {
   description: string;
   unit?: string | null;
@@ -136,19 +138,6 @@ export type ParameterRow = {
   errorUnit: string | null;
 };
 
-function formatValue(value: unknown): string {
-  if (typeof value === "number") {
-    return String(value);
-  }
-  if (typeof value === "string") {
-    return value;
-  }
-  if (value === null || value === undefined) {
-    return "";
-  }
-  return String(value);
-}
-
 export function formatUncertainty(error: string | null): string {
   return error === null || error.trim() === "" ? "—" : `± ${error}`;
 }
@@ -182,13 +171,20 @@ export function parameterRows(
     const hasError =
       errorMeta !== null && rawError !== null && rawError !== undefined;
     const errorUnit = errorMeta?.unit ?? null;
+    const formatted = formatParameterDisplay(
+      key,
+      record[key],
+      hasError ? rawError : null,
+      meta,
+      errorMeta,
+    );
 
     rows.push({
       name: key,
       description: meta.description,
       unit: meta.unit ?? null,
-      value: formatValue(record[key]),
-      error: hasError ? formatValue(rawError) : null,
+      value: formatted.value,
+      error: hasError ? formatted.error : null,
       errorUnit:
         hasError && errorUnit !== (meta.unit ?? null) ? errorUnit : null,
     });
