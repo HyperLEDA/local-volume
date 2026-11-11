@@ -7,17 +7,37 @@
   --accent: #0c5f68;
   --danger: #8d2f2f;
   --font-body: system-ui, sans-serif;
+  --grid-dots: rgb(20 32 43 / 8%);
+  --table-header: rgb(12 95 104 / 8%);
+  --table-stripe: rgb(20 32 43 / 3%);
+  --hover-tint: rgb(12 95 104 / 10%);
+  color-scheme: light;
   color: var(--ink);
   background-color: var(--bg);
   background-image: radial-gradient(
     circle at 1px 1px,
-    rgb(20 32 43 / 8%) 1px,
+    var(--grid-dots) 1px,
     transparent 0
   );
   background-size: 18px 18px;
   font-family: var(--font-body);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
+}
+
+:root[data-theme="dark"] {
+  --bg: #111920;
+  --ink: #e8f0f4;
+  --muted: #aebfca;
+  --card: #1d2a33;
+  --line: #41545f;
+  --accent: #75d1dc;
+  --danger: #ffadad;
+  --grid-dots: rgb(226 242 250 / 5%);
+  --table-header: rgb(117 209 220 / 11%);
+  --table-stripe: rgb(255 255 255 / 3%);
+  --hover-tint: rgb(117 209 220 / 12%);
+  color-scheme: dark;
 }
 
 body {
@@ -29,19 +49,120 @@ h1 {
   font-size: 1.5rem;
   font-weight: 600;
   line-height: 1.25;
-  text-align: center;
 }
 
-.catalog-header {
+.app-shell {
+  box-sizing: border-box;
+  min-height: 100vh;
+  padding: 28px 24px 48px 76px;
+}
+
+.app-workspace {
+  max-width: 1450px;
+  min-width: 0;
+  margin-inline: auto;
+}
+
+.catalog-sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: 48px;
+  height: 100vh;
+  height: 100dvh;
+  padding: 10px 5px;
+  border-right: 1px solid #484d52;
+  background: #24272b;
+  color: #cfd7de;
+}
+
+.catalog-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.catalog-nav--footer {
+  margin-top: auto;
+}
+
+.catalog-nav-link {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 40px;
+  box-sizing: border-box;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.catalog-nav-link:hover,
+.catalog-nav-link:focus-visible {
+  color: white;
+  background: #41464e;
+}
+
+.catalog-nav-link:focus-visible {
+  outline: 2px solid #b4bdfb;
+  outline-offset: 1px;
+}
+
+.catalog-nav-link[aria-current="page"] {
+  color: white;
+  background: #555de2;
+}
+
+.catalog-nav-tooltip {
+  position: absolute;
+  left: calc(100% + 12px);
+  top: 50%;
+  padding: 6px 10px;
+  border-radius: 5px;
+  color: #fff;
+  background: #24272b;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  font-weight: 500;
+  white-space: nowrap;
+  box-shadow: 0 3px 12px rgb(0 0 0 / 18%);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-50%);
+  pointer-events: none;
+  transition:
+    opacity 120ms ease,
+    visibility 120ms ease;
+}
+
+.catalog-nav-link:hover .catalog-nav-tooltip,
+.catalog-nav-link:focus-visible .catalog-nav-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+.catalog-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 44px;
+  margin-bottom: 24px;
 }
 
 .catalog-header h1 {
-  padding-inline: 52px;
+  min-width: 0;
+  text-align: center;
 }
 
 .catalog-header h1 a {
@@ -54,20 +175,45 @@ h1 {
 }
 
 .catalog-logo {
-  position: absolute;
-  right: 0;
-  display: flex;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
 }
 
 .catalog-logo img {
-  height: 40px;
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
   width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.catalog-logo--leda .leda-logo-light {
+  mix-blend-mode: multiply;
+}
+
+.catalog-logo--leda .leda-logo-dark {
+  display: none;
+}
+
+:root[data-theme="dark"] .leda-logo-light {
+  display: none;
+}
+
+:root[data-theme="dark"] .catalog-logo--leda .leda-logo-dark {
+  display: block;
 }
 
 .catalog {
+  width: 100%;
   max-width: 960px;
+  box-sizing: border-box;
   margin: 0 auto;
-  padding: 32px 20px 48px;
+  padding: 0 0 48px;
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -91,25 +237,6 @@ h1 {
 .catalog-search:focus {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
-}
-
-.catalog-publications {
-  align-self: flex-start;
-  display: inline-flex;
-  align-items: center;
-  color: inherit;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 6px 10px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  line-height: 1.3;
-  text-decoration: none;
-}
-
-.catalog-publications:hover {
-  background: rgb(12 95 104 / 10%);
 }
 
 .publications {
@@ -178,7 +305,7 @@ h1 {
 }
 
 .aladin-object-link:hover {
-  background: rgb(12 95 104 / 10%);
+  background: var(--hover-tint);
 }
 
 @media (max-width: 700px) {
@@ -344,7 +471,7 @@ h1 {
 
 .params-table thead th {
   font-weight: 600;
-  background: rgb(12 95 104 / 8%);
+  background: var(--table-header);
 }
 
 .params-table tbody th {
@@ -357,7 +484,7 @@ h1 {
 }
 
 .params-table tbody tr:nth-child(even) {
-  background: rgb(20 32 43 / 3%);
+  background: var(--table-stripe);
 }
 
 .param-name {
@@ -415,7 +542,7 @@ h1 {
 }
 
 .object-card-locate:hover {
-  background: rgb(12 95 104 / 10%);
+  background: var(--hover-tint);
 }
 
 .aladin-frame .aladin-popup-container {
@@ -425,6 +552,8 @@ h1 {
 }
 
 .aladin-frame .aladin-popup {
+  color: var(--ink);
+  background: var(--card);
   box-sizing: border-box;
   padding: 9px 11px 10px;
   font-family: "Segoe UI", Arial, sans-serif;
@@ -503,7 +632,7 @@ h1 {
   white-space: nowrap;
 }
 
-@media (max-width: 980px) {
+@media (max-width: 1200px) {
   .object-layout {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -511,5 +640,30 @@ h1 {
   .catalog--object .catalog-sky {
     width: 100%;
     max-width: 480px;
+  }
+}
+
+@media (max-width: 800px) {
+  .app-shell {
+    padding: 20px 12px 32px 60px;
+  }
+
+  .catalog-sidebar {
+    width: 44px;
+    padding-inline: 3px;
+  }
+
+  .catalog-header {
+    gap: 7px;
+    margin-bottom: 18px;
+  }
+
+  .catalog-header h1 {
+    font-size: clamp(0.92rem, 3.4vw, 1.15rem);
+  }
+
+  .catalog-logo {
+    width: 30px;
+    height: 30px;
   }
 }
