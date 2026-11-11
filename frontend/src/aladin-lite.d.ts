@@ -37,6 +37,23 @@ declare module "aladin-lite" {
     gotoRaDec: (ra: number, dec: number) => void;
     setFoV: (fov: number) => void;
     setZoomFactor: (zoomFactor: number) => void;
+    getSize: () => [number, number];
+    world2pix: (ra: number, dec: number) => [number, number] | null;
+    showPopup: (
+      ra: number,
+      dec: number,
+      title: string,
+      description: string,
+    ) => void;
+    hidePopup: () => void;
+    on: {
+      (event: "positionChanged" | "zoomChanged", listener: () => void): void;
+      (
+        event: "objectClicked",
+        listener: (source: AladinSource | null) => void,
+      ): void;
+    };
+    off: (event: "positionChanged" | "zoomChanged" | "objectClicked") => void;
   };
 
   export type AladinApi = {
