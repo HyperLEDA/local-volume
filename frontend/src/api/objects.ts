@@ -14,6 +14,11 @@ export type CatalogObject = {
   dec: number | null;
   bt: number | null;
   v_hel: number | null;
+  b_mag?: number | null;
+  ks_mag?: number | null;
+  lvg_v_hel_kms?: number | null;
+  a26_arcmin?: number | null;
+  w50_kms?: number | null;
   type_name: string | null;
   d_26?: number | null;
   w_50?: number | null;
@@ -35,6 +40,11 @@ export type CatalogObjectDetail = {
   e_v_hel?: number | null;
   v_lg?: number | null;
   e_v_lg?: number | null;
+  b_mag?: number | null;
+  ks_mag?: number | null;
+  lvg_v_hel_kms?: number | null;
+  a26_arcmin?: number | null;
+  w50_kms?: number | null;
   a50?: number | null;
   e_a50?: number | null;
   b50?: number | null;
@@ -52,6 +62,11 @@ type ObjectsListResponse = {
     ra: (number | null)[];
     dec: (number | null)[];
     bt?: (number | null)[];
+    b_mag?: (number | null)[];
+    ks_mag?: (number | null)[];
+    lvg_v_hel_kms?: (number | null)[];
+    a26_arcmin?: (number | null)[];
+    w50_kms?: (number | null)[];
     v_hel?: (number | null)[];
     type_name?: (string | null)[];
     d_26?: (number | null)[];
@@ -65,7 +80,27 @@ export type ObjectGetResponse = {
   schema: Record<string, ColumnMeta>;
 };
 
-const TABLE_EXCLUDED = new Set(["pgc", "name", "names", "type_name"]);
+const TABLE_EXCLUDED = new Set([
+  "pgc",
+  "name",
+  "names",
+  "type_name",
+  // Legacy LV-0002 measurements are retained in the DB/API,
+  // but are not to be presented as adopted source-native LVGDB values.
+  "bt",
+  "e_bt",
+  "kt",
+  "e_kt",
+  "v_hel",
+  "e_v_hel",
+  "v_lg",
+  "e_v_lg",
+  "a50",
+  "e_a50",
+  "b50",
+  "e_b50",
+  "lvg_e_v_hel_kms",
+]);
 
 export async function fetchObjects(): Promise<CatalogObject[]> {
   const response = await fetch("/api/v1/objects");
@@ -79,6 +114,11 @@ export async function fetchObjects(): Promise<CatalogObject[]> {
     ra,
     dec,
     bt,
+    b_mag: bMag,
+    ks_mag: ksMag,
+    lvg_v_hel_kms: nativeVHel,
+    a26_arcmin: nativeA26,
+    w50_kms: nativeW50,
     v_hel: vHel,
     type_name: typeName,
     d_26: d26,
@@ -91,6 +131,11 @@ export async function fetchObjects(): Promise<CatalogObject[]> {
     ra: ra[index] ?? null,
     dec: dec[index] ?? null,
     bt: bt?.[index] ?? null,
+    b_mag: bMag?.[index] ?? null,
+    ks_mag: ksMag?.[index] ?? null,
+    lvg_v_hel_kms: nativeVHel?.[index] ?? null,
+    a26_arcmin: nativeA26?.[index] ?? null,
+    w50_kms: nativeW50?.[index] ?? null,
     v_hel: vHel?.[index] ?? null,
     type_name: typeName?.[index] ?? null,
     d_26: d26?.[index] ?? null,
@@ -165,7 +210,7 @@ export function parameterRows(
       continue;
     }
 
-    const errorKey = `e_${key}`;
+    const errorKey = key === "lvg_v_hel_kms" ? "lvg_e_v_hel_kms" : `e_${key}`;
     const errorMeta = Object.prototype.hasOwnProperty.call(schema, errorKey)
       ? schema[errorKey]
       : null;

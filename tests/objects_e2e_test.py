@@ -93,6 +93,11 @@ def test_list_objects(client: fastapi.testclient.TestClient) -> None:
     assert body["data"]["names"] == [names.get(row["pgc"], []) for row in rows]
     index = body["data"]["pgc"].index(29146)
     assert body["data"]["bt"][index] == pytest.approx(10.6175)
+    assert body["data"]["b_mag"][index] == pytest.approx(10.55)
+    assert body["data"]["ks_mag"][index] == pytest.approx(7.9)
+    assert body["data"]["a26_arcmin"][index] == pytest.approx(2.3)
+    assert body["data"]["w50_kms"][index] == pytest.approx(104.0)
+    assert body["data"]["lvg_v_hel_kms"][index] == pytest.approx(88.0)
     assert body["data"]["v_hel"][index] == pytest.approx(_row(29146)["v_hel"])
     assert body["data"]["type_name"][index] == "G"
     missing_index = body["data"]["pgc"].index(12676)
@@ -118,6 +123,12 @@ def test_get_object_with_heliocentric_velocity(client: fastapi.testclient.TestCl
     assert v_hel is not None
     assert data["v_hel"] == pytest.approx(v_hel)
     assert data["dist"] == pytest.approx(3.85)
+    assert data["b_mag"] == pytest.approx(10.55)
+    assert data["ks_mag"] == pytest.approx(7.9)
+    assert data["morphology_t"] == 7
+    assert data["source_catalog"] == "nearby_galaxy_catalog_2026-09-03"
+    assert data["w50_kms"] == pytest.approx(104.0)
+    assert data["lvg_v_hel_kms"] == pytest.approx(88.0)
     schema = response.json()["schema"]
     assert schema["dist"]["unit"] == "Mpc"
     assert schema["e_bt"]["ucd"] == "stat.error;phot.mag;em.opt.B"
@@ -163,7 +174,14 @@ def _load_sample(container_id: str) -> None:
         rows = list(csv.DictReader(handle))
     _copy_subset(container_id, "lv.objects", _OBJECT_FIELDS, rows)
     _copy_subset(container_id, "lv.observed", _OBS_FIELDS, rows)
-    _psql(container_id, b"UPDATE lv.observed SET dist = 3.85 WHERE pgc = 29146;\n")
+    _psql(
+        container_id,
+        (
+            b"UPDATE lv.observed SET dist=3.85, b_mag=10.55, ks_mag=7.9, "
+            b"morphology_t=7, a26_arcmin=2.3, w50_kms=104, lvg_v_hel_kms=88, "
+            b"source_catalog='nearby_galaxy_catalog_2026-09-03' WHERE pgc=29146;\n"
+        ),
+    )
     _copy_csv(container_id, "COPY lv.names (pgc, name) FROM STDIN WITH (FORMAT csv, HEADER true);\n", _NAMES_CSV)
 
 
