@@ -40,7 +40,7 @@ const PARAMETER_HELP: Readonly<Record<string, string>> = {
     "Far-ultraviolet magnitude. A leading > denotes a lower limit in magnitude",
   lvg_v_hel_kms: "Heliocentric line-of-sight velocity",
   lvg_v_lg_kms: "Line-of-sight velocity in the Local Group rest frame",
-  mu: "Distance modulus, m minus M",
+  mu: "True distance modulus, (m−M)₀",
   dist: "Adopted galaxy distance in megaparsecs",
   distance_method: "Method used to derive the adopted distance",
   hi21_mag: "Equivalent magnitude of neutral-hydrogen 21-cm emission",
@@ -55,6 +55,7 @@ export function ObservedParameterCards({ rows }: ObservedParameterCardsProps) {
       ?.value.trim()
       .toLowerCase() === "true";
   // The boolean is an attribute of Ks photometry, not an independent measurement.
+  // Retain thematic boundaries for layout, without displaying their names.
   const groups = groupObservedParameters(rows)
     .map((group) => ({
       ...group,
@@ -86,12 +87,7 @@ export function ObservedParameterCards({ rows }: ObservedParameterCardsProps) {
             <col />
           </colgroup>
           {groups.map((group) => (
-            <tbody key={group.title}>
-              <tr className="parameter-group-row">
-                <th colSpan={GRID_COLUMNS} scope="rowgroup">
-                  {group.title}
-                </th>
-              </tr>
+            <tbody className="parameter-group" key={group.title}>
               {splitRows(group.rows).map((cells, index) => (
                 <tr
                   className="parameter-data-row"

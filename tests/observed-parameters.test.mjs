@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import {
   icrsToGalactic,
   galacticToSupergalactic,
@@ -54,7 +55,7 @@ test("coordinate formatting covers wrap and negative zero", () => {
 
 test("known science fields all have an explicit group and display label", () => {
   assert.equal(Object.keys(PARAMETER_DEFINITIONS).length, 21);
-  assert.deepEqual(GROUP_ORDER, ["Geometry", "Morphology", "Photometry", "Kinematics", "Distance", "H I"]);
+  assert.deepEqual(GROUP_ORDER, ["Geometry", "Morphology", "Photometry", "Velocities", "Distance", "H I"]);
   const orderKeys = GROUP_ORDER.flatMap((group) => PARAMETER_ORDER[group]);
   assert.equal(new Set(orderKeys).size, orderKeys.length);
   assert.deepEqual(orderKeys.sort(), Object.keys(PARAMETER_DEFINITIONS).sort());
@@ -75,7 +76,7 @@ test("grouping excludes astrometry, provenance, modulus method and blank fields 
   assert.deepEqual(grouped.flatMap((g) => g.rows.map((r) => r.name)), ["ks_estimated", "dist", "w50_kms"]);
 });
 
-test("Distance display order is μ, D, distance method regardless of API order", () => {
+test("Distance display order is modulus, D, method regardless of API order", () => {
   const input = [row("distance_method", "TRGB"), row("dist", "4.9"), row("mu", "28.45")];
   assert.deepEqual(keysInGroup(input, "Distance"), ["mu", "dist", "distance_method"]);
 });
@@ -148,4 +149,64 @@ test("isolated qualifiers are hidden, unqualified measurements are unchanged", (
     row("ha_mag", "19.2"), row("hi21_mag", "18.5"), row("fuv_mag", "20"),
   ]);
   assert.deepEqual(groups.flatMap((group) => group.rows.map((r) => r.value)), ["19.2", "20", "18.5"]);
+});
+
+
+test("science labels use concise notation rather than descriptive names", () => {
+  const expected = {
+    a26_arcmin: "a<sub>26</sub>",
+    axis_ratio: "b/a",
+    morphology_t: "T",
+    b_mag: "B",
+    ks_mag: "K<sub>s</sub>",
+    a_b_galactic_mag: "A<sub>B</sub>",
+    lvg_v_hel_kms: "V<sub>h</sub>",
+    lvg_v_lg_kms: "V<sub>LG</sub>",
+    mu: "(m−M)<sub>0</sub>",
+    dist: "D",
+    w50_kms: "W<sub>50</sub>",
+  };
+  for (const [key, label] of Object.entries(expected)) {
+    assert.equal(PARAMETER_DEFINITIONS[key]?.label, label, key);
+  }
+  assert.equal(PARAMETER_DEFINITIONS.lvg_v_hel_kms.group, "Velocities");
+  assert.equal(PARAMETER_DEFINITIONS.lvg_v_lg_kms.group, "Velocities");
+});
+
+test("one ordered series retains measurement values and uncertainties", () => {
+  const velocity = { ...row("lvg_v_hel_kms", "123"), error: "3.0", unit: "km/s" };
+  const groups = groupObservedParameters([
+    row("w50_kms", "48"),
+    row("fuv_limit", ">"),
+    row("fuv_mag", "20.2"),
+    row("ks_estimated", "true"),
+    velocity,
+    row("a26_arcmin", "5.5"),
+    row("mu", "28.6"),
+  ]);
+  const displayed = groups.flatMap((group) => group.rows)
+    .filter((parameter) => parameter.name !== "ks_estimated");
+  assert.deepEqual(groups.map((group) => group.title), [
+    "Geometry", "Photometry", "Velocities", "Distance", "H I",
+  ]);
+  assert.deepEqual(displayed.map((parameter) => parameter.name), [
+    "a26_arcmin", "fuv_mag", "lvg_v_hel_kms", "mu", "w50_kms",
+  ]);
+  assert.equal(displayed[1].value, "> 20.2");
+  assert.equal(displayed[2].error, "3.0");
+  assert.equal(displayed[2].unit, "km/s");
+  assert.equal(displayed[3].displayLabel, "(m−M)<sub>0</sub>");
+});
+
+test("observed measurements retain group boundaries without visible group headings", () => {
+  const source = readFileSync("frontend/src/components/ObservedParameterCards.tsx", "utf8");
+  const css = readFileSync("frontend/src/index.css", "utf8");
+  assert.match(source, /groupObservedParameters\(rows\)/);
+  assert.match(source, /groups\.map\(\(group\) =>/);
+  assert.match(source, /splitRows\(group\.rows\)/);
+  assert.match(source, /<tbody className="parameter-group" key=\{group\.title\}>/);
+  assert.doesNotMatch(source, /parameter-group-row|scope="rowgroup"/);
+  assert.match(source, /parameter-matrix-caption/);
+  assert.match(css, /tbody\.parameter-group\s*\+\s*tbody\.parameter-group/);
+  assert.match(css, /border-top: 2px solid var\(--line\)/);
 });
