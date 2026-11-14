@@ -42,7 +42,7 @@ function cross(a: Vector, b: Vector): Vector {
 }
 
 function longitudeDegrees(y: number, x: number): number {
-  return ((Math.atan2(y, x) * TO_DEG) % 360 + 360) % 360;
+  return (((Math.atan2(y, x) * TO_DEG) % 360) + 360) % 360;
 }
 
 function latitudeDegrees(z: number): number {
@@ -53,7 +53,10 @@ function validEquatorial(ra: number, dec: number): boolean {
   return Number.isFinite(ra) && Number.isFinite(dec) && dec >= -90 && dec <= 90;
 }
 
-export function icrsToGalactic(ra: number, dec: number): AngularPosition | null {
+export function icrsToGalactic(
+  ra: number,
+  dec: number,
+): AngularPosition | null {
   if (!validEquatorial(ra, dec)) return null;
   const vector = unitVector(ra, dec);
   const result = ICRS_TO_GALACTIC.map((row) => dot(row, vector)) as number[];
@@ -81,7 +84,10 @@ export function galacticToSupergalactic(
   };
 }
 
-export function icrsToSupergalactic(ra: number, dec: number): AngularPosition | null {
+export function icrsToSupergalactic(
+  ra: number,
+  dec: number,
+): AngularPosition | null {
   const galactic = icrsToGalactic(ra, dec);
   return galactic === null ? null : galacticToSupergalactic(galactic);
 }
@@ -103,7 +109,8 @@ export function formatRaHms(degrees: number | null | undefined): string {
 
 /** Formats declination to 0.1 arcseconds, retaining negative zero. */
 export function formatDecDms(degrees: number | null | undefined): string {
-  if (degrees == null || !Number.isFinite(degrees) || Math.abs(degrees) > 90) return "—";
+  if (degrees == null || !Number.isFinite(degrees) || Math.abs(degrees) > 90)
+    return "—";
   const tenths = Math.round(Math.abs(degrees) * 36000);
   const wholeDegrees = Math.floor(tenths / 36000);
   const minutes = Math.floor((tenths % 36000) / 600);
@@ -119,7 +126,11 @@ export function formatDegrees(
 ): string {
   if (degrees == null || !Number.isFinite(degrees)) return "—";
   const rounded = Number(degrees.toFixed(digits));
-  const sign = signed ? (degrees < 0 || Object.is(degrees, -0) ? "−" : "+") : "";
+  const sign = signed
+    ? degrees < 0 || Object.is(degrees, -0)
+      ? "−"
+      : "+"
+    : "";
   const magnitude = signed ? Math.abs(rounded) : rounded;
   return `${sign}${magnitude.toFixed(digits)}°`;
 }

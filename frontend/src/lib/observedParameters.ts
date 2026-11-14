@@ -1,12 +1,7 @@
 import type { ParameterRow } from "../api/objects.ts";
 
 export type ObservedGroup =
-  | "Geometry"
-  | "Morphology"
-  | "Photometry"
-  | "Kinematics"
-  | "Distance"
-  | "H I";
+  "Geometry" | "Morphology" | "Photometry" | "Kinematics" | "Distance" | "H I";
 
 export type ParameterDefinition = {
   group: ObservedGroup;
@@ -15,7 +10,9 @@ export type ParameterDefinition = {
 };
 
 /** Display-only names: physical values and database metadata are not modified. */
-export const PARAMETER_DEFINITIONS: Readonly<Record<string, ParameterDefinition>> = {
+export const PARAMETER_DEFINITIONS: Readonly<
+  Record<string, ParameterDefinition>
+> = {
   a26_arcmin: { group: "Geometry", label: "Holmberg diameter a<sub>26</sub>" },
   axis_ratio: { group: "Geometry", label: "Axis ratio b/a" },
   morphology_t: { group: "Morphology", label: "Morphological type T" },
@@ -23,14 +20,23 @@ export const PARAMETER_DEFINITIONS: Readonly<Record<string, ParameterDefinition>
   dwarf_sb_class: { group: "Morphology", label: "Surface-brightness class" },
   b_mag: { group: "Photometry", label: "B magnitude" },
   ks_mag: { group: "Photometry", label: "K<sub>s</sub> magnitude" },
-  a_b_galactic_mag: { group: "Photometry", label: "Galactic extinction A<sub>B</sub>" },
+  a_b_galactic_mag: {
+    group: "Photometry",
+    label: "Galactic extinction A<sub>B</sub>",
+  },
   ha_mag: { group: "Photometry", label: "Hα magnitude" },
   fuv_mag: { group: "Photometry", label: "FUV magnitude" },
   ks_estimated: { group: "Photometry", label: "K<sub>s</sub> estimated" },
   ha_limit: { group: "Photometry", label: "Hα limit qualifier" },
   fuv_limit: { group: "Photometry", label: "FUV limit qualifier" },
-  lvg_v_hel_kms: { group: "Kinematics", label: "Heliocentric velocity V<sub>hel</sub>" },
-  lvg_v_lg_kms: { group: "Kinematics", label: "Local Group velocity V<sub>LG</sub>" },
+  lvg_v_hel_kms: {
+    group: "Kinematics",
+    label: "Heliocentric velocity V<sub>hel</sub>",
+  },
+  lvg_v_lg_kms: {
+    group: "Kinematics",
+    label: "Local Group velocity V<sub>LG</sub>",
+  },
   mu: { group: "Distance", label: "Distance modulus μ" },
   dist: { group: "Distance", label: "Distance D" },
   distance_method: { group: "Distance", label: "Distance method" },
@@ -41,23 +47,49 @@ export const PARAMETER_DEFINITIONS: Readonly<Record<string, ParameterDefinition>
 
 /** Database and API fields remain available, but are not scientific display tiles. */
 const NOT_OBSERVED = new Set([
-  "pgc", "name", "names", "type_name", "ra", "e_ra", "dec", "e_dec",
-  "source_catalog", "source_name", "lvg_source_catalog", "lvg_source_name",
-  "distance_reference", "modulus_method",
-  "fuv_limit", "ha_limit", "hi21_limit", // Measurement modifiers, never standalone cells.
+  "pgc",
+  "name",
+  "names",
+  "type_name",
+  "ra",
+  "e_ra",
+  "dec",
+  "e_dec",
+  "source_catalog",
+  "source_name",
+  "lvg_source_catalog",
+  "lvg_source_name",
+  "distance_reference",
+  "modulus_method",
+  "fuv_limit",
+  "ha_limit",
+  "hi21_limit", // Measurement modifiers, never standalone cells.
 ]);
 
 export const GROUP_ORDER: readonly ObservedGroup[] = [
-  "Geometry", "Morphology", "Photometry", "Kinematics", "Distance", "H I",
+  "Geometry",
+  "Morphology",
+  "Photometry",
+  "Kinematics",
+  "Distance",
+  "H I",
 ];
 
 /** Explicit, stable scientific order (independent of API/schema column order). */
-export const PARAMETER_ORDER: Readonly<Record<ObservedGroup, readonly string[]>> = {
+export const PARAMETER_ORDER: Readonly<
+  Record<ObservedGroup, readonly string[]>
+> = {
   Geometry: ["a26_arcmin", "axis_ratio"],
   Morphology: ["morphology_t", "dwarf_morphology", "dwarf_sb_class"],
   Photometry: [
-    "b_mag", "ks_mag", "a_b_galactic_mag", "ha_mag", "fuv_mag",
-    "ks_estimated", "ha_limit", "fuv_limit",
+    "b_mag",
+    "ks_mag",
+    "a_b_galactic_mag",
+    "ha_mag",
+    "fuv_mag",
+    "ks_estimated",
+    "ha_limit",
+    "fuv_limit",
   ],
   Kinematics: ["lvg_v_hel_kms", "lvg_v_lg_kms"],
   Distance: ["mu", "dist", "distance_method"],
@@ -68,11 +100,16 @@ export type DisplayParameter = ParameterRow & { displayLabel: string };
 export type DisplayParameterGroup = { title: string; rows: DisplayParameter[] };
 
 const FIELD_POSITION = new Map<string, number>(
-  GROUP_ORDER.flatMap((group) => PARAMETER_ORDER[group]).map((key, index) => [key, index]),
+  GROUP_ORDER.flatMap((group) => PARAMETER_ORDER[group]).map((key, index) => [
+    key,
+    index,
+  ]),
 );
 
 function humanize(name: string): string {
-  return name.replace(/_/g, " ").replace(/^./, (letter) => letter.toUpperCase());
+  return name
+    .replace(/_/g, " ")
+    .replace(/^./, (letter) => letter.toUpperCase());
 }
 
 /** Source qualifiers belong to the measurement, not to separate table cells. */
@@ -89,8 +126,13 @@ function withMagnitudeQualifier(
 }
 
 /** Preserve newly introduced fields in Other instead of silently hiding science data. */
-export function groupObservedParameters(rows: ParameterRow[]): DisplayParameterGroup[] {
-  const groups = GROUP_ORDER.map((title) => ({ title, rows: [] as DisplayParameter[] }));
+export function groupObservedParameters(
+  rows: ParameterRow[],
+): DisplayParameterGroup[] {
+  const groups = GROUP_ORDER.map((title) => ({
+    title,
+    rows: [] as DisplayParameter[],
+  }));
   const byTitle = new Map(groups.map((group) => [group.title, group]));
   const other: DisplayParameterGroup = { title: "Other", rows: [] };
   const limits: Readonly<Record<string, string>> = {
@@ -112,10 +154,14 @@ export function groupObservedParameters(rows: ParameterRow[]): DisplayParameterG
   }
 
   for (const group of groups) {
-    group.rows.sort((a, b) =>
-      (FIELD_POSITION.get(a.name) ?? Number.MAX_SAFE_INTEGER) -
-      (FIELD_POSITION.get(b.name) ?? Number.MAX_SAFE_INTEGER),
+    group.rows.sort(
+      (a, b) =>
+        (FIELD_POSITION.get(a.name) ?? Number.MAX_SAFE_INTEGER) -
+        (FIELD_POSITION.get(b.name) ?? Number.MAX_SAFE_INTEGER),
     );
   }
-  return [...groups.filter((group) => group.rows.length > 0), ...(other.rows.length ? [other] : [])];
+  return [
+    ...groups.filter((group) => group.rows.length > 0),
+    ...(other.rows.length ? [other] : []),
+  ];
 }

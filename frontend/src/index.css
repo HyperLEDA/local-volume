@@ -717,7 +717,10 @@ h1 {
   background: var(--card);
 }
 
-.coordinate-systems { display: flex; flex-direction: column; }
+.coordinate-systems {
+  display: flex;
+  flex-direction: column;
+}
 .coordinate-system {
   display: grid;
   grid-template-columns: 112px minmax(0, 1fr);
@@ -725,7 +728,9 @@ h1 {
   gap: 8px;
   padding: 6px 0;
 }
-.coordinate-system + .coordinate-system { border-top: 1px solid var(--line); }
+.coordinate-system + .coordinate-system {
+  border-top: 1px solid var(--line);
+}
 .coordinate-system h4 {
   margin: 0;
   font-size: 0.9rem;
@@ -753,7 +758,10 @@ h1 {
   text-align: left;
   font-variant-numeric: tabular-nums;
 }
-.coordinate-label { color: var(--muted); font-size: 0.9rem; }
+.coordinate-label {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
 .coordinate-number {
   font-size: 0.9rem;
   font-weight: 500;
@@ -768,7 +776,10 @@ h1 {
   margin-left: 16px;
 }
 
-.object-params { min-width: 0; overflow-x: visible; }
+.object-params {
+  min-width: 0;
+  overflow-x: visible;
+}
 .parameter-matrix {
   width: 100%;
   border: 1px solid var(--line);
@@ -786,7 +797,9 @@ h1 {
   font-weight: 600;
   text-align: left;
 }
-.parameter-matrix tbody:first-child .parameter-group-row th { border-top: 0; }
+.parameter-matrix tbody:first-child .parameter-group-row th {
+  border-top: 0;
+}
 .parameter-matrix .parameter-cell {
   width: auto;
   padding: 0;
@@ -816,17 +829,37 @@ h1 {
   margin-top: 2px;
   font-variant-numeric: tabular-nums;
 }
-.parameter-block-value { font-weight: 400; }
-.parameter-block-error { color: var(--ink); }
-.parameter-block-unit { color: var(--muted); }
-.parameter-estimated { color: var(--muted); }
-.object-params-empty { color: var(--muted); font-size: 0.9rem; }
+.parameter-block-value {
+  font-weight: 400;
+}
+.parameter-block-error {
+  color: var(--ink);
+}
+.parameter-block-unit {
+  color: var(--muted);
+}
+.parameter-estimated {
+  color: var(--muted);
+}
+.object-params-empty {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
 
 @media (max-width: 580px) {
-  .object-coordinates { padding: 8px 9px; }
-  .coordinate-system { grid-template-columns: minmax(0, 1fr); gap: 3px; }
-  .coordinate-grid { gap: 5px 9px; }
-  .parameter-block { padding-inline: 5px; }
+  .object-coordinates {
+    padding: 8px 9px;
+  }
+  .coordinate-system {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 3px;
+  }
+  .coordinate-grid {
+    gap: 5px 9px;
+  }
+  .parameter-block {
+    padding-inline: 5px;
+  }
 }
 
 /* LV observed parameters: integrated table caption */
@@ -843,11 +876,19 @@ h1 {
 }
 
 /* LV parameter descriptions: custom help, never raw DB field identifiers. */
-.parameter-matrix .parameter-cell { position: relative; }
+.parameter-matrix .parameter-cell {
+  position: relative;
+}
 .parameter-matrix .parameter-cell:hover,
-.parameter-matrix .parameter-cell:focus-within { z-index: 5; }
-.parameter-block { position: relative; }
-.parameter-block-label--help { cursor: default; }
+.parameter-matrix .parameter-cell:focus-within {
+  z-index: 5;
+}
+.parameter-block {
+  position: relative;
+}
+.parameter-block-label--help {
+  cursor: default;
+}
 .parameter-block-label--help:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
@@ -893,4 +934,6 @@ h1 {
 }
 
 /* Slightly more vertical space between measurement rows; original typography unchanged. */
-.parameter-matrix .parameter-block { padding-block: 9px; }
+.parameter-matrix .parameter-block {
+  padding-block: 9px;
+}

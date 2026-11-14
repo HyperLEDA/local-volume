@@ -1,6 +1,9 @@
 import type { ParameterRow } from "../api/objects.ts";
 import { formatUncertainty } from "../api/objects.ts";
-import { groupObservedParameters, type DisplayParameter } from "../lib/observedParameters.ts";
+import {
+  groupObservedParameters,
+  type DisplayParameter,
+} from "../lib/observedParameters.ts";
 import { ParameterLabel } from "./ParameterLabel.tsx";
 
 type ObservedParameterCardsProps = { rows: ParameterRow[] };
@@ -33,7 +36,8 @@ const PARAMETER_HELP: Readonly<Record<string, string>> = {
   a_b_galactic_mag: "Foreground Milky Way extinction in the B band",
   ha_mag: "Apparent magnitude of the galaxy's H-alpha emission",
   ha_limit: "Limit qualifier for the H-alpha magnitude",
-  fuv_mag: "Far-ultraviolet magnitude. A leading > denotes a lower limit in magnitude",
+  fuv_mag:
+    "Far-ultraviolet magnitude. A leading > denotes a lower limit in magnitude",
   lvg_v_hel_kms: "Heliocentric line-of-sight velocity",
   lvg_v_lg_kms: "Line-of-sight velocity in the Local Group rest frame",
   mu: "Distance modulus, m minus M",
@@ -45,7 +49,11 @@ const PARAMETER_HELP: Readonly<Record<string, string>> = {
 };
 
 export function ObservedParameterCards({ rows }: ObservedParameterCardsProps) {
-  const ksEstimated = rows.find((row) => row.name === "ks_estimated")?.value.trim().toLowerCase() === "true";
+  const ksEstimated =
+    rows
+      .find((row) => row.name === "ks_estimated")
+      ?.value.trim()
+      .toLowerCase() === "true";
   // The boolean is an attribute of Ks photometry, not an independent measurement.
   const groups = groupObservedParameters(rows)
     .map((group) => ({
@@ -60,28 +68,55 @@ export function ObservedParameterCards({ rows }: ObservedParameterCardsProps) {
       {groups.length === 0 ? (
         <>
           <h3 className="object-section-heading">Observed Parameters</h3>
-          <p className="object-params-empty">No observed parameters available.</p>
+          <p className="object-params-empty">
+            No observed parameters available.
+          </p>
         </>
       ) : (
         <table className="parameter-matrix">
-          <caption className="parameter-matrix-caption">Observed Parameters</caption>
-          <colgroup><col /><col /><col /><col /><col /><col /></colgroup>
+          <caption className="parameter-matrix-caption">
+            Observed Parameters
+          </caption>
+          <colgroup>
+            <col />
+            <col />
+            <col />
+            <col />
+            <col />
+            <col />
+          </colgroup>
           {groups.map((group) => (
             <tbody key={group.title}>
               <tr className="parameter-group-row">
-                <th colSpan={GRID_COLUMNS} scope="rowgroup">{group.title}</th>
+                <th colSpan={GRID_COLUMNS} scope="rowgroup">
+                  {group.title}
+                </th>
               </tr>
               {splitRows(group.rows).map((cells, index) => (
-                <tr className="parameter-data-row" key={`${group.title}-${index}`}>
+                <tr
+                  className="parameter-data-row"
+                  key={`${group.title}-${index}`}
+                >
                   {cells.map((row) => (
-                    <td className="parameter-cell" key={row.name} colSpan={GRID_COLUMNS / cells.length}>
+                    <td
+                      className="parameter-cell"
+                      key={row.name}
+                      colSpan={GRID_COLUMNS / cells.length}
+                    >
                       <div className="parameter-block">
                         <div
                           className={`parameter-block-label${PARAMETER_HELP[row.name] ? " parameter-block-label--help" : ""}`}
                           tabIndex={PARAMETER_HELP[row.name] ? 0 : undefined}
-                          aria-describedby={PARAMETER_HELP[row.name] ? `parameter-help-${row.name}` : undefined}
+                          aria-describedby={
+                            PARAMETER_HELP[row.name]
+                              ? `parameter-help-${row.name}`
+                              : undefined
+                          }
                         >
-                          <ParameterLabel nice={row.displayLabel} fallback={row.name} />
+                          <ParameterLabel
+                            nice={row.displayLabel}
+                            fallback={row.name}
+                          />
                           {PARAMETER_HELP[row.name] ? (
                             <span
                               id={`parameter-help-${row.name}`}
@@ -93,21 +128,31 @@ export function ObservedParameterCards({ rows }: ObservedParameterCardsProps) {
                           ) : null}
                         </div>
                         <div className="parameter-block-reading">
-                          <span className="parameter-block-value">{displayValue(row)}</span>
+                          <span className="parameter-block-value">
+                            {displayValue(row)}
+                          </span>
                           {row.errorUnit !== null && row.unit ? (
-                            <span className="parameter-block-unit">{row.unit}</span>
+                            <span className="parameter-block-unit">
+                              {row.unit}
+                            </span>
                           ) : null}
                           {row.error !== null && row.error.trim() !== "" ? (
                             <span className="parameter-block-error">
                               {formatUncertainty(row.error)}
-                              {row.errorUnit !== null ? ` ${row.errorUnit}` : ""}
+                              {row.errorUnit !== null
+                                ? ` ${row.errorUnit}`
+                                : ""}
                             </span>
                           ) : null}
                           {row.errorUnit === null && row.unit ? (
-                            <span className="parameter-block-unit">{row.unit}</span>
+                            <span className="parameter-block-unit">
+                              {row.unit}
+                            </span>
                           ) : null}
                           {row.name === "ks_mag" && ksEstimated ? (
-                            <span className="parameter-estimated">(estimated)</span>
+                            <span className="parameter-estimated">
+                              (estimated)
+                            </span>
                           ) : null}
                         </div>
                       </div>
