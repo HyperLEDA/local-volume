@@ -18,13 +18,17 @@ declare module "aladin-lite" {
 
   export type CatalogOptions = {
     name?: string;
-    shape?: string;
+    shape?:
+      string | ((source: AladinSource, ctx: CanvasRenderingContext2D) => void);
     sourceSize?: number;
     color?: string | ((source: AladinSource) => string);
   };
 
   export type AladinSource = {
     data?: Record<string, unknown>;
+    x?: number;
+    y?: number;
+    size?: number;
     setSize: (size: number) => void;
   };
 
