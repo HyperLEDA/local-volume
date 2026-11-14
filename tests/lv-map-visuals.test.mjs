@@ -9,17 +9,20 @@ import {
 import { objectFovDegrees, needsInitialFovCorrection } from "../frontend/src/lib/objectFov.ts";
 
 test("muted morphology bins preserve red negatives, a transitional zero, and blue positives", () => {
-  assert.equal(morphologyColor(-5), "#ac5e65");
-  assert.equal(morphologyColor(-3), "#ac5e65");
-  assert.equal(morphologyColor(-1), "#bb7f83");
-  assert.equal(morphologyColor(0), "#88828f");
-  assert.equal(morphologyColor(1), "#7896a8");
-  assert.equal(morphologyColor(5), "#6389a9");
-  assert.equal(morphologyColor(9), "#47749b");
-  assert.equal(morphologyColor(10), "#47749b");
-  assert.notEqual(morphologyColor(0), UNKNOWN_MORPHOLOGY_COLOR);
-  assert.match(MORPHOLOGY_GRADIENT, /linear-gradient\(to right/);
+  const expected = [
+    [-5, "#c96d76"],
+    [-3, "#c96d76"],
+    [-1, "#d99ea4"],
+    [0, "#a995a6"],
+    [2, "#91a8c6"],
+    [5, "#6489bc"],
+    [10, "#3f6fab"],
+  ];
 
+  for (const [t, color] of expected) {
+    assert.equal(morphologyColor(t), color);
+  }
+  assert.equal(morphologyColor(null), UNKNOWN_MORPHOLOGY_COLOR);
 });
 
 test("unavailable or invalid numeric T is not invented", () => {

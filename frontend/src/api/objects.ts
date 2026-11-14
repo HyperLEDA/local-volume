@@ -45,6 +45,7 @@ export type CatalogObjectDetail = {
   ks_mag?: number | null;
   lvg_v_hel_kms?: number | null;
   a26_arcmin?: number | null;
+  morphology_t?: number | null;
   w50_kms?: number | null;
   a50?: number | null;
   e_a50?: number | null;

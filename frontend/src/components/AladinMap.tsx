@@ -17,6 +17,7 @@ import { shouldDismissSkyPopup } from "../lib/mapInteraction.ts";
 import { morphologyColor } from "../lib/morphologyColors.ts";
 import {
   drawOverviewMarker,
+  drawSelectedObjectMarker,
   OVERVIEW_MARKER_MAX_DIAMETER,
 } from "../lib/overviewMarkers.ts";
 import { formatJ2000Coordinate } from "../lib/popupCoordinates.ts";
@@ -205,15 +206,13 @@ export function AladinMap({
       });
       const catalog = A.catalog({
         name: "Local volume",
-        shape: isOverview ? drawOverviewMarker : "circle",
+        shape: isOverview ? drawOverviewMarker : drawSelectedObjectMarker,
         sourceSize: 7,
-        color: isOverview
-          ? (source: AladinSource) =>
-              morphologyColor(
-                (source.data as { morphology_t?: number | null } | null)
-                  ?.morphology_t,
-              )
-          : "#f2c14e",
+        color: (source: AladinSource) =>
+          morphologyColor(
+            (source.data as { morphology_t?: number | null } | null)
+              ?.morphology_t,
+          ),
       });
       function installOverviewFit(): void {
         if (typeof ResizeObserver === "undefined") return;
@@ -272,7 +271,11 @@ export function AladinMap({
           name: "Other LV catalog objects",
           shape: "circle",
           sourceSize: 6,
-          color: "#55b7c3",
+          color: (source: AladinSource) =>
+            morphologyColor(
+              (source.data as { morphology_t?: number | null } | null)
+                ?.morphology_t,
+            ),
         });
         view.addCatalog(contextCatalog);
         contextCatalogRef.current = contextCatalog;

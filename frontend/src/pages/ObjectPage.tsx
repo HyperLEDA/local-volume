@@ -125,6 +125,7 @@ export function ObjectPage() {
         lvg_v_hel_kms: data.lvg_v_hel_kms ?? null,
         type_name: data.type_name ?? null,
         a26_arcmin: data.a26_arcmin ?? null,
+        morphology_t: data.morphology_t ?? null,
         w50_kms: data.w50_kms ?? null,
         names: data.names,
       },

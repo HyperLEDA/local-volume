@@ -1,36 +1,42 @@
-/**
- * Muted, six-bin morphological color scheme for the full-sky LV overview.
- * Earlier types (T < 0) are red, later types (T > 0) are blue.
- * T = 0 has a distinct muted transitional hue; missing T remains neutral gray.
- */
-export const UNKNOWN_MORPHOLOGY_COLOR = "#919aa3";
+export const MIN_MORPHOLOGY_T = -3;
+export const MAX_MORPHOLOGY_T = 10;
+export const UNKNOWN_MORPHOLOGY_COLOR = "#9aa2ac";
 
-const EARLY_RED = "#ac5e65";
-const EARLY_DUSTY_RED = "#bb7f83";
-const TRANSITIONAL = "#88828f";
-const EARLY_BLUE = "#7896a8";
-const LATE_BLUE = "#6389a9";
-const VERY_LATE_BLUE = "#47749b";
+const NEGATIVE_STRONG = "#c96d76";
+const NEGATIVE_MILD = "#d99ea4";
+const TRANSITION_ZERO = "#a995a6";
+const POSITIVE_MILD = "#91a8c6";
+const POSITIVE_MEDIUM = "#6489bc";
+const POSITIVE_STRONG = "#3f6fab";
 
-export function morphologyColor(type: unknown): string {
-  if (typeof type !== "number" || !Number.isFinite(type)) {
+export function morphologyColor(value: unknown): string {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
     return UNKNOWN_MORPHOLOGY_COLOR;
   }
-  if (type <= -3) return EARLY_RED;
-  if (type < 0) return EARLY_DUSTY_RED;
-  if (type === 0) return TRANSITIONAL;
-  if (type <= 3) return EARLY_BLUE;
-  if (type <= 7) return LATE_BLUE;
-  return VERY_LATE_BLUE;
+  if (value <= -3) {
+    return NEGATIVE_STRONG;
+  }
+  if (value < 0) {
+    return NEGATIVE_MILD;
+  }
+  if (value === 0) {
+    return TRANSITION_ZERO;
+  }
+  if (value <= 3) {
+    return POSITIVE_MILD;
+  }
+  if (value <= 7) {
+    return POSITIVE_MEDIUM;
+  }
+  return POSITIVE_STRONG;
 }
 
-// Legacy exported gradient. Not displayed on the full-sky map; marker colors
-// themselves are intentionally discrete (including the non-white T=0 bin).
+// Exported for compatibility; the global map currently hides the color bar.
 export const MORPHOLOGY_GRADIENT = `linear-gradient(to right, ${[
-  EARLY_RED,
-  EARLY_DUSTY_RED,
-  TRANSITIONAL,
-  EARLY_BLUE,
-  LATE_BLUE,
-  VERY_LATE_BLUE,
+  NEGATIVE_STRONG,
+  NEGATIVE_MILD,
+  TRANSITION_ZERO,
+  POSITIVE_MILD,
+  POSITIVE_MEDIUM,
+  POSITIVE_STRONG,
 ].join(", ")})`;
