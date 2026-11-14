@@ -15,6 +15,11 @@ import { popupObjectRoute } from "../lib/popupNavigation.ts";
 import { needsInitialFovCorrection } from "../lib/objectFov.ts";
 import { shouldDismissSkyPopup } from "../lib/mapInteraction.ts";
 import { morphologyColor } from "../lib/morphologyColors.ts";
+import {
+  drawOverviewMarker,
+  drawSelectedObjectMarker,
+  OVERVIEW_MARKER_MAX_DIAMETER,
+} from "../lib/overviewMarkers.ts";
 import { formatJ2000Coordinate } from "../lib/popupCoordinates.ts";
 
 const DEFAULT_HIPS_SURVEY = "https://skies.esac.esa.int/DSSColor";
@@ -87,6 +92,7 @@ function setCatalogSources(
   catalog: AladinCatalog,
   objects: CatalogObject[],
   sizeScale = 1,
+  maxDiameter = 18,
 ): void {
   catalog.removeAll();
   const sources = objects.flatMap((object) => {
@@ -111,7 +117,12 @@ function setCatalogSources(
       },
     );
     marker.setSize(
-      Math.max(4, Math.round(markerDiameter(object.b_mag ?? null) * sizeScale)),
+      Math.max(
+        4,
+        Math.round(
+          markerDiameter(object.b_mag ?? null, maxDiameter) * sizeScale,
+        ),
+      ),
     );
     return [marker];
   });
@@ -195,15 +206,13 @@ export function AladinMap({
       });
       const catalog = A.catalog({
         name: "Local volume",
-        shape: "circle",
+        shape: isOverview ? drawOverviewMarker : drawSelectedObjectMarker,
         sourceSize: 7,
-        color: isOverview
-          ? (source: AladinSource) =>
-              morphologyColor(
-                (source.data as { morphology_t?: number | null } | null)
-                  ?.morphology_t,
-              )
-          : "#f2c14e",
+        color: (source: AladinSource) =>
+          morphologyColor(
+            (source.data as { morphology_t?: number | null } | null)
+              ?.morphology_t,
+          ),
       });
       function installOverviewFit(): void {
         if (typeof ResizeObserver === "undefined") return;
@@ -262,7 +271,11 @@ export function AladinMap({
           name: "Other LV catalog objects",
           shape: "circle",
           sourceSize: 6,
-          color: "#55b7c3",
+          color: (source: AladinSource) =>
+            morphologyColor(
+              (source.data as { morphology_t?: number | null } | null)
+                ?.morphology_t,
+            ),
         });
         view.addCatalog(contextCatalog);
         contextCatalogRef.current = contextCatalog;
@@ -484,9 +497,14 @@ export function AladinMap({
       return;
     }
     clearReticlePopupRef.current?.();
-    setCatalogSources(catalog, objects);
+    setCatalogSources(
+      catalog,
+      objects,
+      1,
+      isOverview ? OVERVIEW_MARKER_MAX_DIAMETER : 18,
+    );
     refreshReticlePopupRef.current?.();
-  }, [objects, ready]);
+  }, [objects, ready, isOverview]);
 
   useEffect(() => {
     const catalog = contextCatalogRef.current;

@@ -8,15 +8,21 @@ import {
 } from "../frontend/src/lib/morphologyColors.ts";
 import { objectFovDegrees, needsInitialFovCorrection } from "../frontend/src/lib/objectFov.ts";
 
-test("morphology colors follow the numeric T sequence", () => {
-  assert.equal(morphologyColor(-3), "#053061");
-  assert.equal(morphologyColor(3.5), "#f7f7f7");
-  assert.notEqual(morphologyColor(0), morphologyColor(8));
-  assert.equal(morphologyColor(10), "#67001f");
-  assert.equal(morphologyColor(-5), morphologyColor(-3));
-  assert.equal(morphologyColor(11), morphologyColor(10));
-  assert.notEqual(morphologyColor(1), morphologyColor(2));
-  assert.match(MORPHOLOGY_GRADIENT, /linear-gradient\(to right/);
+test("muted morphology bins preserve red negatives, a transitional zero, and blue positives", () => {
+  const expected = [
+    [-5, "#c96d76"],
+    [-3, "#c96d76"],
+    [-1, "#d99ea4"],
+    [0, "#a995a6"],
+    [2, "#91a8c6"],
+    [5, "#6489bc"],
+    [10, "#3f6fab"],
+  ];
+
+  for (const [t, color] of expected) {
+    assert.equal(morphologyColor(t), color);
+  }
+  assert.equal(morphologyColor(null), UNKNOWN_MORPHOLOGY_COLOR);
 });
 
 test("unavailable or invalid numeric T is not invented", () => {

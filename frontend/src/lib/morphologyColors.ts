@@ -1,56 +1,42 @@
-/** de Vaucouleurs numeric T: ColorBrewer RdBu_r, blue early -> red late. */
-export const UNKNOWN_MORPHOLOGY_COLOR = "#919aa3";
+export const MIN_MORPHOLOGY_T = -3;
+export const MAX_MORPHOLOGY_T = 10;
+export const UNKNOWN_MORPHOLOGY_COLOR = "#9aa2ac";
 
-const T_MIN = -3;
-const T_MAX = 10;
+const NEGATIVE_STRONG = "#c96d76";
+const NEGATIVE_MILD = "#d99ea4";
+const TRANSITION_ZERO = "#a995a6";
+const POSITIVE_MILD = "#91a8c6";
+const POSITIVE_MEDIUM = "#6489bc";
+const POSITIVE_STRONG = "#3f6fab";
 
-// Eleven ColorBrewer RdBu colors in reverse of the canonical red-to-blue order.
-const RDBU_REVERSED = [
-  "#053061",
-  "#2166ac",
-  "#4393c3",
-  "#92c5de",
-  "#d1e5f0",
-  "#f7f7f7",
-  "#fddbc7",
-  "#f4a582",
-  "#d6604d",
-  "#b2182b",
-  "#67001f",
-] as const;
-
-function rgb(hex: string): [number, number, number] {
-  return [1, 3, 5].map((index) =>
-    parseInt(hex.slice(index, index + 2), 16),
-  ) as [number, number, number];
-}
-
-/** Missing/invalid values remain gray; valid T is clamped to [-3, 10]. */
-export function morphologyColor(type: unknown): string {
-  if (typeof type !== "number" || !Number.isFinite(type)) {
+export function morphologyColor(value: unknown): string {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
     return UNKNOWN_MORPHOLOGY_COLOR;
   }
-
-  const fraction =
-    (Math.max(T_MIN, Math.min(T_MAX, type)) - T_MIN) / (T_MAX - T_MIN);
-  const position = fraction * (RDBU_REVERSED.length - 1);
-  const lower = Math.floor(position);
-  const upper = Math.ceil(position);
-  if (lower === upper) return RDBU_REVERSED[lower];
-
-  const start = rgb(RDBU_REVERSED[lower]);
-  const end = rgb(RDBU_REVERSED[upper]);
-  const mix = position - lower;
-  return `#${start
-    .map((channel, index) =>
-      Math.round(channel + (end[index] - channel) * mix)
-        .toString(16)
-        .padStart(2, "0"),
-    )
-    .join("")}`;
+  if (value <= -3) {
+    return NEGATIVE_STRONG;
+  }
+  if (value < 0) {
+    return NEGATIVE_MILD;
+  }
+  if (value === 0) {
+    return TRANSITION_ZERO;
+  }
+  if (value <= 3) {
+    return POSITIVE_MILD;
+  }
+  if (value <= 7) {
+    return POSITIVE_MEDIUM;
+  }
+  return POSITIVE_STRONG;
 }
 
-// Kept in sync with source colors; not rendered as a legend in the overview UI.
-export const MORPHOLOGY_GRADIENT = `linear-gradient(to right, ${RDBU_REVERSED.map(
-  (color, index) => `${color} ${(index * 100) / (RDBU_REVERSED.length - 1)}%`,
-).join(", ")})`;
+// Exported for compatibility; the global map currently hides the color bar.
+export const MORPHOLOGY_GRADIENT = `linear-gradient(to right, ${[
+  NEGATIVE_STRONG,
+  NEGATIVE_MILD,
+  TRANSITION_ZERO,
+  POSITIVE_MILD,
+  POSITIVE_MEDIUM,
+  POSITIVE_STRONG,
+].join(", ")})`;

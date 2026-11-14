@@ -1,6 +1,7 @@
 import type { CatalogObject } from "../api/objects.ts";
+import { OVERVIEW_MARKER_MAX_DIAMETER } from "./overviewMarkers.ts";
 
-type ReticleObject = Pick<CatalogObject, "pgc" | "ra" | "dec" | "bt">;
+type ReticleObject = Pick<CatalogObject, "pgc" | "ra" | "dec" | "bt" | "b_mag">;
 type Pixel = readonly [number, number] | null;
 
 const MAX_AUTOMATIC_POPUP_FOV_DEGREES = 60;
@@ -17,12 +18,12 @@ export function reticlePopupAllowed(fov: readonly [number, number]): boolean {
   );
 }
 
-export function markerDiameter(bt: number | null): number {
+export function markerDiameter(bt: number | null, maxDiameter = 18): number {
   if (bt === null || !Number.isFinite(bt)) {
     return 7;
   }
   const logFluxRatio = 0.4 * (17 - bt);
-  return Math.round(Math.min(18, Math.max(7, 7 + 3 * logFluxRatio)));
+  return Math.round(Math.min(maxDiameter, Math.max(7, 7 + 3 * logFluxRatio)));
 }
 
 function projectSafely(
@@ -75,7 +76,9 @@ export function findReticleTarget<T extends ReticleObject>(
     }
 
     const distance = Math.hypot(pixel[0] - centerX, pixel[1] - centerY);
-    const tolerance = markerDiameter(object.bt) / 2 + 3;
+    const tolerance =
+      markerDiameter(object.b_mag ?? null, OVERVIEW_MARKER_MAX_DIAMETER) / 2 +
+      3;
     if (object.pgc === activePgc && distance <= tolerance + 8) {
       retained = object;
     }
