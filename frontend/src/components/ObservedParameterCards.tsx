@@ -110,7 +110,11 @@ export function ObservedParameterCards({ rows }: ObservedParameterCardsProps) {
                           }
                         >
                           <ParameterLabel
-                            nice={row.displayLabel}
+                            nice={
+                              row.name === "ks_mag" && ksEstimated
+                                ? `${row.displayLabel} (est)`
+                                : row.displayLabel
+                            }
                             fallback={row.name}
                           />
                           {PARAMETER_HELP[row.name] ? (
@@ -143,11 +147,6 @@ export function ObservedParameterCards({ rows }: ObservedParameterCardsProps) {
                           {row.errorUnit === null && row.unit ? (
                             <span className="parameter-block-unit">
                               {row.unit}
-                            </span>
-                          ) : null}
-                          {row.name === "ks_mag" && ksEstimated ? (
-                            <span className="parameter-estimated">
-                              (estimated)
                             </span>
                           ) : null}
                         </div>
