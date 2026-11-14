@@ -11,7 +11,7 @@ export type ParameterDefinition = {
 
 /** Display-only names: physical values and database metadata are not modified. */
 export const PARAMETER_DEFINITIONS: Readonly<
-  Record<string, ParameterDefinition>
+  Partial<Record<string, ParameterDefinition>>
 > = {
   a26_arcmin: { group: "Geometry", label: "Holmberg diameter a<sub>26</sub>" },
   axis_ratio: { group: "Geometry", label: "Axis ratio b/a" },

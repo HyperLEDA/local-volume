@@ -13,7 +13,7 @@ const TO_DEG = 180 / Math.PI;
 
 const ICRS_TO_GALACTIC = [
   [-0.0548755604162154, -0.873437090234885, -0.4838350155487132],
-  [0.4941094278755837, -0.4448296299600112, 0.7469822444972189],
+  [0.4941094278755837, -0.4448296299600112, 0.746982244497219],
   [-0.8676661490190047, -0.1980763734312015, 0.4559837761750669],
 ] as const;
 
@@ -59,7 +59,7 @@ export function icrsToGalactic(
 ): AngularPosition | null {
   if (!validEquatorial(ra, dec)) return null;
   const vector = unitVector(ra, dec);
-  const result = ICRS_TO_GALACTIC.map((row) => dot(row, vector)) as number[];
+  const result = ICRS_TO_GALACTIC.map((row) => dot(row, vector));
   return {
     longitude: longitudeDegrees(result[1], result[0]),
     latitude: latitudeDegrees(result[2]),
@@ -98,7 +98,8 @@ function pad2(number: number): string {
 
 /** Formats right ascension to 0.01 seconds, carrying across minute/hour edges. */
 export function formatRaHms(degrees: number | null | undefined): string {
-  if (degrees == null || !Number.isFinite(degrees)) return "—";
+  if (degrees === null || degrees === undefined || !Number.isFinite(degrees))
+    return "—";
   const centiseconds =
     Math.round((((degrees % 360) + 360) % 360) * 24000) % 8640000;
   const hours = Math.floor(centiseconds / 360000);
@@ -109,7 +110,12 @@ export function formatRaHms(degrees: number | null | undefined): string {
 
 /** Formats declination to 0.1 arcseconds, retaining negative zero. */
 export function formatDecDms(degrees: number | null | undefined): string {
-  if (degrees == null || !Number.isFinite(degrees) || Math.abs(degrees) > 90)
+  if (
+    degrees === null ||
+    degrees === undefined ||
+    !Number.isFinite(degrees) ||
+    Math.abs(degrees) > 90
+  )
     return "—";
   const tenths = Math.round(Math.abs(degrees) * 36000);
   const wholeDegrees = Math.floor(tenths / 36000);
@@ -124,7 +130,8 @@ export function formatDegrees(
   digits = 6,
   signed = false,
 ): string {
-  if (degrees == null || !Number.isFinite(degrees)) return "—";
+  if (degrees === null || degrees === undefined || !Number.isFinite(degrees))
+    return "—";
   const rounded = Number(degrees.toFixed(digits));
   const sign = signed
     ? degrees < 0 || Object.is(degrees, -0)
