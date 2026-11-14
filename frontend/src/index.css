@@ -687,7 +687,7 @@ h1 {
   }
 }
 
-/* LV object page: compact left-aligned coordinates and grouped measurement table. */
+/* LV object page: compact left-aligned coordinates and measurement table. */
 .object-section-heading {
   margin: 0 0 7px;
   font-size: 0.9rem;
@@ -773,23 +773,19 @@ h1 {
   background: var(--card);
   font-size: 0.9rem;
 }
-.parameter-matrix .parameter-group-row th {
-  padding: 5px 9px;
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
-  background: var(--table-header);
-  color: var(--ink);
-  font-weight: 600;
-  text-align: left;
-}
-.parameter-matrix tbody:first-child .parameter-group-row th {
-  border-top: 0;
-}
 .parameter-matrix .parameter-cell {
   width: auto;
   padding: 0;
   border: 1px solid var(--line);
   vertical-align: top;
+}
+/* Preserve measurement clusters with a discreet boundary, without headings. */
+.parameter-matrix
+  tbody.parameter-group
+  + tbody.parameter-group
+  > tr:first-child
+  > .parameter-cell {
+  border-top: 2px solid var(--line);
 }
 .parameter-block {
   box-sizing: border-box;
@@ -800,7 +796,8 @@ h1 {
   overflow-wrap: break-word;
 }
 .parameter-block-label {
-  color: var(--ink);
+  color: var(--muted);
+  font-size: 0.85rem;
   font-weight: 500;
   line-height: inherit;
 }
@@ -815,7 +812,8 @@ h1 {
   font-variant-numeric: tabular-nums;
 }
 .parameter-block-value {
-  font-weight: 400;
+  font-size: 1.02rem;
+  font-weight: 500;
 }
 .parameter-block-error {
   color: var(--ink);
@@ -918,7 +916,7 @@ h1 {
   transform: none;
 }
 
-/* Slightly more vertical space between measurement rows; original typography unchanged. */
+/* Vertical spacing in the single observed-parameter grid. */
 .parameter-matrix .parameter-block {
   padding-block: 9px;
 }

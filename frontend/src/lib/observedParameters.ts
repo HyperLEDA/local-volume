@@ -1,7 +1,7 @@
 import type { ParameterRow } from "../api/objects.ts";
 
 export type ObservedGroup =
-  "Geometry" | "Morphology" | "Photometry" | "Kinematics" | "Distance" | "H I";
+  "Geometry" | "Morphology" | "Photometry" | "Velocities" | "Distance" | "H I";
 
 export type ParameterDefinition = {
   group: ObservedGroup;
@@ -13,36 +13,27 @@ export type ParameterDefinition = {
 export const PARAMETER_DEFINITIONS: Readonly<
   Partial<Record<string, ParameterDefinition>>
 > = {
-  a26_arcmin: { group: "Geometry", label: "Holmberg diameter a<sub>26</sub>" },
-  axis_ratio: { group: "Geometry", label: "Axis ratio b/a" },
-  morphology_t: { group: "Morphology", label: "Morphological type T" },
-  dwarf_morphology: { group: "Morphology", label: "Dwarf morphology" },
-  dwarf_sb_class: { group: "Morphology", label: "Surface-brightness class" },
-  b_mag: { group: "Photometry", label: "B magnitude" },
-  ks_mag: { group: "Photometry", label: "K<sub>s</sub> magnitude" },
-  a_b_galactic_mag: {
-    group: "Photometry",
-    label: "Galactic extinction A<sub>B</sub>",
-  },
-  ha_mag: { group: "Photometry", label: "Hα magnitude" },
-  fuv_mag: { group: "Photometry", label: "FUV magnitude" },
-  ks_estimated: { group: "Photometry", label: "K<sub>s</sub> estimated" },
-  ha_limit: { group: "Photometry", label: "Hα limit qualifier" },
-  fuv_limit: { group: "Photometry", label: "FUV limit qualifier" },
-  lvg_v_hel_kms: {
-    group: "Kinematics",
-    label: "Heliocentric velocity V<sub>hel</sub>",
-  },
-  lvg_v_lg_kms: {
-    group: "Kinematics",
-    label: "Local Group velocity V<sub>LG</sub>",
-  },
-  mu: { group: "Distance", label: "Distance modulus μ" },
-  dist: { group: "Distance", label: "Distance D" },
-  distance_method: { group: "Distance", label: "Distance method" },
-  hi21_mag: { group: "H I", label: "21-cm magnitude m<sub>21</sub>" },
-  hi21_limit: { group: "H I", label: "21-cm limit qualifier" },
-  w50_kms: { group: "H I", label: "H I linewidth W<sub>50</sub>" },
+  a26_arcmin: { group: "Geometry", label: "a<sub>26</sub>" },
+  axis_ratio: { group: "Geometry", label: "b/a" },
+  morphology_t: { group: "Morphology", label: "T" },
+  dwarf_morphology: { group: "Morphology", label: "Type" },
+  dwarf_sb_class: { group: "Morphology", label: "SB class" },
+  b_mag: { group: "Photometry", label: "B" },
+  ks_mag: { group: "Photometry", label: "K<sub>s</sub>" },
+  a_b_galactic_mag: { group: "Photometry", label: "A<sub>B</sub>" },
+  ha_mag: { group: "Photometry", label: "m<sub>Hα</sub>" },
+  fuv_mag: { group: "Photometry", label: "m<sub>FUV</sub>" },
+  ks_estimated: { group: "Photometry", label: "K<sub>s</sub> est." },
+  ha_limit: { group: "Photometry", label: "Hα limit" },
+  fuv_limit: { group: "Photometry", label: "FUV limit" },
+  lvg_v_hel_kms: { group: "Velocities", label: "V<sub>h</sub>" },
+  lvg_v_lg_kms: { group: "Velocities", label: "V<sub>LG</sub>" },
+  mu: { group: "Distance", label: "(m−M)<sub>0</sub>" },
+  dist: { group: "Distance", label: "D" },
+  distance_method: { group: "Distance", label: "Method" },
+  hi21_mag: { group: "H I", label: "m<sub>21</sub>" },
+  hi21_limit: { group: "H I", label: "m<sub>21</sub> limit" },
+  w50_kms: { group: "H I", label: "W<sub>50</sub>" },
 };
 
 /** Database and API fields remain available, but are not scientific display tiles. */
@@ -70,7 +61,7 @@ export const GROUP_ORDER: readonly ObservedGroup[] = [
   "Geometry",
   "Morphology",
   "Photometry",
-  "Kinematics",
+  "Velocities",
   "Distance",
   "H I",
 ];
@@ -91,7 +82,7 @@ export const PARAMETER_ORDER: Readonly<
     "ha_limit",
     "fuv_limit",
   ],
-  Kinematics: ["lvg_v_hel_kms", "lvg_v_lg_kms"],
+  Velocities: ["lvg_v_hel_kms", "lvg_v_lg_kms"],
   Distance: ["mu", "dist", "distance_method"],
   "H I": ["hi21_mag", "hi21_limit", "w50_kms"],
 };
