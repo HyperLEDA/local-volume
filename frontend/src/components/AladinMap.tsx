@@ -14,8 +14,13 @@ import {
 import { popupObjectRoute } from "../lib/popupNavigation.ts";
 import { needsInitialFovCorrection } from "../lib/objectFov.ts";
 import { shouldDismissSkyPopup } from "../lib/mapInteraction.ts";
+import { morphologyColor } from "../lib/morphologyColors.ts";
 
 const DEFAULT_HIPS_SURVEY = "https://skies.esac.esa.int/DSSColor";
+
+// AIT full-sky disk occupies ~98% of the viewport; edges never clip.
+// Values below 1 zoom in and crop the 360° × 180° all-sky ellipse.
+const ALL_SKY_AIT_FIT_ZOOM_FACTOR = 1.02;
 
 export type SkyFocus = {
   ra: number;
@@ -127,11 +132,18 @@ function setCatalogSources(
     ) {
       return [];
     }
-    const marker = A.marker(object.ra, object.dec, {
-      popupTitle: popupTitle(object),
-      popupDesc: popupDescription(object),
-      useMarkerDefaultIcon: false,
-    });
+    const marker = A.marker(
+      object.ra,
+      object.dec,
+      {
+        popupTitle: popupTitle(object),
+        popupDesc: popupDescription(object),
+        useMarkerDefaultIcon: false,
+      },
+      {
+        morphology_t: object.morphology_t ?? null,
+      },
+    );
     marker.setSize(
       Math.max(4, Math.round(markerDiameter(object.b_mag ?? null) * sizeScale)),
     );
@@ -198,6 +210,7 @@ export function AladinMap({
     let cancelled = false;
     const listeners = { detach: null as (() => void) | null };
     const initialFovCleanup = { detach: null as (() => void) | null };
+    const overviewFitCleanup = { detach: null as (() => void) | null };
 
     async function mount(element: HTMLDivElement): Promise<void> {
       await A.init;
@@ -218,11 +231,61 @@ export function AladinMap({
         name: "Local volume",
         shape: "circle",
         sourceSize: 7,
-        color: "#f2c14e",
+        color: isOverview
+          ? (source: AladinSource) =>
+              morphologyColor(
+                (source.data as { morphology_t?: number | null } | null)
+                  ?.morphology_t,
+              )
+          : "#f2c14e",
       });
       view.setFoV(mapFov);
       if (isOverview) {
-        view.setZoomFactor(1.25);
+        view.setZoomFactor(ALL_SKY_AIT_FIT_ZOOM_FACTOR);
+
+        // Aladin Lite rescales its internal zoom factor whenever its canvas
+        // width changes. Restore the all-sky fit AFTER that resize, without
+        // resetting the user's own zoom/pan interactions.
+        if (typeof ResizeObserver !== "undefined") {
+          let userInteracted = false;
+          let fitTimer: ReturnType<typeof setTimeout> | null = null;
+          let lastSize = "";
+          const observer = new ResizeObserver(() => {
+            if (cancelled || userInteracted) return;
+            const rect = element.getBoundingClientRect();
+            if (rect.width < 2 || rect.height < 2) return;
+            const size = Math.round(rect.width) + "x" + Math.round(rect.height);
+            if (size === lastSize) return;
+            lastSize = size;
+            if (fitTimer !== null) clearTimeout(fitTimer);
+            fitTimer = setTimeout(() => {
+              fitTimer = null;
+              if (!cancelled && !userInteracted) {
+                view.setZoomFactor(ALL_SKY_AIT_FIT_ZOOM_FACTOR);
+              }
+            }, 180);
+          });
+          function stopAutomaticFit(): void {
+            userInteracted = true;
+            if (fitTimer !== null) {
+              clearTimeout(fitTimer);
+              fitTimer = null;
+            }
+            observer.disconnect();
+            element.removeEventListener("pointerdown", stopAutomaticFit);
+            element.removeEventListener("wheel", stopAutomaticFit);
+            element.removeEventListener("touchstart", stopAutomaticFit);
+          }
+          element.addEventListener("pointerdown", stopAutomaticFit);
+          element.addEventListener("wheel", stopAutomaticFit, {
+            passive: true,
+          });
+          element.addEventListener("touchstart", stopAutomaticFit, {
+            passive: true,
+          });
+          observer.observe(element);
+          overviewFitCleanup.detach = stopAutomaticFit;
+        }
       }
       if (!isOverview) {
         const contextCatalog = A.catalog({
@@ -432,6 +495,7 @@ export function AladinMap({
     return () => {
       cancelled = true;
       initialFovCleanup.detach?.();
+      overviewFitCleanup.detach?.();
       listeners.detach?.();
       clearReticlePopupRef.current = null;
       refreshReticlePopupRef.current = null;

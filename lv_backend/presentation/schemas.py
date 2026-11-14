@@ -17,6 +17,7 @@ class ObjectSummaryColumns(pydantic.BaseModel):
     b_mag: list[float | None]
     ks_mag: list[float | None]
     a26_arcmin: list[float | None]
+    morphology_t: list[int | None]
     w50_kms: list[float | None]
     lvg_v_hel_kms: list[float | None]
     v_hel: list[float | None]

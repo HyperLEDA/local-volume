@@ -87,8 +87,18 @@ export function ObjectPage() {
   }, []);
 
   const contextObjects = useMemo(
-    () => otherSkyObjects(skyCatalog, pgc),
-    [skyCatalog, pgc],
+    () =>
+      otherSkyObjects(
+        skyCatalog,
+        pgc,
+        data !== null &&
+          typeof data.ra === "number" &&
+          typeof data.dec === "number"
+          ? { ra: data.ra, dec: data.dec }
+          : null,
+        10,
+      ),
+    [skyCatalog, pgc, data],
   );
 
   const rows = useMemo(() => {
@@ -157,25 +167,6 @@ export function ObjectPage() {
                   focus={focus}
                   fov={objectFovDegrees(data)}
                 />
-                <div
-                  className="object-sky-legend"
-                  aria-label="Map marker legend"
-                >
-                  <span className="object-sky-legend-item">
-                    <span
-                      className="object-sky-dot object-sky-dot--target"
-                      aria-hidden="true"
-                    />
-                    Selected object
-                  </span>
-                  <span className="object-sky-legend-item">
-                    <span
-                      className="object-sky-dot object-sky-dot--context"
-                      aria-hidden="true"
-                    />
-                    Other LV catalog objects (sky positions)
-                  </span>
-                </div>
                 {skyCatalogError ? (
                   <p className="catalog-status" role="status">
                     Other catalog objects could not be loaded.

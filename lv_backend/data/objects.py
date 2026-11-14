@@ -13,6 +13,7 @@ SUMMARY_COLUMNS: tuple[str, ...] = (
     "b_mag",
     "ks_mag",
     "a26_arcmin",
+    "morphology_t",
     "w50_kms",
     "lvg_v_hel_kms",
     "v_hel",
@@ -106,7 +107,7 @@ COALESCE(
 
 _OBJECTS_QUERY = f"""
 SELECT o.pgc, o.name, o.ra, o.dec, obs.bt, obs.b_mag, obs.ks_mag,
-       obs.a26_arcmin, obs.w50_kms, obs.lvg_v_hel_kms, obs.v_hel,
+       obs.a26_arcmin, obs.morphology_t, obs.w50_kms, obs.lvg_v_hel_kms, obs.v_hel,
        o.type_name, {_NAMES_AGG}
 FROM lv.objects AS o
 LEFT JOIN lv.observed AS obs ON obs.pgc = o.pgc

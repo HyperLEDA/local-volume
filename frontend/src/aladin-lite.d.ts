@@ -20,10 +20,11 @@ declare module "aladin-lite" {
     name?: string;
     shape?: string;
     sourceSize?: number;
-    color?: string;
+    color?: string | ((source: AladinSource) => string);
   };
 
   export type AladinSource = {
+    data?: Record<string, unknown>;
     setSize: (size: number) => void;
   };
 
@@ -73,14 +74,14 @@ declare module "aladin-lite" {
     source: (
       ra: number,
       dec: number,
-      data?: Record<string, string>,
+      data?: Record<string, unknown>,
       options?: MarkerOptions,
     ) => AladinSource;
     marker: (
       ra: number,
       dec: number,
       options?: MarkerOptions,
-      data?: Record<string, string>,
+      data?: Record<string, unknown>,
     ) => AladinSource;
   };
 

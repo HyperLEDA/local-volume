@@ -18,6 +18,7 @@ export type CatalogObject = {
   ks_mag?: number | null;
   lvg_v_hel_kms?: number | null;
   a26_arcmin?: number | null;
+  morphology_t?: number | null;
   w50_kms?: number | null;
   type_name: string | null;
   d_26?: number | null;
@@ -66,6 +67,7 @@ type ObjectsListResponse = {
     ks_mag?: (number | null)[];
     lvg_v_hel_kms?: (number | null)[];
     a26_arcmin?: (number | null)[];
+    morphology_t?: (number | null)[];
     w50_kms?: (number | null)[];
     v_hel?: (number | null)[];
     type_name?: (string | null)[];
@@ -118,6 +120,7 @@ export async function fetchObjects(): Promise<CatalogObject[]> {
     ks_mag: ksMag,
     lvg_v_hel_kms: nativeVHel,
     a26_arcmin: nativeA26,
+    morphology_t: morphologyT,
     w50_kms: nativeW50,
     v_hel: vHel,
     type_name: typeName,
@@ -135,6 +138,7 @@ export async function fetchObjects(): Promise<CatalogObject[]> {
     ks_mag: ksMag?.[index] ?? null,
     lvg_v_hel_kms: nativeVHel?.[index] ?? null,
     a26_arcmin: nativeA26?.[index] ?? null,
+    morphology_t: morphologyT?.[index] ?? null,
     w50_kms: nativeW50?.[index] ?? null,
     v_hel: vHel?.[index] ?? null,
     type_name: typeName?.[index] ?? null,
