@@ -3,7 +3,6 @@ import { useParams } from "react-router-dom";
 import {
   fetchObject,
   fetchObjects,
-  formatUncertainty,
   nameIncludesPgc,
   parameterRows,
   type CatalogObject,
@@ -11,7 +10,8 @@ import {
   type ColumnMeta,
 } from "../api/objects.ts";
 import { AladinMap, type SkyFocus } from "../components/AladinMap.tsx";
-import { ParameterLabel } from "../components/ParameterLabel.tsx";
+import { ObjectCoordinates } from "../components/ObjectCoordinates.tsx";
+import { ObservedParameterCards } from "../components/ObservedParameterCards.tsx";
 import { objectFovDegrees } from "../lib/objectFov.ts";
 import { otherSkyObjects } from "../lib/skyContext.ts";
 
@@ -109,10 +109,13 @@ export function ObjectPage() {
         ra: data.ra ?? null,
         dec: data.dec ?? null,
         bt: data.bt ?? null,
+        b_mag: data.b_mag ?? null,
+        ks_mag: data.ks_mag ?? null,
         v_hel: data.v_hel ?? null,
+        lvg_v_hel_kms: data.lvg_v_hel_kms ?? null,
         type_name: data.type_name ?? null,
-        d_26: data.d_26 ?? null,
-        w_50: data.w_50 ?? null,
+        a26_arcmin: data.a26_arcmin ?? null,
+        w50_kms: data.w50_kms ?? null,
         names: data.names,
       },
     ];
@@ -209,47 +212,8 @@ export function ObjectPage() {
                   </ul>
                 ) : null}
               </section>
-              <section className="object-params" aria-label="Parameters">
-                <table className="params-table">
-                  <thead>
-                    <tr>
-                      <th scope="col">Parameter</th>
-                      <th scope="col">Value</th>
-                      <th scope="col">Error</th>
-                      <th scope="col">Unit</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rows.map((row) => (
-                      <tr key={row.name}>
-                        <th scope="row">
-                          <span
-                            className="param-name"
-                            title={[row.description, row.name]
-                              .filter(Boolean)
-                              .join(" · ")}
-                          >
-                            <ParameterLabel
-                              nice={row.nice}
-                              fallback={row.name}
-                            />
-                          </span>
-                        </th>
-                        <td className="param-value">{row.value || "—"}</td>
-                        <td className="param-error">
-                          {formatUncertainty(row.error)}
-                          {row.error !== null && row.errorUnit !== null ? (
-                            <span className="param-error-unit">
-                              {` ${row.errorUnit}`}
-                            </span>
-                          ) : null}
-                        </td>
-                        <td className="param-unit">{row.unit ?? "—"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </section>
+              <ObjectCoordinates object={data} />
+              <ObservedParameterCards rows={rows} />
             </div>
           </div>
         </>
