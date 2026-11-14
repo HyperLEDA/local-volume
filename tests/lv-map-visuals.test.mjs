@@ -9,10 +9,10 @@ import {
 import { objectFovDegrees, needsInitialFovCorrection } from "../frontend/src/lib/objectFov.ts";
 
 test("morphology colors follow the numeric T sequence", () => {
-  assert.equal(morphologyColor(-3), "#30123b");
-  assert.equal(morphologyColor(0), "#17b3eb");
-  assert.equal(morphologyColor(5), "#ecf33b");
-  assert.equal(morphologyColor(10), "#8b0f11");
+  assert.equal(morphologyColor(-3), "#053061");
+  assert.equal(morphologyColor(3.5), "#f7f7f7");
+  assert.notEqual(morphologyColor(0), morphologyColor(8));
+  assert.equal(morphologyColor(10), "#67001f");
   assert.equal(morphologyColor(-5), morphologyColor(-3));
   assert.equal(morphologyColor(11), morphologyColor(10));
   assert.notEqual(morphologyColor(1), morphologyColor(2));

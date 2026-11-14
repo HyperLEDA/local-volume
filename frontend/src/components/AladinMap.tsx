@@ -15,6 +15,7 @@ import { popupObjectRoute } from "../lib/popupNavigation.ts";
 import { needsInitialFovCorrection } from "../lib/objectFov.ts";
 import { shouldDismissSkyPopup } from "../lib/mapInteraction.ts";
 import { morphologyColor } from "../lib/morphologyColors.ts";
+import { formatJ2000Coordinate } from "../lib/popupCoordinates.ts";
 
 const DEFAULT_HIPS_SURVEY = "https://skies.esac.esa.int/DSSColor";
 
@@ -44,36 +45,6 @@ function escapeHtml(value: string): string {
     .replace(/"/g, "&quot;");
 }
 
-function pad2(value: number): string {
-  return String(value).padStart(2, "0");
-}
-
-function formatRa(degrees: number | null): string {
-  if (degrees === null || !Number.isFinite(degrees)) {
-    return "—";
-  }
-  const totalCentiseconds =
-    Math.round((((degrees % 360) + 360) % 360) * 24000) % 8640000;
-  const hours = Math.floor(totalCentiseconds / 360000);
-  const minutes = Math.floor((totalCentiseconds % 360000) / 6000);
-  const seconds = ((totalCentiseconds % 6000) / 100)
-    .toFixed(2)
-    .padStart(5, "0");
-  return `${pad2(hours)}h ${pad2(minutes)}m ${seconds}s`;
-}
-
-function formatDec(degrees: number | null): string {
-  if (degrees === null || !Number.isFinite(degrees)) {
-    return "—";
-  }
-  const totalTenths = Math.round(Math.abs(degrees) * 36000);
-  const wholeDegrees = Math.floor(totalTenths / 36000);
-  const arcminutes = Math.floor((totalTenths % 36000) / 600);
-  const arcseconds = ((totalTenths % 600) / 10).toFixed(1).padStart(4, "0");
-  const sign = degrees < 0 || Object.is(degrees, -0) ? "−" : "+";
-  return `${sign}${pad2(wholeDegrees)}° ${pad2(arcminutes)}′ ${arcseconds}″`;
-}
-
 function formatQuantity(
   value: number | null | undefined,
   digits: number,
@@ -92,24 +63,19 @@ function popupField(label: string, value: string): string {
 function popupTitle(object: CatalogObject): string {
   const nature = escapeHtml(object.type_name ?? "—");
   const name = escapeHtml(object.name);
-  return `<div class="lv-popup-header"><a class="lv-popup-name" href="/object/${object.pgc}">${name}</a><span class="lv-popup-nature">${nature}</span></div>`;
+  const position = formatJ2000Coordinate(object.ra, object.dec);
+  const coordinate = position
+    ? `<span class="lv-popup-jcoord" title="ICRS, J2000">${position}</span>`
+    : "";
+  return `<div class="lv-popup-header"><div class="lv-popup-heading"><a class="lv-popup-name" href="/object/${object.pgc}">${name}</a>${coordinate}</div><span class="lv-popup-nature">${nature}</span></div>`;
 }
 
 function popupDescription(object: CatalogObject): string {
   const fields = [
-    popupField("RA", formatRa(object.ra)),
-    popupField("Dec", formatDec(object.dec)),
-    popupField("B (LVGDB)", formatQuantity(object.b_mag, 2, "mag")),
+    popupField("B", formatQuantity(object.b_mag, 2, "mag")),
+    popupField("K<sub>s</sub>", formatQuantity(object.ks_mag, 2, "mag")),
     popupField(
-      "K<sub>s</sub> (LVGDB)",
-      formatQuantity(object.ks_mag, 2, "mag"),
-    ),
-    popupField(
-      "a<sub>26</sub>",
-      formatQuantity(object.a26_arcmin, 2, "arcmin"),
-    ),
-    popupField(
-      "V<sub>hel</sub> (LVGDB)",
+      "V<sub>hel</sub>",
       formatQuantity(object.lvg_v_hel_kms, 1, "km/s"),
     ),
     popupField("W<sub>50</sub>", formatQuantity(object.w50_kms, 1, "km/s")),
