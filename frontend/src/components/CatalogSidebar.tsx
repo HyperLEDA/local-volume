@@ -4,7 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 type Theme = "light" | "dark";
 
 export function parseSavedTheme(value: string | null): Theme {
-  return value === "dark" ? "dark" : "light";
+  return value === "light" ? "light" : "dark";
 }
 
 function AtlasIcon() {
@@ -80,12 +80,12 @@ function ThemeIcon({ theme }: { theme: Theme }) {
 
 function initialTheme(): Theme {
   if (typeof window === "undefined") {
-    return "light";
+    return "dark";
   }
   try {
     return parseSavedTheme(window.localStorage.getItem("lv-theme"));
   } catch {
-    return "light";
+    return "dark";
   }
 }
 

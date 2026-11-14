@@ -72,6 +72,7 @@ export function ObjectsPage() {
         <>
           <section className="catalog-sky" aria-label="Sky">
             <AladinMap objects={filtered} focus={focus} enableReticlePopups />
+            <></>
           </section>
           <input
             className="catalog-search"

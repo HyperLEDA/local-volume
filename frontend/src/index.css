@@ -25,7 +25,7 @@
   text-rendering: optimizeLegibility;
 }
 
-:root[data-theme="dark"] {
+:root:not([data-theme="light"]) {
   --bg: #111920;
   --ink: #e8f0f4;
   --muted: #aebfca;
@@ -200,11 +200,11 @@ h1 {
   display: none;
 }
 
-:root[data-theme="dark"] .leda-logo-light {
+:root:not([data-theme="light"]) .leda-logo-light {
   display: none;
 }
 
-:root[data-theme="dark"] .catalog-logo--leda .leda-logo-dark {
+:root:not([data-theme="light"]) .catalog-logo--leda .leda-logo-dark {
   display: block;
 }
 
@@ -284,6 +284,9 @@ h1 {
 }
 
 .aladin-frame.aladin-frame--overview {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
   aspect-ratio: 2 / 1;
   height: auto;
 }
@@ -378,40 +381,6 @@ h1 {
 .catalog--object .aladin-frame {
   height: auto;
   aspect-ratio: 1 / 1;
-}
-
-.object-sky-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 16px;
-  margin-top: 9px;
-  color: var(--muted);
-  font-size: 0.77rem;
-  line-height: 1.35;
-}
-
-.object-sky-legend-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.object-sky-dot {
-  display: inline-block;
-  box-sizing: border-box;
-  width: 9px;
-  height: 9px;
-  flex: none;
-  border: 2px solid;
-  border-radius: 50%;
-}
-
-.object-sky-dot--target {
-  border-color: #f2c14e;
-}
-
-.object-sky-dot--context {
-  border-color: #55b7c3;
 }
 
 .object-params {
@@ -936,4 +905,46 @@ h1 {
 /* Slightly more vertical space between measurement rows; original typography unchanged. */
 .parameter-matrix .parameter-block {
   padding-block: 9px;
+}
+
+/* All-sky atlas color key; no effect on object detail maps or parameter tables. */
+.morphology-scale {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  margin-top: 9px;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.morphology-scale-title {
+  flex: none;
+  color: var(--ink);
+  font-weight: 500;
+}
+.morphology-scale-middle {
+  flex: 1 1 240px;
+  max-width: 430px;
+  min-width: 190px;
+}
+.morphology-scale-bar {
+  height: 10px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+}
+.morphology-scale-ticks {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+}
+.morphology-scale-missing {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.morphology-scale-missing-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
 }
