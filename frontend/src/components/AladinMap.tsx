@@ -94,10 +94,20 @@ function popupDescription(object: CatalogObject): string {
   const fields = [
     popupField("RA", formatRa(object.ra)),
     popupField("Dec", formatDec(object.dec)),
-    popupField("B<sub>T</sub>", formatQuantity(object.bt, 2, "mag")),
-    popupField("D<sub>26</sub>", formatQuantity(object.d_26, 1)),
-    popupField("V<sub>hel</sub>", formatQuantity(object.v_hel, 1, "km/s")),
-    popupField("W<sub>50</sub>", formatQuantity(object.w_50, 1, "km/s")),
+    popupField("B (LVGDB)", formatQuantity(object.b_mag, 2, "mag")),
+    popupField(
+      "K<sub>s</sub> (LVGDB)",
+      formatQuantity(object.ks_mag, 2, "mag"),
+    ),
+    popupField(
+      "a<sub>26</sub>",
+      formatQuantity(object.a26_arcmin, 2, "arcmin"),
+    ),
+    popupField(
+      "V<sub>hel</sub> (LVGDB)",
+      formatQuantity(object.lvg_v_hel_kms, 1, "km/s"),
+    ),
+    popupField("W<sub>50</sub>", formatQuantity(object.w50_kms, 1, "km/s")),
   ];
   return `<div class="lv-popup-grid">${fields.join("")}</div>`;
 }
@@ -123,7 +133,7 @@ function setCatalogSources(
       useMarkerDefaultIcon: false,
     });
     marker.setSize(
-      Math.max(4, Math.round(markerDiameter(object.bt) * sizeScale)),
+      Math.max(4, Math.round(markerDiameter(object.b_mag ?? null) * sizeScale)),
     );
     return [marker];
   });

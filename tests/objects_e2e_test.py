@@ -1,4 +1,5 @@
 import csv
+import io
 import os
 import subprocess
 import time
@@ -21,6 +22,22 @@ _STORAGE_ENV = {
     "STORAGE_USER": "lv",
     "STORAGE_PASSWORD": "password",
 }
+_OBJECT_FIELDS = ("pgc", "name", "ra", "e_ra", "dec", "e_dec", "type_name")
+_OBS_FIELDS = (
+    "pgc",
+    "bt",
+    "e_bt",
+    "kt",
+    "e_kt",
+    "v_hel",
+    "e_v_hel",
+    "v_lg",
+    "e_v_lg",
+    "a50",
+    "e_a50",
+    "b50",
+    "e_b50",
+)
 
 
 class _SampleRow(TypedDict):
@@ -76,6 +93,11 @@ def test_list_objects(client: fastapi.testclient.TestClient) -> None:
     assert body["data"]["names"] == [names.get(row["pgc"], []) for row in rows]
     index = body["data"]["pgc"].index(29146)
     assert body["data"]["bt"][index] == pytest.approx(10.6175)
+    assert body["data"]["b_mag"][index] == pytest.approx(10.55)
+    assert body["data"]["ks_mag"][index] == pytest.approx(7.9)
+    assert body["data"]["a26_arcmin"][index] == pytest.approx(2.3)
+    assert body["data"]["w50_kms"][index] == pytest.approx(104.0)
+    assert body["data"]["lvg_v_hel_kms"][index] == pytest.approx(88.0)
     assert body["data"]["v_hel"][index] == pytest.approx(_row(29146)["v_hel"])
     assert body["data"]["type_name"][index] == "G"
     missing_index = body["data"]["pgc"].index(12676)
@@ -96,10 +118,24 @@ def test_get_object_with_heliocentric_velocity(client: fastapi.testclient.TestCl
     assert data["name"] == "NGC 3077"
     assert response.json()["schema"]["v_hel"]["nice"] == "V<sub>hel</sub>"
     assert response.json()["schema"]["ra"]["nice"] == "α"
-    assert response.json()["schema"]["bt"]["description"] == "Mean total B magnitude"
+    assert response.json()["schema"]["bt"]["description"] == "Mean total B magnitude from LV 0002"
     assert data["names"] == _sample_names()[29146]
     assert v_hel is not None
     assert data["v_hel"] == pytest.approx(v_hel)
+    assert data["dist"] == pytest.approx(3.85)
+    assert data["b_mag"] == pytest.approx(10.55)
+    assert data["ks_mag"] == pytest.approx(7.9)
+    assert data["morphology_t"] == 7
+    assert data["source_catalog"] == "nearby_galaxy_catalog_2026-09-03"
+    assert data["w50_kms"] == pytest.approx(104.0)
+    assert data["lvg_v_hel_kms"] == pytest.approx(88.0)
+    schema = response.json()["schema"]
+    assert schema["dist"]["unit"] == "Mpc"
+    assert schema["e_bt"]["ucd"] == "stat.error;phot.mag;em.opt.B"
+    assert schema["kt"]["ucd"] == "phot.mag;em.IR.K"
+    assert schema["e_kt"]["ucd"] == "stat.error;phot.mag;em.IR.K"
+    assert schema["e_a50"]["ucd"] == "stat.error;phys.angSize.smajAxis"
+    assert schema["e_b50"]["ucd"] == "stat.error;phys.angSize.sminAxis"
 
 
 def test_get_object_without_velocity_omits_nulls(client: fastapi.testclient.TestClient) -> None:
@@ -109,6 +145,7 @@ def test_get_object_without_velocity_omits_nulls(client: fastapi.testclient.Test
     body = response.json()
     assert "v_hel" not in body["data"]
     assert "e_v_hel" not in body["data"]
+    assert "dist" not in body["data"]
     assert body["data"]["names"] == []
     assert "v_hel" in body["schema"]
     assert "e_v_hel" in body["schema"]
@@ -133,18 +170,28 @@ def _wait_until_ready(container: testcontainers.core.container.DockerContainer) 
 
 
 def _load_sample(container_id: str) -> None:
-    _copy_csv(
+    with _SAMPLE_CSV.open(newline="") as handle:
+        rows = list(csv.DictReader(handle))
+    _copy_subset(container_id, "lv.objects", _OBJECT_FIELDS, rows)
+    _copy_subset(container_id, "lv.observed", _OBS_FIELDS, rows)
+    _psql(
         container_id,
-        "COPY lv.objects (pgc, name, ra, e_ra, dec, e_dec, bt, e_bt, kt, e_kt, "
-        "v_hel, e_v_hel, v_lg, e_v_lg, a50, e_a50, b50, e_b50, type_name) "
-        "FROM STDIN WITH (FORMAT csv, HEADER true);\n",
-        _SAMPLE_CSV,
+        (
+            b"UPDATE lv.observed SET dist=3.85, b_mag=10.55, ks_mag=7.9, "
+            b"morphology_t=7, a26_arcmin=2.3, w50_kms=104, lvg_v_hel_kms=88, "
+            b"source_catalog='nearby_galaxy_catalog_2026-09-03' WHERE pgc=29146;\n"
+        ),
     )
-    _copy_csv(
-        container_id,
-        "COPY lv.names (pgc, name) FROM STDIN WITH (FORMAT csv, HEADER true);\n",
-        _NAMES_CSV,
-    )
+    _copy_csv(container_id, "COPY lv.names (pgc, name) FROM STDIN WITH (FORMAT csv, HEADER true);\n", _NAMES_CSV)
+
+
+def _copy_subset(container_id: str, table: str, columns: tuple[str, ...], rows: list[dict[str, str]]) -> None:
+    buffer = io.StringIO(newline="")
+    writer = csv.writer(buffer, lineterminator="\n")
+    for row in rows:
+        writer.writerow([row[column] for column in columns])
+    statement = f"COPY {table} ({', '.join(columns)}) FROM STDIN WITH (FORMAT csv);\n"
+    _psql(container_id, statement.encode() + buffer.getvalue().encode() + b"\\.\n")
 
 
 def _copy_csv(container_id: str, statement: str, path: Path) -> None:
