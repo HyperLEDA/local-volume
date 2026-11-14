@@ -62,7 +62,7 @@ function formatQuantity(
 }
 
 function popupField(label: string, value: string): string {
-  return `<div class="lv-popup-field"><span class="lv-popup-label">${label}</span><span class="lv-popup-value" title="${escapeHtml(value)}">${escapeHtml(value)}</span></div>`;
+  return `<div class="lv-popup-field"><span class="lv-popup-label">${label}:</span><span class="lv-popup-value" title="${escapeHtml(value)}">${escapeHtml(value)}</span></div>`;
 }
 
 function popupTitle(object: CatalogObject): string {

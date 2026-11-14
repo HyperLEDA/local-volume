@@ -962,3 +962,80 @@ h1 {
   height: 10px;
   border-radius: 50%;
 }
+
+/* Compact Aladin popup: each measurement is a single `label: value` line. */
+.aladin-frame .aladin-popup-container {
+  width: 296px;
+  max-width: calc(100% - 16px);
+}
+
+.lv-popup-header {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  column-gap: 8px;
+  row-gap: 3px;
+}
+
+.lv-popup-heading {
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  column-gap: 12px;
+  row-gap: 2px;
+}
+
+.lv-popup-jcoord {
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.lv-popup-grid {
+  column-gap: 10px;
+  row-gap: 5px;
+}
+
+.lv-popup-field {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.lv-popup-label {
+  flex: none;
+  font-size: 0.78rem;
+}
+
+.lv-popup-value {
+  min-width: 0;
+}
+
+/* Fit object-page cards to their contents without widening the map column. */
+.object-details > .object-coordinates,
+.object-details > .object-params {
+  align-self: flex-start;
+  width: fit-content;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.object-details > .object-params .parameter-matrix {
+  width: max-content;
+  max-width: 100%;
+  table-layout: auto;
+}
+
+.object-details > .object-params .parameter-block {
+  min-width: 108px;
+}
+
+@media (max-width: 580px) {
+  .object-details > .object-coordinates,
+  .object-details > .object-params,
+  .object-details > .object-params .parameter-matrix {
+    width: 100%;
+  }
+}
