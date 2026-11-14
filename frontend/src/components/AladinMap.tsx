@@ -239,6 +239,49 @@ export function AladinMap({
               )
           : "#f2c14e",
       });
+      function installOverviewFit(): void {
+        if (typeof ResizeObserver === "undefined") return;
+
+        let userInteracted = false;
+        let fitTimer: ReturnType<typeof setTimeout> | null = null;
+        let lastSize = "";
+        const observer = new ResizeObserver(() => {
+          if (cancelled || userInteracted) return;
+          const rect = element.getBoundingClientRect();
+          if (rect.width < 2 || rect.height < 2) return;
+          const size = Math.round(rect.width) + "x" + Math.round(rect.height);
+          if (size === lastSize) return;
+          lastSize = size;
+          if (fitTimer !== null) clearTimeout(fitTimer);
+          fitTimer = setTimeout(() => {
+            fitTimer = null;
+            if (!cancelled && !userInteracted) {
+              view.setZoomFactor(ALL_SKY_AIT_FIT_ZOOM_FACTOR);
+            }
+          }, 180);
+        });
+        function stopAutomaticFit(): void {
+          userInteracted = true;
+          if (fitTimer !== null) {
+            clearTimeout(fitTimer);
+            fitTimer = null;
+          }
+          observer.disconnect();
+          element.removeEventListener("pointerdown", stopAutomaticFit);
+          element.removeEventListener("wheel", stopAutomaticFit);
+          element.removeEventListener("touchstart", stopAutomaticFit);
+        }
+        element.addEventListener("pointerdown", stopAutomaticFit);
+        element.addEventListener("wheel", stopAutomaticFit, {
+          passive: true,
+        });
+        element.addEventListener("touchstart", stopAutomaticFit, {
+          passive: true,
+        });
+        observer.observe(element);
+        overviewFitCleanup.detach = stopAutomaticFit;
+      }
+
       view.setFoV(mapFov);
       if (isOverview) {
         view.setZoomFactor(ALL_SKY_AIT_FIT_ZOOM_FACTOR);
@@ -246,46 +289,7 @@ export function AladinMap({
         // Aladin Lite rescales its internal zoom factor whenever its canvas
         // width changes. Restore the all-sky fit AFTER that resize, without
         // resetting the user's own zoom/pan interactions.
-        if (typeof ResizeObserver !== "undefined") {
-          let userInteracted = false;
-          let fitTimer: ReturnType<typeof setTimeout> | null = null;
-          let lastSize = "";
-          const observer = new ResizeObserver(() => {
-            if (cancelled || userInteracted) return;
-            const rect = element.getBoundingClientRect();
-            if (rect.width < 2 || rect.height < 2) return;
-            const size = Math.round(rect.width) + "x" + Math.round(rect.height);
-            if (size === lastSize) return;
-            lastSize = size;
-            if (fitTimer !== null) clearTimeout(fitTimer);
-            fitTimer = setTimeout(() => {
-              fitTimer = null;
-              if (!cancelled && !userInteracted) {
-                view.setZoomFactor(ALL_SKY_AIT_FIT_ZOOM_FACTOR);
-              }
-            }, 180);
-          });
-          function stopAutomaticFit(): void {
-            userInteracted = true;
-            if (fitTimer !== null) {
-              clearTimeout(fitTimer);
-              fitTimer = null;
-            }
-            observer.disconnect();
-            element.removeEventListener("pointerdown", stopAutomaticFit);
-            element.removeEventListener("wheel", stopAutomaticFit);
-            element.removeEventListener("touchstart", stopAutomaticFit);
-          }
-          element.addEventListener("pointerdown", stopAutomaticFit);
-          element.addEventListener("wheel", stopAutomaticFit, {
-            passive: true,
-          });
-          element.addEventListener("touchstart", stopAutomaticFit, {
-            passive: true,
-          });
-          observer.observe(element);
-          overviewFitCleanup.detach = stopAutomaticFit;
-        }
+        installOverviewFit();
       }
       if (!isOverview) {
         const contextCatalog = A.catalog({
