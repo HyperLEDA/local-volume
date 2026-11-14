@@ -702,178 +702,195 @@ h1 {
   }
 }
 
-/* LV object page: coordinate panel and semantically grouped measurements. */
+/* LV object page: compact left-aligned coordinates and grouped measurement table. */
 .object-section-heading {
-  margin: 0 0 11px;
-  font-size: 0.96rem;
-  font-weight: 650;
-  letter-spacing: 0.01em;
+  margin: 0 0 7px;
+  font-size: 0.9rem;
+  font-weight: 600;
 }
 
 .object-coordinates {
+  min-width: 0;
   border: 1px solid var(--line);
-  border-radius: 9px;
-  padding: 14px;
+  border-radius: 7px;
+  padding: 9px 11px 8px;
   background: var(--card);
 }
 
-.coordinate-systems {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+.coordinate-systems { display: flex; flex-direction: column; }
+.coordinate-system {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 0;
 }
-
-.coordinate-system + .coordinate-system {
-  padding-top: 12px;
-  border-top: 1px solid var(--line);
-}
-
+.coordinate-system + .coordinate-system { border-top: 1px solid var(--line); }
 .coordinate-system h4 {
-  margin: 0 0 8px;
+  margin: 0;
+  font-size: 0.9rem;
   font-weight: 600;
-  font-size: 0.81rem;
+  line-height: 1.3;
 }
-
 .coordinate-system h4 span {
-  margin-left: 5px;
-  font-size: 0.71rem;
-  font-weight: 400;
+  margin-left: 3px;
   color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 400;
 }
-
 .coordinate-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 9px;
+  gap: 6px 12px;
 }
-
 .coordinate-value {
-  min-width: 0;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 4px;
-  padding: 10px 7px;
-  border: 1px solid var(--line);
-  border-radius: 7px;
-  background: var(--bg);
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: flex-start;
+  gap: 2px 6px;
+  min-width: 0;
+  text-align: left;
+  font-variant-numeric: tabular-nums;
 }
-
-.coordinate-label {
-  color: var(--muted);
-  font-size: 0.75rem;
-}
-
+.coordinate-label { color: var(--muted); font-size: 0.9rem; }
 .coordinate-number {
-  font-size: clamp(0.78rem, 1.1vw, 0.93rem);
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  overflow-wrap: anywhere;
-}
-
-.coordinate-secondary {
-  font-size: 0.72rem;
-  color: var(--muted);
-  font-variant-numeric: tabular-nums;
-  overflow-wrap: anywhere;
-}
-
-.object-params {
-  min-width: 0;
-  overflow-x: visible;
-}
-
-.parameter-groups {
-  display: flex;
-  flex-direction: column;
-  gap: 19px;
-}
-
-.parameter-group-heading {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  margin: 0 0 9px;
-  color: var(--muted);
-  font-size: 0.82rem;
-  font-weight: 650;
-}
-
-.parameter-group-heading::after {
-  content: "";
-  flex: 1;
-  height: 1px;
-  background: var(--line);
-}
-
-.parameter-card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 172px), 1fr));
-  gap: 9px;
-}
-
-.parameter-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  min-height: 102px;
-  min-width: 0;
-  padding: 12px 8px 11px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--card);
-  text-align: center;
-}
-
-.parameter-card-label {
-  color: var(--muted);
-  font-size: 0.77rem;
-  line-height: 1.35;
+  font-size: 0.9rem;
   font-weight: 500;
   overflow-wrap: anywhere;
 }
+.coordinate-secondary {
+  color: var(--ink);
+  font-size: 0.9rem;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+  flex-basis: 100%;
+  margin-left: 16px;
+}
 
-.parameter-card-reading {
+.object-params { min-width: 0; overflow-x: visible; }
+.parameter-matrix {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-collapse: collapse;
+  table-layout: fixed;
+  background: var(--card);
+  font-size: 0.9rem;
+}
+.parameter-matrix .parameter-group-row th {
+  padding: 5px 9px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: var(--table-header);
+  color: var(--ink);
+  font-weight: 600;
+  text-align: left;
+}
+.parameter-matrix tbody:first-child .parameter-group-row th { border-top: 0; }
+.parameter-matrix .parameter-cell {
+  width: auto;
+  padding: 0;
+  border: 1px solid var(--line);
+  vertical-align: top;
+}
+.parameter-block {
+  box-sizing: border-box;
+  min-width: 0;
+  padding: 6px 10px;
+  text-align: center;
+  line-height: normal;
+  overflow-wrap: break-word;
+}
+.parameter-block-label {
+  color: var(--ink);
+  font-weight: 500;
+  line-height: inherit;
+}
+.parameter-block-reading {
   display: flex;
   align-items: baseline;
   justify-content: center;
   flex-wrap: wrap;
-  column-gap: 6px;
+  column-gap: 5px;
   row-gap: 1px;
-  width: 100%;
-  margin-top: 9px;
+  margin-top: 2px;
   font-variant-numeric: tabular-nums;
-  overflow-wrap: anywhere;
+}
+.parameter-block-value { font-weight: 400; }
+.parameter-block-error { color: var(--ink); }
+.parameter-block-unit { color: var(--muted); }
+.parameter-estimated { color: var(--muted); }
+.object-params-empty { color: var(--muted); font-size: 0.9rem; }
+
+@media (max-width: 580px) {
+  .object-coordinates { padding: 8px 9px; }
+  .coordinate-system { grid-template-columns: minmax(0, 1fr); gap: 3px; }
+  .coordinate-grid { gap: 5px 9px; }
+  .parameter-block { padding-inline: 5px; }
 }
 
-.parameter-card-value {
-  font-size: 1.02rem;
-  font-weight: 650;
+/* LV observed parameters: integrated table caption */
+.parameter-matrix .parameter-matrix-caption {
+  caption-side: top;
+  padding: 8px 9px;
+  border: 1px solid var(--line);
+  border-bottom: 0;
+  background: var(--card);
+  color: var(--ink);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: left;
 }
 
-.parameter-card-error {
-  font-size: 0.86rem;
-  font-weight: 450;
-  color: var(--muted);
+/* LV parameter descriptions: custom help, never raw DB field identifiers. */
+.parameter-matrix .parameter-cell { position: relative; }
+.parameter-matrix .parameter-cell:hover,
+.parameter-matrix .parameter-cell:focus-within { z-index: 5; }
+.parameter-block { position: relative; }
+.parameter-block-label--help { cursor: default; }
+.parameter-block-label--help:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.parameter-help-tooltip {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 5px);
+  left: 50%;
+  width: max-content;
+  max-width: min(280px, calc(100vw - 32px));
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--card);
+  box-shadow: 0 5px 16px rgb(0 0 0 / 16%);
+  color: var(--ink);
+  font-size: 0.9rem;
+  font-weight: 400;
+  line-height: 1.35;
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: normal;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+.parameter-block-label--help:hover .parameter-help-tooltip,
+.parameter-block-label--help:focus .parameter-help-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+.parameter-matrix .parameter-cell:first-child .parameter-help-tooltip {
+  left: 0;
+  transform: none;
+}
+.parameter-matrix .parameter-cell:last-child .parameter-help-tooltip {
+  left: auto;
+  right: 0;
+  transform: none;
 }
 
-.parameter-card-unit {
-  margin-top: 5px;
-  color: var(--muted);
-  font-size: 0.76rem;
-}
-
-.object-params-empty {
-  color: var(--muted);
-  font-size: 0.85rem;
-}
-
-@media (max-width: 480px) {
-  .object-coordinates { padding: 11px; }
-  .coordinate-grid { grid-template-columns: minmax(0, 1fr); }
-  .parameter-card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .parameter-card { padding-inline: 6px; }
-}
+/* Slightly more vertical space between measurement rows; original typography unchanged. */
+.parameter-matrix .parameter-block { padding-block: 9px; }

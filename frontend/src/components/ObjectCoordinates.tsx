@@ -7,9 +7,7 @@ import {
   galacticToSupergalactic,
 } from "../lib/coordinates.ts";
 
-type ObjectCoordinatesProps = {
-  object: CatalogObjectDetail;
-};
+type ObjectCoordinatesProps = { object: CatalogObjectDetail };
 
 function CoordinateValue({
   label,
@@ -35,13 +33,6 @@ export function ObjectCoordinates({ object }: ObjectCoordinatesProps) {
   const galactic = ra !== null && dec !== null ? icrsToGalactic(ra, dec) : null;
   const supergalactic = galactic ? galacticToSupergalactic(galactic) : null;
 
-  const raError = typeof object.e_ra === "number" && Number.isFinite(object.e_ra)
-    ? `± ${Math.abs(object.e_ra).toPrecision(2)}°`
-    : undefined;
-  const decError = typeof object.e_dec === "number" && Number.isFinite(object.e_dec)
-    ? `± ${Math.abs(object.e_dec).toPrecision(2)}°`
-    : undefined;
-
   return (
     <section className="object-coordinates" aria-labelledby="object-coordinates-heading">
       <h3 id="object-coordinates-heading" className="object-section-heading">Coordinates</h3>
@@ -49,30 +40,22 @@ export function ObjectCoordinates({ object }: ObjectCoordinatesProps) {
         <div className="coordinate-system">
           <h4>Equatorial <span>ICRS</span></h4>
           <div className="coordinate-grid">
-            <CoordinateValue
-              label="Right ascension α"
-              value={formatRaHms(ra)}
-              secondary={`${formatDegrees(ra)}${raError ? `  ${raError}` : ""}`}
-            />
-            <CoordinateValue
-              label="Declination δ"
-              value={formatDecDms(dec)}
-              secondary={`${formatDegrees(dec, 6, true)}${decError ? `  ${decError}` : ""}`}
-            />
+            <CoordinateValue label="α" value={formatRaHms(ra)} secondary={formatDegrees(ra)} />
+            <CoordinateValue label="δ" value={formatDecDms(dec)} secondary={formatDegrees(dec, 6, true)} />
           </div>
         </div>
         <div className="coordinate-system">
-          <h4>Galactic <span>derived</span></h4>
+          <h4>Galactic</h4>
           <div className="coordinate-grid">
-            <CoordinateValue label="Longitude l" value={formatDegrees(galactic?.longitude, 4)} />
-            <CoordinateValue label="Latitude b" value={formatDegrees(galactic?.latitude, 4, true)} />
+            <CoordinateValue label="l" value={formatDegrees(galactic?.longitude, 4)} />
+            <CoordinateValue label="b" value={formatDegrees(galactic?.latitude, 4, true)} />
           </div>
         </div>
         <div className="coordinate-system">
-          <h4>Supergalactic <span>derived</span></h4>
+          <h4>Supergalactic</h4>
           <div className="coordinate-grid">
-            <CoordinateValue label="Longitude SGL" value={formatDegrees(supergalactic?.longitude, 4)} />
-            <CoordinateValue label="Latitude SGB" value={formatDegrees(supergalactic?.latitude, 4, true)} />
+            <CoordinateValue label="SGL" value={formatDegrees(supergalactic?.longitude, 4)} />
+            <CoordinateValue label="SGB" value={formatDegrees(supergalactic?.latitude, 4, true)} />
           </div>
         </div>
       </div>
