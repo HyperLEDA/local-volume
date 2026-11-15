@@ -1,10 +1,10 @@
 SELECT
     r.pgc,
-    d.design AS name,
-    i.ra,
-    i.e_ra,
-    i.dec,
-    i.e_dec,
+    o.name,
+    o.ra,
+    o.e_ra,
+    o.dec,
+    o.e_dec,
     bt.mag AS bt,
     bt.e_mag AS e_bt,
     kt.mag AS kt,
@@ -17,12 +17,10 @@ SELECT
     geom.e_a AS e_a50,
     geom.b AS b50,
     geom.e_b AS e_b50,
-    n.type_name
+    o.objtype AS type_name
 FROM layer0.records AS r
 JOIN layer0.tables AS t ON t.id = r.table_id
-LEFT JOIN layer2.designation AS d ON d.pgc = r.pgc
-LEFT JOIN layer2.icrs AS i ON i.pgc = r.pgc
-LEFT JOIN layer2.nature AS n ON n.pgc = r.pgc
+LEFT JOIN layer2.objects AS o ON o.pgc = r.pgc
 LEFT JOIN layer2.velocity AS v_hel
     ON v_hel.pgc = r.pgc AND v_hel.apex = 'heliocentric'
 LEFT JOIN layer2.velocity AS v_lg
