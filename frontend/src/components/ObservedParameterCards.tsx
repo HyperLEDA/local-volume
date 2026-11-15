@@ -64,11 +64,11 @@ export function ObservedParameterCards({ rows }: ObservedParameterCardsProps) {
     .filter((group) => group.rows.length > 0);
 
   return (
-    <section className="object-params" aria-label="Observed Parameters">
+    <section className="object-params" aria-label="Observed Properties">
       {/* Table caption replaces standalone heading. */}
       {groups.length === 0 ? (
         <>
-          <h3 className="object-section-heading">Observed Parameters</h3>
+          <h3 className="object-section-heading">Observed Properties</h3>
           <p className="object-params-empty">
             No observed parameters available.
           </p>
@@ -76,7 +76,7 @@ export function ObservedParameterCards({ rows }: ObservedParameterCardsProps) {
       ) : (
         <table className="parameter-matrix">
           <caption className="parameter-matrix-caption">
-            Observed Parameters
+            Observed Properties
           </caption>
           <colgroup>
             <col />

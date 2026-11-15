@@ -1,4 +1,5 @@
 import { formatParameterDisplay } from "../lib/precision.ts";
+import { displayedKs } from "../lib/estimatedKs.ts";
 
 export type ColumnMeta = {
   description: string;
@@ -199,6 +200,7 @@ export function parameterRows(
   schema: Record<string, ColumnMeta>,
 ): ParameterRow[] {
   const record = data as Record<string, unknown>;
+  const ks = displayedKs(record);
   const rows: ParameterRow[] = [];
 
   for (const [key, meta] of Object.entries(schema)) {
@@ -219,13 +221,20 @@ export function parameterRows(
     const errorMeta = Object.prototype.hasOwnProperty.call(schema, errorKey)
       ? schema[errorKey]
       : null;
-    const rawError = record[errorKey];
+    const displayed =
+      key === "ks_mag"
+        ? ks.value
+        : key === "ks_estimated"
+          ? ks.estimated
+          : record[key];
+    // A B/T-derived Ks proxy has no independently measured Ks uncertainty.
+    const rawError = key === "ks_mag" && ks.estimated ? null : record[errorKey];
     const hasError =
       errorMeta !== null && rawError !== null && rawError !== undefined;
     const errorUnit = errorMeta?.unit ?? null;
     const formatted = formatParameterDisplay(
       key,
-      record[key],
+      displayed,
       hasError ? rawError : null,
       meta,
       errorMeta,

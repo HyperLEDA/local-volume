@@ -1,0 +1,183 @@
+/* Localhost preview: widen all usable object-page content by another 5%. */
+body:has(.catalog--object) .app-workspace {
+  max-width: 1900px;
+  width: 100%;
+}
+
+.catalog.catalog--object {
+  max-width: 1586px; /* 1510px * 1.05 */
+  width: 100%;
+  margin-inline: auto;
+}
+
+/* Center the intrinsic-width group as a whole; keep the sky at 714 CSS px. */
+.catalog--object .object-layout {
+  grid-template-columns: 714px max-content;
+  justify-content: center;
+  gap: 20px;
+}
+
+.catalog--object .object-layout--no-map {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.catalog--object .object-layout--no-map .object-details {
+  justify-self: center;
+}
+
+/* Preserve the content-sized Observed / Physical tables without leaving
+   the entire pair pinned to the left of an oversized grid track. */
+.catalog--object .object-details {
+  display: grid;
+  grid-template-columns: max-content max-content;
+  justify-content: start;
+  align-items: start;
+  align-content: start;
+  column-gap: 12px;
+  row-gap: 16px;
+}
+
+.catalog--object .object-details > .object-identity,
+.catalog--object .object-details > .object-coordinates {
+  grid-column: 1 / -1;
+}
+
+/* Compact coordinates: equatorial positions wrap into two lines, not a wide card. */
+.catalog--object .object-details > .object-coordinates {
+  justify-self: start;
+  width: 404px;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.catalog--object .object-details > .object-coordinates .coordinate-system {
+  grid-template-columns: 112px minmax(0, 1fr);
+  column-gap: 6px;
+}
+
+.catalog--object .object-details > .object-coordinates .coordinate-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 8px;
+}
+
+/* Right ascension and declination keep full precision, each on its own line. */
+.catalog--object
+  .object-details
+  > .object-coordinates
+  .coordinate-system:first-child
+  .coordinate-grid {
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: 5px;
+}
+
+.catalog--object
+  .object-details
+  > .object-coordinates
+  .coordinate-system:first-child
+  .coordinate-value {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  align-items: baseline;
+  column-gap: 5px;
+  row-gap: 1px;
+}
+
+.catalog--object
+  .object-details
+  > .object-coordinates
+  .coordinate-system:first-child
+  .coordinate-secondary {
+  grid-column: 2;
+  margin-left: 0;
+  flex-basis: auto;
+}
+
+.catalog--object .object-details > [aria-label="Observed Properties"] {
+  grid-column: 1;
+  justify-self: start;
+}
+
+.catalog--object .object-details > [aria-label="Physical Properties"] {
+  grid-column: 2;
+  justify-self: start;
+}
+
+.catalog--object .object-details > [aria-label="Observed Properties"],
+.catalog--object .object-details > [aria-label="Physical Properties"] {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Both cards share the original Observed matrix styles and caption geometry. */
+.catalog--object .parameter-matrix {
+  width: max-content;
+  max-width: 100%;
+  table-layout: auto;
+}
+
+.catalog--object .parameter-matrix .parameter-matrix-caption {
+  text-align: center;
+}
+
+.catalog--object .physical-parameter-matrix {
+  min-width: 0;
+}
+
+.physical-md-link {
+  color: var(--accent);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.physical-md-link:hover,
+.physical-md-link:focus-visible {
+  text-decoration: underline;
+}
+
+@media (max-width: 1590px) {
+  .catalog--object .object-layout {
+    grid-template-columns: minmax(0, 1fr);
+    justify-content: stretch;
+  }
+
+  .catalog--object .catalog-sky {
+    width: 100%;
+    max-width: 714px;
+    justify-self: center;
+  }
+
+  .catalog--object .object-details {
+    justify-self: center;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 930px) {
+  .catalog--object .object-details {
+    grid-template-columns: minmax(0, 1fr);
+    width: max-content;
+    max-width: 100%;
+  }
+
+  .catalog--object .object-details > [aria-label="Observed Properties"],
+  .catalog--object .object-details > [aria-label="Physical Properties"] {
+    grid-column: 1;
+  }
+}
+
+@media (max-width: 580px) {
+  .catalog--object .object-details > .object-coordinates .coordinate-system {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .catalog--object .object-details > .object-coordinates .coordinate-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .catalog--object
+    .object-details
+    > .object-coordinates
+    .coordinate-system:first-child
+    .coordinate-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

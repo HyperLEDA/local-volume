@@ -7,6 +7,7 @@ import fastapi.responses
 import fastapi.staticfiles
 
 from lv_backend.data import migrations as data_migrations
+from lv_backend.data import physical as data_physical
 from lv_backend.data import storage as data_storage
 from lv_backend.domain import objects
 from lv_backend.presentation import schemas
@@ -42,6 +43,14 @@ def get_object(request: fastapi.Request, pgc: int) -> schemas.ObjectGetResponse:
     if response is None:
         raise fastapi.HTTPException(status_code=404)
     return response
+
+
+@api.get("/object/{pgc}/physical")
+def get_physical(request: fastapi.Request, pgc: int) -> dict[str, object]:
+    row = data_physical.select_physical(request.app.state.storage, pgc)
+    if row is None:
+        raise fastapi.HTTPException(status_code=404)
+    return {"data": row}
 
 
 app.include_router(api)

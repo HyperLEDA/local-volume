@@ -12,6 +12,7 @@ import {
 import { AladinMap, type SkyFocus } from "../components/AladinMap.tsx";
 import { ObjectCoordinates } from "../components/ObjectCoordinates.tsx";
 import { ObservedParameterCards } from "../components/ObservedParameterCards.tsx";
+import { PhysicalParametersTable } from "../components/PhysicalParametersTable.tsx";
 import { objectFovDegrees } from "../lib/objectFov.ts";
 import { otherSkyObjects } from "../lib/skyContext.ts";
 
@@ -206,6 +207,7 @@ export function ObjectPage() {
               </section>
               <ObjectCoordinates object={data} />
               <ObservedParameterCards rows={rows} />
+              <PhysicalParametersTable pgc={pgc} />
             </div>
           </div>
         </>

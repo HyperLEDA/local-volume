@@ -1,0 +1,4 @@
+postgres/migrations/000[6-9].*.sql text eol=lf
+lv_backend/data/lvgdb_physical.py text eol=lf
+scripts/lv_physical_stage_p0.py text eol=lf
+tests/lvgdb_physical_test.py text eol=lf
