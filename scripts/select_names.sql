@@ -13,6 +13,6 @@ JOIN layer0.records AS r ON r.pgc = c.pgc
 JOIN designation.data AS d ON d.record_id = r.id
 WHERE NOT EXISTS (
     SELECT 1
-    FROM layer2.designation AS main
-    WHERE main.pgc = c.pgc AND main.design = d.design
+    FROM layer2.objects AS main
+    WHERE main.pgc = c.pgc AND main.name = d.design
 );
