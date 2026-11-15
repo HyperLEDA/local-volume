@@ -1,7 +1,13 @@
 import type { ParameterRow } from "../api/objects.ts";
 
 export type ObservedGroup =
-  "Geometry" | "Morphology" | "Photometry" | "Velocities" | "Distance" | "H I";
+  | "Geometry"
+  | "Morphology"
+  | "Photometry"
+  | "Velocities"
+  | "Distance"
+  | "Star formation"
+  | "H I";
 
 export type ParameterDefinition = {
   group: ObservedGroup;
@@ -21,11 +27,11 @@ export const PARAMETER_DEFINITIONS: Readonly<
   b_mag: { group: "Photometry", label: "B" },
   ks_mag: { group: "Photometry", label: "K<sub>s</sub>" },
   a_b_galactic_mag: { group: "Photometry", label: "A<sub>B</sub>" },
-  ha_mag: { group: "Photometry", label: "m<sub>Hα</sub>" },
-  fuv_mag: { group: "Photometry", label: "m<sub>FUV</sub>" },
+  ha_mag: { group: "Star formation", label: "m<sub>Hα</sub>" },
+  fuv_mag: { group: "Star formation", label: "m<sub>FUV</sub>" },
   ks_estimated: { group: "Photometry", label: "K<sub>s</sub> est." },
-  ha_limit: { group: "Photometry", label: "Hα limit" },
-  fuv_limit: { group: "Photometry", label: "FUV limit" },
+  ha_limit: { group: "Star formation", label: "Hα limit" },
+  fuv_limit: { group: "Star formation", label: "FUV limit" },
   lvg_v_hel_kms: { group: "Velocities", label: "V<sub>h</sub>" },
   lvg_v_lg_kms: { group: "Velocities", label: "V<sub>LG</sub>" },
   mu: { group: "Distance", label: "(m−M)<sub>0</sub>" },
@@ -63,6 +69,7 @@ export const GROUP_ORDER: readonly ObservedGroup[] = [
   "Photometry",
   "Velocities",
   "Distance",
+  "Star formation",
   "H I",
 ];
 
@@ -72,18 +79,10 @@ export const PARAMETER_ORDER: Readonly<
 > = {
   Geometry: ["a26_arcmin", "axis_ratio"],
   Morphology: ["morphology_t", "dwarf_morphology", "dwarf_sb_class"],
-  Photometry: [
-    "b_mag",
-    "ks_mag",
-    "a_b_galactic_mag",
-    "ha_mag",
-    "fuv_mag",
-    "ks_estimated",
-    "ha_limit",
-    "fuv_limit",
-  ],
+  Photometry: ["b_mag", "ks_mag", "a_b_galactic_mag", "ks_estimated"],
   Velocities: ["lvg_v_hel_kms", "lvg_v_lg_kms"],
   Distance: ["mu", "dist", "distance_method"],
+  "Star formation": ["ha_mag", "fuv_mag", "ha_limit", "fuv_limit"],
   "H I": ["hi21_mag", "hi21_limit", "w50_kms"],
 };
 

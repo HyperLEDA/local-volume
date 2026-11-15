@@ -106,10 +106,11 @@ function formatAtPlace(value: number, place: number): string {
 
 function roundedUncertainty(error: number): { rounded: number; place: number } {
   const rounded = Number(error.toPrecision(ERROR_SIGNIFICANT_DIGITS));
-  // Compute the place from the *rounded* value so that 0.0999 -> 0.10,
-  // rather than incorrectly displaying 0.100 (three significant digits).
-  const place =
-    Math.floor(Math.log10(rounded)) - (ERROR_SIGNIFICANT_DIGITS - 1);
+  // Keep up to two significant digits, without padding the uncertainty with
+  // a trailing zero. The central value shares its last *meaningful* place.
+  const [mantissa, exponent] = rounded.toExponential().split("e");
+  const significantDigits = mantissa.replace(".", "").length;
+  const place = Number(exponent) - significantDigits + 1;
   return { rounded, place };
 }
 
@@ -159,6 +160,8 @@ export function formatParameterDisplay(
       ? formatWithoutUncertainty(key, rawValue, meta)
       : plainText(rawValue),
     error:
-      rawError === null || rawError === undefined ? null : plainText(rawError),
+      rawError === null || rawError === undefined || rawError === 0
+        ? null
+        : plainText(rawError),
   };
 }
