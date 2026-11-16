@@ -17,7 +17,6 @@ type Field = {
 
 type PhysicalRow = { key: string; fields: readonly Field[] };
 
-const SOLAR_KS_ABSOLUTE_MAGNITUDE = 3.28;
 const NUMERIC = /^[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?$/;
 
 function finiteNumber(value: PhysicalValue | undefined): number | null {
@@ -25,11 +24,6 @@ function finiteNumber(value: PhysicalValue | undefined): number | null {
   if (typeof value !== "string" || !NUMERIC.test(value.trim())) return null;
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : null;
-}
-
-function magnitudeKs(record: PhysicalData): number | null {
-  const logL = finiteNumber(record.log_lks_lsun_published);
-  return logL === null ? null : SOLAR_KS_ABSOLUTE_MAGNITUDE - 2.5 * logL;
 }
 
 function displayValue(
@@ -61,7 +55,7 @@ const ROWS: readonly PhysicalRow[] = [
           "Linear diameter at the Holmberg B-band isophote (26.5 mag/arcsec²)",
         unit: "kpc",
         decimals: 2,
-        value: (d) => d.a26_kpc_published,
+        value: (d) => d.a26_kpc,
       },
       {
         key: "inclination",
@@ -69,7 +63,7 @@ const ROWS: readonly PhysicalRow[] = [
         description: "Inclination of the galaxy disk to the line of sight",
         unit: "deg",
         decimals: 1,
-        value: (d) => d.inclination_deg_published,
+        value: (d) => d.inclination_deg,
       },
       {
         key: "vm",
@@ -81,7 +75,7 @@ const ROWS: readonly PhysicalRow[] = [
         description: "Rotation amplitude derived from the H I line width",
         unit: "km/s",
         decimals: 1,
-        value: (d) => d.vrot_kms_published,
+        value: (d) => d.vrot_kms,
       },
     ],
   },
@@ -98,7 +92,7 @@ const ROWS: readonly PhysicalRow[] = [
         description: "Absolute B-band magnitude corrected for extinction",
         unit: "mag",
         decimals: 2,
-        value: (d) => d.abs_b_mag_published,
+        value: (d) => d.abs_b_mag,
       },
       {
         key: "mk",
@@ -111,7 +105,7 @@ const ROWS: readonly PhysicalRow[] = [
           "Absolute Ks-band magnitude from the published Ks luminosity, adopting M(Ks, Sun) = 3.28 mag",
         unit: "mag",
         decimals: 2,
-        value: magnitudeKs,
+        value: (d) => d.abs_ks_mag,
       },
     ],
   },
@@ -128,7 +122,7 @@ const ROWS: readonly PhysicalRow[] = [
         description:
           "Base-10 logarithm of Ks-band luminosity in solar Ks-band luminosities",
         decimals: 2,
-        value: (d) => d.log_lks_lsun_published,
+        value: (d) => d.log_lks_lsun,
       },
       {
         key: "mu",
@@ -141,7 +135,7 @@ const ROWS: readonly PhysicalRow[] = [
           "Mean B-band surface brightness inside the corrected Holmberg isophote",
         unit: "mag/arcsec²",
         decimals: 2,
-        value: (d) => d.mean_sb_b_mag_arcsec2_published,
+        value: (d) => d.mean_sb_b_mag_arcsec2,
       },
     ],
   },
@@ -158,7 +152,7 @@ const ROWS: readonly PhysicalRow[] = [
         description:
           "Base-10 logarithm of dynamical mass in solar masses, within the Holmberg radius (M26)",
         decimals: 2,
-        value: (d) => d.log_m26_msun_published,
+        value: (d) => d.log_m26_msun,
       },
       {
         key: "log-mhi",
@@ -170,7 +164,7 @@ const ROWS: readonly PhysicalRow[] = [
         description:
           "Base-10 logarithm of neutral-hydrogen mass in solar masses; '<' indicates an upper limit",
         decimals: 2,
-        value: (d) => d.log_mhi_msun_published,
+        value: (d) => d.log_mhi_msun,
         upperLimit: (d) => d.log_mhi_limit_flag === "<",
       },
     ],
@@ -214,10 +208,7 @@ const ROWS: readonly PhysicalRow[] = [
         label: <>MD</>,
         description:
           "Main disturber: canonical galaxy responsible for the strongest tidal contribution",
-        value: (d) =>
-          typeof d.md_name === "string" && d.md_name.trim()
-            ? d.md_name
-            : d.md_published,
+        value: (d) => d.md_name,
       },
       {
         key: "theta1",
@@ -226,9 +217,10 @@ const ROWS: readonly PhysicalRow[] = [
             Θ<sub>1</sub>
           </>
         ),
-        description: "Tidal index set by the strongest neighboring galaxy",
+        description:
+          "Tidal index set by the strongest neighboring galaxy; provisional from the available LV donor census",
         decimals: 2,
-        value: (d) => d.theta1_published,
+        value: (d) => d.theta1,
       },
       {
         key: "theta5",
@@ -237,9 +229,10 @@ const ROWS: readonly PhysicalRow[] = [
             Θ<sub>5</sub>
           </>
         ),
-        description: "Tidal index of the five dominant neighboring galaxies",
+        description:
+          "Tidal index of the five dominant neighboring galaxies; provisional from the available LV donor census",
         decimals: 2,
-        value: (d) => d.theta5_published,
+        value: (d) => d.theta5,
       },
       {
         key: "thetaj",
@@ -248,9 +241,10 @@ const ROWS: readonly PhysicalRow[] = [
             Θ<sub>j</sub>
           </>
         ),
-        description: "Local Ks luminosity density relative to the cosmic mean",
+        description:
+          "Local Ks luminosity density relative to the cosmic mean; provisional from the available LV donor census",
         decimals: 2,
-        value: (d) => d.thetaj_published,
+        value: (d) => d.thetaj,
       },
     ],
   },
@@ -325,6 +319,7 @@ export function PhysicalParametersTable({ pgc }: { pgc: number }) {
 
   useEffect(() => {
     const controller = new AbortController();
+    let retryTimer: ReturnType<typeof setTimeout> | undefined = undefined;
     setRecord(null);
     setLoading(true);
     setError(null);
@@ -343,7 +338,14 @@ export function PhysicalParametersTable({ pgc }: { pgc: number }) {
             `Physical properties unavailable (${response.status})`,
           );
         const payload = (await response.json()) as { data: PhysicalData };
-        if (!controller.signal.aborted) setRecord(payload.data);
+        if (!controller.signal.aborted) {
+          setRecord(payload.data);
+          if (payload.data.physical_status === "pending") {
+            retryTimer = setTimeout(() => {
+              if (!controller.signal.aborted) void load();
+            }, 3000);
+          }
+        }
       } catch (reason) {
         if (!controller.signal.aborted) {
           setError(
@@ -358,7 +360,10 @@ export function PhysicalParametersTable({ pgc }: { pgc: number }) {
     }
 
     void load();
-    return () => controller.abort();
+    return () => {
+      controller.abort();
+      if (retryTimer !== undefined) clearTimeout(retryTimer);
+    };
   }, [pgc]);
 
   const activeRows =
@@ -375,6 +380,8 @@ export function PhysicalParametersTable({ pgc }: { pgc: number }) {
         <p className="catalog-status">Loading physical properties…</p>
       ) : error !== null ? (
         <p className="catalog-status catalog-status-error">{error}</p>
+      ) : record?.physical_status === "pending" ? (
+        <p className="catalog-status">Calculating physical properties…</p>
       ) : record === null ? (
         <p className="catalog-status">
           Physical parameters are unavailable for this object.

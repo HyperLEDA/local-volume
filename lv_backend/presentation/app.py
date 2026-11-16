@@ -1,4 +1,5 @@
 import pathlib
+import threading
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -8,6 +9,7 @@ import fastapi.staticfiles
 
 from lv_backend.data import migrations as data_migrations
 from lv_backend.data import physical as data_physical
+from lv_backend.data import physical_refresh as data_physical_refresh
 from lv_backend.data import storage as data_storage
 from lv_backend.domain import objects
 from lv_backend.presentation import schemas
@@ -23,7 +25,19 @@ async def lifespan(app: fastapi.FastAPI) -> AsyncIterator[None]:
     try:
         data_migrations.apply(config)
         app.state.storage = storage
-        yield
+        stop = threading.Event()
+        worker = threading.Thread(
+            target=data_physical_refresh.background_refresh,
+            args=(config, stop),
+            name="lv-physical-refresh",
+            daemon=True,
+        )
+        worker.start()
+        try:
+            yield
+        finally:
+            stop.set()
+            worker.join(timeout=1)
     finally:
         storage.close()
 
@@ -51,6 +65,11 @@ def get_physical(request: fastapi.Request, pgc: int) -> dict[str, object]:
     if row is None:
         raise fastapi.HTTPException(status_code=404)
     return {"data": row}
+
+
+@api.get("/physical/refresh-status")
+def get_physical_refresh_status(request: fastapi.Request) -> dict[str, object]:
+    return {"data": data_physical.refresh_status(request.app.state.storage)}
 
 
 app.include_router(api)
