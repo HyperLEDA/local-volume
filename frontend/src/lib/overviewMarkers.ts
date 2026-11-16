@@ -1,5 +1,6 @@
 import type { AladinSource } from "aladin-lite";
 import { morphologyColor } from "./morphologyColors.ts";
+import { tidalStrokeWidth } from "./tidalMarker.ts";
 
 /** The global map uses 7..14 px; object detail maps retain their 7..18 px cap. */
 export const OVERVIEW_MARKER_MAX_DIAMETER = 14;
@@ -29,6 +30,10 @@ function drawCircleOutline(
 
   ctx.beginPath();
   ctx.arc(x, y, (diameter - lineWidth) / 2, 0, 2 * Math.PI);
+  // A 0.05 px white rim on either edge of the colored stroke.
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.68)";
+  ctx.lineWidth = lineWidth + 0.1;
+  ctx.stroke();
   ctx.strokeStyle = strokeStyle;
   ctx.lineWidth = lineWidth;
   ctx.stroke();
@@ -59,7 +64,11 @@ export function drawOverviewMarker(
     source,
     ctx,
     morphologyColor(source.data?.morphology_t),
-    OVERVIEW_MARKER_STROKE_WIDTH,
+    tidalStrokeWidth(
+      source.data?.theta1,
+      source.data?.tidal_min,
+      source.data?.tidal_max,
+    ),
   );
   ctx.restore();
 }

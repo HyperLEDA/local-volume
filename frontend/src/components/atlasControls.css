@@ -1,0 +1,1220 @@
+/* Compact overview controls; intentionally scoped to the atlas page. */
+.catalog--overview .atlas-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  position: relative;
+  z-index: 30;
+}
+.atlas-search-form {
+  position: relative;
+  width: 310px;
+  max-width: 100%;
+}
+.atlas-compact-search {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 8px 35px 8px 11px;
+  font: inherit;
+  font-size: 0.86rem;
+  line-height: 1.25;
+  color: var(--ink);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+}
+.atlas-compact-search:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.atlas-go-coordinates {
+  position: absolute;
+  inset: 1px 1px 1px auto;
+  width: 32px;
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font-size: 1.3rem;
+  cursor: pointer;
+}
+.atlas-radius-control {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.atlas-radius-control select {
+  background: var(--card);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px;
+}
+.atlas-coordinate-hint {
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+.atlas-filter-anchor {
+  position: relative;
+}
+.atlas-filters-trigger {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--card);
+  color: var(--ink);
+  padding: 8px 11px;
+  font: inherit;
+  font-size: 0.83rem;
+  cursor: pointer;
+}
+.atlas-filters-trigger--active {
+  border-color: var(--accent);
+}
+.atlas-filter-panel {
+  position: absolute;
+  top: calc(100% + 7px);
+  left: 0;
+  z-index: 40;
+  width: min(316px, calc(100vw - 75px));
+  box-sizing: border-box;
+  padding: 11px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--card);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 25%);
+}
+.atlas-filter-heading,
+.atlas-filter-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.atlas-filter-heading {
+  font-size: 0.85rem;
+  margin-bottom: 9px;
+}
+.atlas-plain-icon {
+  border: none;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 1.2rem;
+}
+.atlas-filter-row {
+  display: grid;
+  grid-template-columns: 69px minmax(0, 1fr) 8px minmax(0, 1fr) 32px;
+  gap: 4px;
+  align-items: center;
+  margin: 5px 0;
+}
+.atlas-filter-row-label {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+.atlas-filter-row-label input {
+  margin: 0;
+}
+.atlas-filter-row > input {
+  box-sizing: border-box;
+  min-width: 0;
+  width: 100%;
+  border-radius: 4px;
+  padding: 4px;
+  background: var(--bg);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  font-size: 0.78rem;
+}
+.atlas-filter-row > input:disabled {
+  opacity: 0.55;
+}
+.atlas-filter-unit {
+  color: var(--muted);
+  font-size: 0.69rem;
+}
+.atlas-filter-environment {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 11px;
+  font-size: 0.8rem;
+}
+.atlas-filter-environment select {
+  min-width: 0;
+  padding: 5px 3px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--ink);
+  border-radius: 4px;
+  font-size: 0.78rem;
+}
+.atlas-filter-data-status {
+  margin-top: 5px;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+.atlas-filter-missing {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 9px;
+  color: var(--muted);
+  font-size: 0.77rem;
+}
+.atlas-filter-footer {
+  margin-top: 9px;
+}
+.atlas-filter-footer button {
+  padding: 5px 9px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.78rem;
+}
+.atlas-filter-reset {
+  color: var(--ink);
+  background: transparent;
+}
+.atlas-filter-done {
+  color: var(--ink);
+  background: var(--hover-tint);
+}
+.catalog--overview .catalog-sky {
+  position: relative;
+}
+.atlas-legend-anchor {
+  position: absolute;
+  right: 12px;
+  bottom: 43px;
+  z-index: 20;
+}
+.atlas-legend-button {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgb(199 215 227 / 70%);
+  border-radius: 6px;
+  background: rgb(15 25 35 / 85%);
+  color: #e5eff7;
+  cursor: pointer;
+  font-size: 1.1rem;
+}
+.atlas-legend-button:hover,
+.atlas-legend-button:focus-visible {
+  border-color: #e5eff7;
+}
+.atlas-legend-panel {
+  position: absolute;
+  right: 0;
+  bottom: 38px;
+  width: 213px;
+  box-sizing: border-box;
+  border: 1px solid #617584;
+  border-radius: 8px;
+  padding: 10px;
+  background: rgb(17 28 39 / 95%);
+  box-shadow: 0 5px 25px rgb(0 0 0 / 35%);
+  color: #eaf2f8;
+  font-size: 11px;
+  line-height: 1.3;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(4px);
+  transition:
+    opacity 0.15s,
+    visibility 0.15s,
+    transform 0.15s;
+}
+.atlas-legend-anchor:hover .atlas-legend-panel,
+.atlas-legend-anchor:focus-within .atlas-legend-panel,
+.atlas-legend-anchor--pinned .atlas-legend-panel {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+.atlas-legend-section {
+  margin-top: 9px;
+  color: #b6c9d6;
+}
+.atlas-legend-swatches {
+  display: flex;
+  gap: 3px;
+  margin-top: 5px;
+}
+.atlas-legend-swatches > span {
+  height: 7px;
+  flex: 1;
+  border-radius: 2px;
+}
+.atlas-legend-label-pair {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  margin-top: 4px;
+}
+.atlas-legend-unknown {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
+  font-size: 10px;
+}
+.atlas-legend-unknown > span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+.atlas-legend-sizes,
+.atlas-legend-strokes {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 5px;
+  color: #eaf2f8;
+  font-size: 10px;
+}
+.atlas-legend-circle {
+  display: inline-block;
+  border: 1.5px solid #91a8c6;
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+.atlas-legend-circle--small {
+  width: 8px;
+  height: 8px;
+}
+.atlas-legend-circle--large {
+  width: 15px;
+  height: 15px;
+}
+.atlas-legend-stroke {
+  width: 18px;
+  height: 0;
+  border-top: solid #91a8c6;
+  display: inline-block;
+}
+.atlas-legend-stroke--thin {
+  border-width: 1.2px;
+}
+.atlas-legend-stroke--thick {
+  border-width: 1.8px;
+  margin-left: 12px;
+}
+.atlas-legend-detail {
+  margin-top: 4px;
+  font-size: 10px;
+}
+@media (max-width: 530px) {
+  .atlas-search-form {
+    width: min(255px, 100%);
+  }
+  .atlas-filter-anchor {
+    position: static;
+  }
+  .atlas-filter-panel {
+    left: 0;
+  }
+  .atlas-legend-panel {
+    max-height: 50vh;
+    overflow-y: auto;
+  }
+}
+
+/* Region tools and selected-population summary */
+.atlas-region-panel {
+  width: min(342px, calc(100vw - 75px));
+}
+.atlas-region-mode {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.atlas-region-mode button,
+.atlas-region-draw {
+  padding: 7px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8rem;
+}
+.atlas-region-mode button[aria-pressed="true"] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.atlas-region-draw {
+  width: 100%;
+  margin: 9px 0 3px;
+}
+.atlas-region-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+.atlas-region-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+.atlas-region-fields input {
+  min-width: 0;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--bg);
+  color: var(--ink);
+  font: inherit;
+}
+.atlas-region-note {
+  color: var(--muted);
+  font-size: 0.7rem;
+  line-height: 1.35;
+}
+.atlas-region-error {
+  color: var(--danger);
+  font-size: 0.75rem;
+}
+.atlas-region-label {
+  padding-left: 5px;
+  color: var(--muted);
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+.atlas-results {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 22px;
+  padding: 5px 0;
+}
+.atlas-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.atlas-stat > span,
+.atlas-stat > small {
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+.atlas-stat > strong {
+  font-size: 1rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.atlas-stat strong small {
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-weight: 400;
+}
+.atlas-results-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+}
+.atlas-results-actions button {
+  font: inherit;
+  font-size: 0.76rem;
+  padding: 7px 10px;
+  background: var(--card);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.atlas-results-actions button:hover {
+  border-color: var(--accent);
+}
+.atlas-results-feedback {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+/* Integrated toolbar and transparent spherical-region drawing surface. */
+.catalog--overview .atlas-controls-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  position: relative;
+  z-index: 35;
+}
+.catalog--overview .atlas-controls-row > .atlas-toolbar {
+  flex: 0 1 auto;
+}
+.atlas-active-criteria {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: -10px;
+}
+.atlas-criterion {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 265px;
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.73rem;
+  cursor: pointer;
+}
+.atlas-criterion > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.atlas-criterion:hover {
+  border-color: var(--accent);
+}
+.atlas-criterion-reset {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.73rem;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.atlas-missing-note {
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+.atlas-draw-surface {
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  cursor: crosshair;
+  touch-action: none;
+  outline: none;
+}
+.atlas-draw-surface:focus-visible {
+  outline: 2px solid #efd29b;
+  outline-offset: -3px;
+}
+.atlas-draw-preview {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.atlas-draw-instruction {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: rgb(18 29 39 / 92%);
+  color: #e9f1f7;
+  font-size: 0.76rem;
+  white-space: nowrap;
+  box-shadow: 0 3px 12px rgb(0 0 0 / 25%);
+}
+.atlas-draw-cancel {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  background: rgb(18 29 39 / 90%);
+  border: 1px solid #607385;
+  border-radius: 5px;
+  padding: 5px 8px;
+  color: #e9f1f7;
+  font-size: 0.77rem;
+  cursor: pointer;
+}
+@media (max-width: 600px) {
+  .atlas-controls-row .atlas-search-form {
+    width: min(270px, calc(100vw - 110px));
+  }
+  .atlas-draw-instruction {
+    max-width: 75%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+/* Atlas v2: search and selection directly beneath the all-sky map. */
+.catalog--overview .atlas-input-section {
+  position: relative;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 1px 0 0;
+}
+.catalog--overview .atlas-controls-row {
+  z-index: 41;
+}
+.catalog--overview .atlas-active-criteria {
+  margin-top: 0;
+}
+.catalog--overview .atlas-toolbar .atlas-search-form {
+  width: 280px;
+}
+.catalog--overview .atlas-results {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  padding: 2px 0 8px;
+}
+.atlas-results-statistics {
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+  align-items: start;
+}
+.atlas-results-actions {
+  margin-left: 0;
+  justify-content: flex-start;
+}
+.atlas-share-anchor {
+  position: relative;
+}
+.atlas-share-popup {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%);
+  z-index: 50;
+  white-space: nowrap;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  box-shadow: 0 3px 12px rgb(0 0 0 / 25%);
+  color: var(--ink);
+  font-size: 0.74rem;
+  pointer-events: none;
+}
+/* Five scientific ranges; hints report the extrema of the full catalogue. */
+.atlas-filter-panel {
+  width: min(365px, calc(100vw - 75px));
+}
+.atlas-filter-row {
+  grid-template-columns: 72px minmax(0, 1fr) 10px minmax(0, 1fr) 40px;
+  row-gap: 2px;
+  margin: 8px 0;
+}
+.atlas-filter-range-hint {
+  grid-column: 2 / 6;
+  font-size: 0.68rem;
+  color: var(--muted);
+}
+.atlas-filter-row-label sub,
+.atlas-criterion sub,
+.atlas-legend-section sub,
+.atlas-stat sub {
+  font-size: 0.72em;
+  line-height: 0;
+  vertical-align: sub;
+}
+.atlas-draw-hint {
+  position: absolute;
+  left: 50%;
+  top: 42px;
+  transform: translateX(-50%);
+  border: 1px solid #a08e69;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: rgb(18 29 39 / 92%);
+  color: #f0d29a;
+  font-size: 0.75rem;
+  pointer-events: none;
+  white-space: nowrap;
+}
+@media (max-width: 600px) {
+  .atlas-results-statistics {
+    gap: 12px 18px;
+  }
+  .catalog--overview .atlas-toolbar .atlas-search-form {
+    width: min(270px, calc(100vw - 110px));
+  }
+  .atlas-draw-hint {
+    max-width: 80%;
+    white-space: normal;
+  }
+}
+
+/* Scientific filters: two physically grouped columns; compact to one on mobile. */
+.atlas-filter-panel {
+  width: min(760px, calc(100vw - 40px));
+  max-width: calc(100vw - 40px);
+}
+.atlas-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+.atlas-filter-column {
+  min-width: 0;
+}
+.atlas-filter-group-title {
+  margin: 6px 0 10px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+.atlas-filter-row {
+  grid-template-columns: 69px minmax(0, 1fr) 10px minmax(0, 1fr) 40px;
+}
+@media (max-width: 680px) {
+  .atlas-filter-panel {
+    width: min(375px, calc(100vw - 32px));
+    max-width: calc(100vw - 32px);
+  }
+  .atlas-filter-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+}
+
+/* Atlas MD: page navigation and independent sky-location action. */
+.lv-popup-md-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.lv-popup-md-link {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: currentColor;
+  text-underline-offset: 2px;
+}
+.lv-popup-md-link:hover,
+.lv-popup-md-link:focus-visible {
+  text-decoration-thickness: 2px;
+}
+.lv-popup-md-locate {
+  display: inline-grid;
+  place-items: center;
+  padding: 2px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.lv-popup-md-locate:hover,
+.lv-popup-md-locate:focus-visible {
+  background: rgb(175 185 194 / 18%);
+  outline-offset: 2px;
+}
+
+/* Atlas v5: stage selection edits without affecting the live catalogue. */
+.atlas-filter-validation {
+  margin: 6px 0;
+  font-size: 0.75rem;
+  color: #ecaa9c;
+}
+.atlas-filter-stage-note {
+  margin-left: auto;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+.atlas-filter-panel .atlas-filter-footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.atlas-filter-panel input[type="number"] {
+  min-width: 0;
+}
+.atlas-toolbar .atlas-search-form {
+  display: flex;
+  align-items: stretch;
+}
+.atlas-toolbar .atlas-go-coordinates {
+  flex: none;
+}
+@media (max-width: 680px) {
+  .atlas-filter-stage-note {
+    font-size: 0.66rem;
+  }
+}
+
+/* Atlas v5.2 — compact, upward-opening controls and a single command bar. */
+.catalog--overview .atlas-overview-commandbar {
+  display: grid;
+  grid-template-columns: minmax(340px, 1fr) max-content minmax(190px, 1fr);
+  column-gap: 13px;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+}
+.catalog--overview .atlas-overview-commandbar > .atlas-results {
+  display: contents;
+}
+.catalog--overview .atlas-overview-commandbar > .atlas-controls-row {
+  grid-column: 1;
+  min-width: 0;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 6px;
+}
+.catalog--overview .atlas-overview-commandbar .atlas-results-statistics {
+  grid-column: 2;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  flex-wrap: nowrap;
+  gap: 15px;
+  white-space: nowrap;
+  min-width: 0;
+}
+.catalog--overview .atlas-overview-commandbar .atlas-results-actions {
+  grid-column: 3;
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: nowrap;
+  gap: 6px;
+  margin: 0;
+  white-space: nowrap;
+}
+.catalog--overview .atlas-overview-commandbar .atlas-stat {
+  min-width: 0;
+}
+.catalog--overview .atlas-overview-commandbar .atlas-stat strong {
+  white-space: nowrap;
+}
+.catalog--overview
+  .atlas-overview-commandbar
+  .atlas-toolbar
+  .atlas-search-form {
+  width: clamp(170px, 16vw, 270px);
+  min-width: 150px;
+}
+.catalog--overview .atlas-overview-commandbar .atlas-compact-search {
+  min-width: 0;
+  width: 100%;
+}
+.catalog--overview .atlas-filter-anchor {
+  position: relative;
+}
+.catalog--overview .atlas-filter-anchor > .atlas-filter-panel {
+  position: absolute;
+  top: auto !important;
+  bottom: calc(100% + 9px);
+  left: 0;
+  z-index: 100;
+  max-height: min(480px, calc(100vh - 30px));
+  overflow-y: auto;
+  box-sizing: border-box;
+  box-shadow: 0 12px 30px rgb(0 0 0 / 30%);
+}
+.catalog--overview
+  .atlas-filter-anchor
+  > .atlas-filter-panel:not(.atlas-region-panel) {
+  width: min(625px, calc(100vw - 32px));
+  max-width: calc(100vw - 32px);
+  padding: 11px 13px;
+}
+.catalog--overview .atlas-filter-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.catalog--overview .atlas-filter-group-title {
+  margin: 3px 0 7px;
+  font-size: 0.72rem;
+}
+.catalog--overview .atlas-filter-row {
+  display: grid;
+  grid-template-columns: 53px minmax(58px, 1fr) 7px minmax(58px, 1fr) 34px;
+  gap: 5px;
+  align-items: center;
+  margin: 5px 0;
+  row-gap: 0;
+}
+.catalog--overview .atlas-filter-row-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  font-size: 0.78rem;
+}
+.catalog--overview .atlas-filter-row-label input[type="checkbox"] {
+  margin: 0;
+}
+.catalog--overview .atlas-filter-row > input[type="text"] {
+  width: 100%;
+  min-width: 0;
+  height: 30px;
+  box-sizing: border-box;
+  padding: 4px 6px;
+  font-variant-numeric: tabular-nums;
+}
+.catalog--overview .atlas-filter-row .atlas-filter-unit {
+  white-space: nowrap;
+  font-size: 0.67rem;
+}
+/* Full-catalog extrema are retained in the label's accessible title.
+   Hiding the repeated text saves six rows without discarding source information. */
+.catalog--overview .atlas-filter-range-hint {
+  display: none;
+}
+.catalog--overview .atlas-filter-environment {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 10px 0 6px;
+}
+.catalog--overview .atlas-filter-environment label {
+  white-space: nowrap;
+  margin: 0;
+}
+.catalog--overview .atlas-filter-environment select {
+  width: min(194px, 100%);
+  max-width: 194px;
+  margin: 0;
+}
+.catalog--overview .atlas-filter-missing {
+  margin: 4px 0 7px;
+}
+.catalog--overview .atlas-filter-footer {
+  margin-top: 7px;
+}
+.catalog--overview .atlas-filter-stage-note {
+  font-size: 0.66rem;
+}
+.catalog--overview .atlas-filter-anchor > .atlas-region-panel {
+  width: min(435px, calc(100vw - 32px));
+  max-width: calc(100vw - 32px);
+  padding: 11px 13px;
+}
+.catalog--overview .atlas-region-mode {
+  display: flex;
+  gap: 6px;
+  margin: 6px 0;
+}
+.catalog--overview .atlas-region-mode button {
+  flex: 1 1 0;
+  padding: 5px 9px;
+  min-height: 30px;
+}
+.catalog--overview .atlas-region-draw {
+  width: 100%;
+  padding: 5px 9px;
+  min-height: 30px;
+  margin: 0;
+}
+.catalog--overview .atlas-region-note {
+  font-size: 0.69rem;
+  line-height: 1.35;
+  margin: 5px 0;
+}
+.catalog--overview .atlas-region-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 10px;
+  row-gap: 7px;
+  margin: 7px 0;
+}
+.catalog--overview .atlas-region-fields label {
+  display: block;
+  font-size: 0.72rem;
+}
+.catalog--overview .atlas-region-fields input {
+  display: block;
+  box-sizing: border-box;
+  margin-top: 3px;
+  padding: 4px 7px;
+  height: 30px;
+  width: 100%;
+  font-variant-numeric: tabular-nums;
+}
+.catalog--overview .atlas-legend-stroke--thick {
+  border-width: 2.2px;
+}
+@media (max-width: 1250px) {
+  .catalog--overview .atlas-overview-commandbar {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    row-gap: 9px;
+  }
+  .catalog--overview .atlas-overview-commandbar > .atlas-controls-row {
+    grid-column: 1 / -1;
+  }
+  .catalog--overview .atlas-overview-commandbar .atlas-results-statistics {
+    grid-column: 1;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+  .catalog--overview .atlas-overview-commandbar .atlas-results-actions {
+    grid-column: 2;
+  }
+}
+@media (max-width: 690px) {
+  .catalog--overview .atlas-overview-commandbar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .catalog--overview .atlas-overview-commandbar > .atlas-controls-row {
+    grid-column: 1;
+    flex-wrap: wrap;
+  }
+  .catalog--overview .atlas-overview-commandbar .atlas-results-statistics {
+    grid-column: 1;
+    gap: 10px 15px;
+  }
+  .catalog--overview .atlas-overview-commandbar .atlas-results-actions {
+    grid-column: 1;
+    justify-content: flex-start;
+  }
+  .catalog--overview
+    .atlas-filter-anchor
+    > .atlas-filter-panel:not(.atlas-region-panel) {
+    width: min(385px, calc(100vw - 24px));
+  }
+  .catalog--overview .atlas-filter-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 5px;
+  }
+  .catalog--overview .atlas-filter-anchor > .atlas-filter-panel {
+    max-height: min(490px, calc(100vh - 22px));
+  }
+}
+
+/* Atlas v5.3: two-line masthead without increasing header height. */
+.catalog-header h1.catalog-header-title--atlas {
+  margin: 0;
+  line-height: 1.05;
+}
+.catalog-header-title--atlas a {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.catalog-header-title--atlas .catalog-title-main {
+  font-size: clamp(1rem, 1.55vw, 1.25rem);
+  font-weight: 700;
+  letter-spacing: 0.025em;
+}
+.catalog-header-title--atlas .catalog-title-subtitle {
+  font-size: clamp(0.65rem, 0.9vw, 0.79rem);
+  font-weight: 450;
+  opacity: 0.84;
+  letter-spacing: 0.01em;
+}
+/* Both floating panels remain anchored above their controls. */
+.catalog--overview .atlas-filter-anchor > .atlas-filter-panel {
+  z-index: 120;
+}
+@media (max-width: 700px) {
+  .catalog-header-title--atlas .catalog-title-main {
+    font-size: 0.93rem;
+  }
+  .catalog-header-title--atlas .catalog-title-subtitle {
+    font-size: 0.65rem;
+  }
+}
+
+/* v5.4: dense filters with direct activation and non-dominant tidal outlines. */
+.catalog--overview
+  .atlas-filter-anchor
+  > .atlas-filter-panel:not(.atlas-region-panel) {
+  width: min(619px, calc(100vw - 24px));
+  padding: 9px 11px;
+}
+.catalog--overview .atlas-filter-grid {
+  gap: 10px;
+}
+.catalog--overview .atlas-filter-group-title {
+  font-size: 0.77rem;
+  margin: 3px 0 6px;
+}
+.catalog--overview .atlas-filter-row {
+  grid-template-columns: 55px minmax(0, 82px) 9px minmax(0, 82px) 37px;
+  gap: 4px;
+  margin: 3px 0;
+  min-height: 27px;
+}
+.catalog--overview .atlas-filter-row > input[type="text"] {
+  height: 27px;
+  padding: 3px 6px;
+  font-size: 0.82rem;
+}
+.catalog--overview .atlas-filter-row-label {
+  appearance: none;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  min-width: 0;
+  height: 27px;
+  padding: 0 0 0 7px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 0.94rem;
+  font-weight: 550;
+  line-height: 1;
+  cursor: pointer;
+}
+.catalog--overview .atlas-filter-row-label::before {
+  position: absolute;
+  left: 0;
+  top: 7px;
+  height: 13px;
+  width: 2px;
+  border-radius: 2px;
+  background: transparent;
+  content: "";
+}
+.catalog--overview .atlas-filter-row--active .atlas-filter-row-label::before {
+  background: #71c6e5;
+}
+.catalog--overview .atlas-filter-row--active > input[type="text"] {
+  border-color: #5c9cba;
+}
+.catalog--overview .atlas-filter-row-label:focus-visible {
+  outline: 2px solid #71c6e5;
+  outline-offset: 1px;
+}
+.catalog--overview .atlas-filter-row-label:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+.catalog--overview .atlas-filter-row-label i {
+  font-size: inherit;
+}
+.catalog--overview .atlas-filter-row-label sub {
+  font-size: 0.66em;
+}
+.catalog--overview .atlas-filter-row .atlas-filter-unit {
+  font-size: 0.7rem;
+}
+.catalog--overview .atlas-filter-environment {
+  margin-top: 9px;
+}
+@media (max-width: 690px) {
+  .catalog--overview .atlas-filter-grid {
+    gap: 5px;
+  }
+  .catalog--overview .atlas-filter-row {
+    grid-template-columns: 49px minmax(0, 1fr) 7px minmax(0, 1fr) 32px;
+    gap: 4px;
+  }
+}
+
+/* v5.5: tighter filter layout with subtle active state. */
+.catalog--overview
+  .atlas-filter-anchor
+  > .atlas-filter-panel:not(.atlas-region-panel) {
+  width: min(524px, calc(100vw - 24px));
+  padding: 9px 10px;
+}
+.catalog--overview .atlas-filter-grid {
+  gap: 8px;
+}
+.catalog--overview .atlas-filter-row {
+  grid-template-columns: 43px minmax(0, 69px) 8px minmax(0, 69px) 34px;
+  gap: 3px;
+  justify-content: start;
+  margin: 3px 0;
+  min-height: 26px;
+}
+.catalog--overview .atlas-filter-row > input[type="text"] {
+  height: 26px;
+  padding: 3px 5px;
+  font-size: 0.81rem;
+}
+.catalog--overview
+  .atlas-filter-row:not(.atlas-filter-row--active)
+  > input[type="text"] {
+  color: #8f9baa;
+  border-color: #40505e;
+}
+.catalog--overview .atlas-filter-row--active > input[type="text"] {
+  color: #f5f8fb;
+  border-color: #647c8e;
+}
+.catalog--overview .atlas-filter-row-label {
+  height: 26px;
+  padding: 0;
+  font-size: 0.88rem;
+  font-weight: 400;
+  line-height: 1;
+}
+.catalog--overview .atlas-filter-row-label::before {
+  display: none;
+}
+.catalog--overview .atlas-filter-row-label i {
+  font-weight: 400;
+}
+.catalog--overview .atlas-filter-row-label sub {
+  font-size: 0.68em;
+  vertical-align: sub;
+  line-height: 0;
+  font-weight: 400;
+  margin-left: 0.01em;
+}
+.catalog--overview .atlas-filter-row .atlas-filter-unit {
+  font-size: 0.67rem;
+}
+@media (max-width: 690px) {
+  .catalog--overview .atlas-filter-row {
+    grid-template-columns: 43px minmax(0, 1fr) 8px minmax(0, 1fr) 31px;
+  }
+}
+
+/* v5.6 — filter symbols use the same typography as the catalogue controls.
+   A relative baseline offset is explicit: inherited sub rules must not flatten
+   V_h, V_LG, or m_21 into an apparent space-separated label. */
+.catalog--overview .atlas-filter-row-label {
+  font-family: inherit;
+  font-size: 0.87rem;
+  font-weight: 400;
+  font-style: normal;
+  letter-spacing: normal;
+  line-height: 1;
+}
+.catalog--overview .atlas-filter-row-label .atlas-filter-symbol {
+  display: inline-block;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 400;
+  font-style: normal;
+  line-height: 1;
+  white-space: nowrap;
+}
+.catalog--overview .atlas-filter-row-label .atlas-filter-symbol i {
+  font-weight: 400;
+  font-style: normal;
+}
+.catalog--overview .atlas-filter-row-label .atlas-filter-symbol sub {
+  display: inline-block;
+  position: relative;
+  top: 0.32em;
+  margin: 0 0 0 0.01em;
+  font-family: inherit;
+  font-size: 0.67em;
+  font-weight: 400;
+  font-style: normal;
+  line-height: 1;
+  vertical-align: baseline;
+}

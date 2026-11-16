@@ -11,13 +11,22 @@ export type ColumnMeta = {
 export type CatalogObject = {
   pgc: number;
   name: string;
+  distance_method?: string | null;
   ra: number | null;
   dec: number | null;
   bt: number | null;
   v_hel: number | null;
   b_mag?: number | null;
+  hi21_mag?: number | null;
+  hi21_limit?: string | null;
   ks_mag?: number | null;
   lvg_v_hel_kms?: number | null;
+  lvg_v_lg_kms?: number | null;
+  dist?: number | null;
+  theta1?: number | null;
+  md_pgc?: number | null;
+  md_name?: string | null;
+  environment_coverage?: string | null;
   a26_arcmin?: number | null;
   morphology_t?: number | null;
   w50_kms?: number | null;
@@ -62,12 +71,21 @@ type ObjectsListResponse = {
   data: {
     pgc: number[];
     name: string[];
+    distance_method?: (string | null)[];
     ra: (number | null)[];
     dec: (number | null)[];
     bt?: (number | null)[];
     b_mag?: (number | null)[];
+    hi21_mag?: (number | null)[];
+    hi21_limit?: (string | null)[];
     ks_mag?: (number | null)[];
     lvg_v_hel_kms?: (number | null)[];
+    lvg_v_lg_kms?: (number | null)[];
+    dist?: (number | null)[];
+    theta1?: (number | null)[];
+    md_pgc?: (number | null)[];
+    md_name?: (string | null)[];
+    environment_coverage?: (string | null)[];
     a26_arcmin?: (number | null)[];
     morphology_t?: (number | null)[];
     w50_kms?: (number | null)[];
@@ -115,12 +133,21 @@ export async function fetchObjects(): Promise<CatalogObject[]> {
   const {
     pgc,
     name,
+    distance_method: distanceMethod,
     ra,
     dec,
     bt,
     b_mag: bMag,
+    hi21_mag: hi21Mag,
+    hi21_limit: hi21Limit,
     ks_mag: ksMag,
     lvg_v_hel_kms: nativeVHel,
+    lvg_v_lg_kms: nativeVLg,
+    dist: nativeDistance,
+    theta1: nativeTheta,
+    md_pgc: nativeMdPgc,
+    md_name: nativeMdName,
+    environment_coverage: coverage,
     a26_arcmin: nativeA26,
     morphology_t: morphologyT,
     w50_kms: nativeW50,
@@ -133,12 +160,21 @@ export async function fetchObjects(): Promise<CatalogObject[]> {
   return pgc.map((id, index) => ({
     pgc: id,
     name: name[index] ?? "",
+    distance_method: distanceMethod?.[index] ?? null,
     ra: ra[index] ?? null,
     dec: dec[index] ?? null,
     bt: bt?.[index] ?? null,
     b_mag: bMag?.[index] ?? null,
+    hi21_mag: hi21Mag?.[index] ?? null,
+    hi21_limit: hi21Limit?.[index] ?? null,
     ks_mag: ksMag?.[index] ?? null,
     lvg_v_hel_kms: nativeVHel?.[index] ?? null,
+    lvg_v_lg_kms: nativeVLg?.[index] ?? null,
+    dist: nativeDistance?.[index] ?? null,
+    theta1: nativeTheta?.[index] ?? null,
+    md_pgc: nativeMdPgc?.[index] ?? null,
+    md_name: nativeMdName?.[index] ?? null,
+    environment_coverage: coverage?.[index] ?? null,
     a26_arcmin: nativeA26?.[index] ?? null,
     morphology_t: morphologyT?.[index] ?? null,
     w50_kms: nativeW50?.[index] ?? null,
