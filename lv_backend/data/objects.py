@@ -2,20 +2,30 @@ from collections.abc import Sequence
 from typing import Any
 
 from lv_backend.data.storage import Storage
+from lv_backend.domain.physical_calculations import FORMULA_VERSION
 from lv_backend.presentation import schemas
 
 SUMMARY_COLUMNS: tuple[str, ...] = (
     "pgc",
     "name",
+    "distance_method",
     "ra",
     "dec",
     "bt",
     "b_mag",
+    "hi21_mag",
+    "hi21_limit",
     "ks_mag",
     "a26_arcmin",
     "morphology_t",
     "w50_kms",
     "lvg_v_hel_kms",
+    "dist",
+    "lvg_v_lg_kms",
+    "theta1",
+    "md_pgc",
+    "md_name",
+    "environment_coverage",
     "v_hel",
     "type_name",
     "names",
@@ -87,6 +97,7 @@ WHERE schema_name = 'lv'
   AND (
     (table_name = 'objects' AND column_name = ANY(%s))
     OR (table_name = 'observed' AND column_name = ANY(%s))
+    OR (table_name = 'physical' AND column_name = ANY(%s))
   )
 """
 
@@ -106,13 +117,21 @@ COALESCE(
 """
 
 _OBJECTS_QUERY = f"""
-SELECT o.pgc, o.name, o.ra, o.dec, obs.bt, obs.b_mag, obs.ks_mag,
-       obs.a26_arcmin, obs.morphology_t, obs.w50_kms, obs.lvg_v_hel_kms, obs.v_hel,
-       o.type_name, {_NAMES_AGG}
+SELECT o.pgc, o.name, o.ra, o.dec, obs.bt, obs.b_mag, obs.hi21_mag, obs.hi21_limit, obs.ks_mag,
+       obs.a26_arcmin, obs.morphology_t, obs.w50_kms, obs.lvg_v_hel_kms,
+       obs.dist, obs.lvg_v_lg_kms, p.theta1, p.md_pgc, md.name AS md_name,
+       p.environment_coverage, obs.v_hel,
+       obs.distance_method, o.type_name, {_NAMES_AGG}
 FROM lv.objects AS o
 LEFT JOIN lv.observed AS obs ON obs.pgc = o.pgc
+LEFT JOIN lv.physical_refresh_state AS s ON s.singleton = true
+LEFT JOIN lv.physical AS p ON p.pgc = o.pgc
+  AND s.source_revision = s.applied_revision
+  AND p.computed_revision = s.applied_revision
+  AND s.formula_version = %s
+LEFT JOIN lv.objects AS md ON md.pgc = p.md_pgc
 LEFT JOIN lv.names AS n ON n.pgc = o.pgc
-GROUP BY o.pgc, obs.pgc
+GROUP BY o.pgc, obs.pgc, p.pgc, md.pgc
 ORDER BY o.pgc
 """
 
@@ -184,8 +203,11 @@ GROUP BY o.pgc, obs.pgc
 def select_schema(storage: Storage, columns: Sequence[str]) -> dict[str, schemas.ColumnMeta]:
     selected = [column for column in columns if column != "names"]
     object_columns = [column for column in selected if column in _OBJECT_COLUMNS]
-    observed_columns = [column for column in selected if column not in _OBJECT_COLUMNS]
-    rows = storage.query(_SCHEMA_QUERY, [object_columns, observed_columns])
+    physical_columns = [column for column in selected if column in {"theta1", "md_pgc", "environment_coverage"}]
+    observed_columns = [
+        column for column in selected if column not in _OBJECT_COLUMNS and column not in physical_columns
+    ]
+    rows = storage.query(_SCHEMA_QUERY, [object_columns, observed_columns, physical_columns])
     by_name = {row["column_name"]: _as_param(row["param"]) for row in rows}
     result = {column: _column_meta(by_name.get(column, {})) for column in selected}
     if "names" in columns:
@@ -196,7 +218,7 @@ def select_schema(storage: Storage, columns: Sequence[str]) -> dict[str, schemas
 
 
 def select_objects(storage: Storage) -> list[dict[str, Any]]:
-    return storage.query(_OBJECTS_QUERY)
+    return storage.query(_OBJECTS_QUERY, [FORMULA_VERSION])
 
 
 def select_object(storage: Storage, pgc: int) -> dict[str, Any] | None:

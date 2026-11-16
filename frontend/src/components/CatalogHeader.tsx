@@ -1,9 +1,10 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import saoLogo from "../images/sao.png";
 import ledaLogo from "../images/leda.png";
 import ledaDarkLogo from "../images/leda-dark.png";
 
 export function CatalogHeader() {
+  const isOverview = useLocation().pathname === "/";
   return (
     <header className="catalog-header">
       <a
@@ -13,8 +14,19 @@ export function CatalogHeader() {
       >
         <img src={saoLogo} alt="SAO" />
       </a>
-      <h1>
-        <Link to="/">Catalog & Atlas of the LV galaxies</Link>
+      <h1 className={isOverview ? "catalog-header-title--atlas" : undefined}>
+        <Link to="/">
+          {isOverview ? (
+            <>
+              <span className="catalog-title-main">LV LEDA</span>
+              <span className="catalog-title-subtitle">
+                Galaxies of the Nearby Universe
+              </span>
+            </>
+          ) : (
+            "Catalog & Atlas of the LV galaxies"
+          )}
+        </Link>
       </h1>
       <a
         className="catalog-logo catalog-logo--leda"
