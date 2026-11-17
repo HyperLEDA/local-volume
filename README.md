@@ -1,1 +1,42 @@
-This is a template Python project.
+# Local Volume (LV LEDA)
+
+Local Volume galaxy catalogue and group explorer developed within LEDA.
+The application provides an object catalogue, galaxy detail pages, sky maps,
+physical parameters, group information, and scientific diagnostics.
+
+The codebase contains a Python/FastAPI backend, a React/TypeScript frontend,
+and PostgreSQL/PostGIS migrations.
+
+## Local development
+
+Requirements: Python 3.12+, [uv](https://docs.astral.sh/uv/),
+[Bun](https://bun.sh/), Docker with Compose, and GNU Make for the `make` targets.
+The commands below assume a Unix-like shell and a disposable local database.
+
+```sh
+make install-dev
+make start-db
+uv run lv-backend migrate
+bun run --cwd frontend build
+uv run lv-backend webserver
+```
+
+The web server listens at `http://localhost:8000`. The local Compose database
+is exposed on port `6433`; connection defaults are documented in `.env.example`.
+Do not reuse the example credentials in a production deployment.
+
+## Checks
+
+```sh
+make check       # Python checks, migrations naming, frontend lint, and tests
+make test-js     # All JavaScript/TypeScript tests (Bun)
+```
+
+The CI workflow runs `make check` and builds a Docker image for every pull
+request. Its `tests` and `build` jobs are required before merging into `main`.
+
+## Database safety
+
+`make check-schema` removes and recreates the local `lvdb` Compose container,
+including associated anonymous volumes. Do not run it against a database
+containing data you need to retain.

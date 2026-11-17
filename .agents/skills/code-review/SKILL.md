@@ -36,7 +36,7 @@ If the rule asks for a citation, put it in the `description` field.
 
 To fetch the full diff use
 ```shell
-git fetch origin && git diff origin/master...HEAD
+git fetch origin && git diff origin/main...HEAD
 ```
 
 Below are rules you should check when reviewing the code.
