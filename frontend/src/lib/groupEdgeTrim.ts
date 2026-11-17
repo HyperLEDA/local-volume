@@ -16,7 +16,10 @@ function positionOnArc(a: SkyVertex, b: SkyVertex, t: number): SkyVertex {
   }
   const u = vector(a);
   const v = vector(b);
-  const dot = Math.max(-1, Math.min(1, u[0] * v[0] + u[1] * v[1] + u[2] * v[2]));
+  const dot = Math.max(
+    -1,
+    Math.min(1, u[0] * v[0] + u[1] * v[1] + u[2] * v[2]),
+  );
   const omega = Math.acos(dot);
   if (omega < 1e-9 || Math.PI - omega < 1e-8) return a;
   const sine = Math.sin(omega);
@@ -25,7 +28,10 @@ function positionOnArc(a: SkyVertex, b: SkyVertex, t: number): SkyVertex {
   const x = wa * u[0] + wb * v[0];
   const y = wa * u[1] + wb * v[1];
   const z = wa * u[2] + wb * v[2];
-  return [((Math.atan2(y, x) / DEG) % 360 + 360) % 360, Math.atan2(z, Math.hypot(x, y)) / DEG];
+  return [
+    (((Math.atan2(y, x) / DEG) % 360) + 360) % 360,
+    Math.atan2(z, Math.hypot(x, y)) / DEG,
+  ];
 }
 
 function screenDistance(a: ScreenPoint, b: ScreenPoint): number | null {
@@ -45,7 +51,16 @@ function endFraction(
   let low = 0;
   let high = 1;
   let reached = false;
-  for (const fraction of [1 / 128, 1 / 64, 1 / 32, 1 / 16, 1 / 8, 1 / 4, 1 / 2, 1]) {
+  for (const fraction of [
+    1 / 128,
+    1 / 64,
+    1 / 32,
+    1 / 16,
+    1 / 8,
+    1 / 4,
+    1 / 2,
+    1,
+  ]) {
     const position = positionOnArc(start, finish, fraction);
     const distance = screenDistance(startScreen, project(...position));
     if (distance === null || distance >= pixels) {

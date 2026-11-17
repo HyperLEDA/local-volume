@@ -20,7 +20,10 @@ function finitePositive(value: number | null | undefined): value is number {
 }
 
 /** An observed cell is rounded for display; allow at most half its last unit. */
-function agreesWithDisplayedValue(displayed: string, adopted: number | null | undefined): boolean {
+function agreesWithDisplayedValue(
+  displayed: string,
+  adopted: number | null | undefined,
+): boolean {
   if (typeof adopted !== "number" || !Number.isFinite(adopted)) return false;
   const text = displayed.trim().replace(/\u2212/g, "-");
   if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(text)) return false;
@@ -49,15 +52,20 @@ export function observedUncertainty(
 ): CompactUncertainty | null {
   if (!physical || physical.physical_status !== "ready") return null;
   if (row.name === "dist") {
-    if (!agreesWithDisplayedValue(row.value, physical.distance_mpc)) return null;
+    if (!agreesWithDisplayedValue(row.value, physical.distance_mpc))
+      return null;
     const plus = physical.e_distance_plus_mpc;
     const minus = physical.e_distance_minus_mpc;
-    return finitePositive(plus) && finitePositive(minus) ? compactPair(plus, minus) : null;
+    return finitePositive(plus) && finitePositive(minus)
+      ? compactPair(plus, minus)
+      : null;
   }
   if (row.name === "lvg_v_lg_kms") {
     if (!agreesWithDisplayedValue(row.value, physical.v_lg_kms)) return null;
     const sigma = physical.e_v_lg_kms;
-    return finitePositive(sigma) ? { kind: "symmetric", sigma: twoSignificant(sigma) } : null;
+    return finitePositive(sigma)
+      ? { kind: "symmetric", sigma: twoSignificant(sigma) }
+      : null;
   }
   return null;
 }

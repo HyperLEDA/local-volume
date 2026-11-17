@@ -51,21 +51,30 @@ const PARAMETER_HELP: Readonly<Record<string, string>> = {
   w50_kms: "H I 21-cm line width at 50% of peak flux",
 };
 
-function ObservedReading({ row, physical }: {
+function ObservedReading({
+  row,
+  physical,
+}: {
   row: DisplayParameter;
   physical: AdoptedPhysicalErrorSource | null;
 }) {
   const derived = observedUncertainty(row, physical);
   const isDerived = derived !== null;
   return (
-    <div className={`parameter-block-reading${isDerived ? " observed-reading--with-error" : ""}${derived?.kind === "asymmetric" ? " observed-reading--asymmetric" : ""}`}>
+    <div
+      className={`parameter-block-reading${isDerived ? " observed-reading--with-error" : ""}${derived?.kind === "asymmetric" ? " observed-reading--asymmetric" : ""}`}
+    >
       <span className="parameter-block-value">{displayValue(row)}</span>
       {derived?.kind === "symmetric" ? (
-        <span className="parameter-block-error observed-error-symmetric">± {derived.sigma}</span>
+        <span className="parameter-block-error observed-error-symmetric">
+          ± {derived.sigma}
+        </span>
       ) : null}
       {derived?.kind === "asymmetric" ? (
-        <span className="parameter-block-error observed-error-stack"
-          aria-label={`upper error +${derived.plus}, lower error −${derived.minus}`}>
+        <span
+          className="parameter-block-error observed-error-stack"
+          aria-label={`upper error +${derived.plus}, lower error −${derived.minus}`}
+        >
           <span>+{derived.plus}</span>
           <span>−{derived.minus}</span>
         </span>
@@ -86,17 +95,29 @@ function ObservedReading({ row, physical }: {
   );
 }
 
-export function ObservedParameterCards({ rows, pgc }: ObservedParameterCardsProps) {
-  const [physical, setPhysical] = useState<AdoptedPhysicalErrorSource | null>(null);
+export function ObservedParameterCards({
+  rows,
+  pgc,
+}: ObservedParameterCardsProps) {
+  const [physical, setPhysical] = useState<AdoptedPhysicalErrorSource | null>(
+    null,
+  );
   useEffect(() => {
     const controller = new AbortController();
     setPhysical(null);
     async function loadErrorSource(): Promise<void> {
       try {
-        const response = await fetch(`/api/v1/object/${pgc}/physical`, { signal: controller.signal });
+        const response = await fetch(`/api/v1/object/${pgc}/physical`, {
+          signal: controller.signal,
+        });
         if (!response.ok) return;
-        const result = (await response.json()) as { data: AdoptedPhysicalErrorSource };
-        if (!controller.signal.aborted && result.data.physical_status === "ready") {
+        const result = (await response.json()) as {
+          data: AdoptedPhysicalErrorSource;
+        };
+        if (
+          !controller.signal.aborted &&
+          result.data.physical_status === "ready"
+        ) {
           setPhysical(result.data);
         }
       } catch {

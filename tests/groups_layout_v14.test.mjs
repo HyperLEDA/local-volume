@@ -6,8 +6,11 @@ const css = readFileSync("frontend/src/styles/groups.css", "utf8");
 const figs = readFileSync("frontend/src/components/GroupFigures.tsx", "utf8");
 const jpeg = readFileSync("frontend/src/lib/groupFigureJpeg.ts", "utf8");
 
-const source = params.split("  const rows: Cell[][] = [")[1]?.split("  ];\n  return (")[0] ?? "";
-const rowKeys = source.split(/^    \],$/m).map(row => [...row.matchAll(/cell\("([^\"]+)"/g)].map(m => m[1])).filter(x => x.length);
+// Read source structure without depending on Prettier's line wrapping of cell() arguments.
+const rowsBody = params.split(/const rows:\s*Cell\[\]\[\]\s*=\s*\[/)[1]?.split(/\n  \];/)[0] ?? "";
+const rowKeys = [...rowsBody.matchAll(/^    \[([\s\S]*?)^    \],?$/gm)].map(([, row]) =>
+  [...row.matchAll(/\bcell\(\s*"([^"]+)"/g)].map((match) => match[1]),
+);
 
 test("six exact rows with requested variable column counts and no unavailable footer", () => {
   expect(rowKeys).toEqual([

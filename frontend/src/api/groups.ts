@@ -58,16 +58,23 @@ export type GroupDetail = GroupSummary & {
   members: GroupMember[];
 };
 
-export async function fetchGroups(definition: GroupDefinition): Promise<GroupSummary[]> {
+export async function fetchGroups(
+  definition: GroupDefinition,
+): Promise<GroupSummary[]> {
   const response = await fetch(`/api/v1/groups?definition=${definition}`);
-  if (!response.ok) throw new Error(`Failed to load groups (${response.status})`);
+  if (!response.ok)
+    throw new Error(`Failed to load groups (${response.status})`);
   const payload = (await response.json()) as { data: GroupSummary[] };
   return payload.data;
 }
 
-export async function fetchGroup(pgc: number, definition: GroupDefinition = "physical"): Promise<GroupDetail> {
+export async function fetchGroup(
+  pgc: number,
+  definition: GroupDefinition = "physical",
+): Promise<GroupDetail> {
   const response = await fetch(`/api/v1/group/${pgc}?definition=${definition}`);
-  if (!response.ok) throw new Error(`Failed to load group (${response.status})`);
+  if (!response.ok)
+    throw new Error(`Failed to load group (${response.status})`);
   const payload = (await response.json()) as { data: GroupDetail };
   return payload.data;
 }
@@ -85,17 +92,28 @@ export async function previewExists(
   definition: GroupDefinition,
   variant: GroupPreviewVariant = "hierarchy",
 ): Promise<boolean> {
-  const result = await fetch(previewUrl(pgc, definition, variant), { method: "HEAD", cache: "no-store" });
+  const result = await fetch(previewUrl(pgc, definition, variant), {
+    method: "HEAD",
+    cache: "no-store",
+  });
   if (result.status === 404) return false;
   if (!result.ok) throw new Error(`Cannot check preview (${result.status})`);
   return true;
 }
 
 export async function currentPhysicalRevision(): Promise<number> {
-  const response = await fetch("/api/v1/physical/refresh-status", { cache: "no-store" });
-  if (!response.ok) throw new Error(`Physical revision unavailable (${response.status})`);
-  const payload = (await response.json()) as { data: { source_revision: number; applied_revision: number } };
-  if (payload.data.source_revision !== payload.data.applied_revision || !Number.isSafeInteger(payload.data.applied_revision)) {
+  const response = await fetch("/api/v1/physical/refresh-status", {
+    cache: "no-store",
+  });
+  if (!response.ok)
+    throw new Error(`Physical revision unavailable (${response.status})`);
+  const payload = (await response.json()) as {
+    data: { source_revision: number; applied_revision: number };
+  };
+  if (
+    payload.data.source_revision !== payload.data.applied_revision ||
+    !Number.isSafeInteger(payload.data.applied_revision)
+  ) {
     throw new Error("Physical catalogue is not refreshed");
   }
   return payload.data.applied_revision;
@@ -108,11 +126,21 @@ export async function uploadPreview(
   revision: number,
   variant: GroupPreviewVariant = "hierarchy",
 ): Promise<void> {
-  if (blob.type !== "image/webp") throw new Error("Only WebP previews may be stored");
-  const result = await fetch(previewUrl(pgc, definition, variant), { method: "PUT", headers: { "Content-Type": "image/webp", "X-LV-Physical-Revision": String(revision) }, body: blob });
-  if (!result.ok) throw new Error(`Preview storage failed (${result.status}): ${await result.text()}`);
+  if (blob.type !== "image/webp")
+    throw new Error("Only WebP previews may be stored");
+  const result = await fetch(previewUrl(pgc, definition, variant), {
+    method: "PUT",
+    headers: {
+      "Content-Type": "image/webp",
+      "X-LV-Physical-Revision": String(revision),
+    },
+    body: blob,
+  });
+  if (!result.ok)
+    throw new Error(
+      `Preview storage failed (${result.status}): ${await result.text()}`,
+    );
 }
-
 
 /** The cache report contains metadata only. No WebP bytes are read into the UI. */
 export type GroupPreviewCacheManifest = {
@@ -134,8 +162,12 @@ export async function fetchPreviewCacheManifest(
     { cache: "no-store" },
   );
   if (!response.ok) {
-    throw new Error(`Preview cache status unavailable (${response.status}): ${await response.text()}`);
+    throw new Error(
+      `Preview cache status unavailable (${response.status}): ${await response.text()}`,
+    );
   }
-  const payload = (await response.json()) as { data: GroupPreviewCacheManifest };
+  const payload = (await response.json()) as {
+    data: GroupPreviewCacheManifest;
+  };
   return payload.data;
 }

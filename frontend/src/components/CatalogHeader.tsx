@@ -8,9 +8,13 @@ export function CatalogHeader() {
   const isOverview = pathname === "/";
   const isGroupDetail = /^\/groups\/\d+\/?$/.test(pathname);
   return (
-    <header className={`catalog-header${isGroupDetail ? " catalog-header--group" : ""}`}>
+    <header
+      className={`catalog-header${isGroupDetail ? " catalog-header--group" : ""}`}
+    >
       {isGroupDetail && (
-        <Link className="catalog-header-back" to="/groups">← Groups</Link>
+        <Link className="catalog-header-back" to="/groups">
+          ← Groups
+        </Link>
       )}
       <a
         className="catalog-logo catalog-logo--sao"

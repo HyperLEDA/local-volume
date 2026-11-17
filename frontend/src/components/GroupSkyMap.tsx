@@ -17,8 +17,15 @@ import {
   drawOverviewMarker,
   OVERVIEW_MARKER_MAX_DIAMETER,
 } from "../lib/overviewMarkers.ts";
-import { popupDescription, popupTitle, setCatalogSources } from "./AladinMap.tsx";
-import { hasSkySignal, hasWebpSignature } from "../lib/groupPreviewImageQuality.ts";
+import {
+  popupDescription,
+  popupTitle,
+  setCatalogSources,
+} from "./AladinMap.tsx";
+import {
+  hasSkySignal,
+  hasWebpSignature,
+} from "../lib/groupPreviewImageQuality.ts";
 
 type PositionedMember = GroupMember & { ra: number; dec: number };
 
@@ -42,15 +49,24 @@ type CaptureView = GroupDrawingView & {
 /** Do not ever stretch a nonsquare sky screenshot into a square galaxy thumbnail. */
 async function captureSquareWebp(view: CaptureView): Promise<Blob> {
   const [viewWidth, viewHeight] = view.getSize();
-  if (!Number.isFinite(viewWidth) || !Number.isFinite(viewHeight) ||
-      viewWidth < 100 || viewHeight < 100 ||
-      Math.abs(viewWidth - viewHeight) > Math.max(2, viewWidth * 0.015)) {
-    throw new Error(`Aladin preview must have a square viewport; got ${viewWidth}x${viewHeight}`);
+  if (
+    !Number.isFinite(viewWidth) ||
+    !Number.isFinite(viewHeight) ||
+    viewWidth < 100 ||
+    viewHeight < 100 ||
+    Math.abs(viewWidth - viewHeight) > Math.max(2, viewWidth * 0.015)
+  ) {
+    throw new Error(
+      `Aladin preview must have a square viewport; got ${viewWidth}x${viewHeight}`,
+    );
   }
   // The documented Aladin API accepts explicit screenshot dimensions here,
   // unlike getViewData('blob'), which uses the underlying view dimensions.
   const url = await view.getViewDataURL({
-    format: "image/png", width: 512, height: 512, logo: false,
+    format: "image/png",
+    width: 512,
+    height: 512,
+    logo: false,
   });
   if (!url.startsWith("data:image/png")) {
     throw new Error("Aladin did not return a PNG screenshot");
@@ -59,7 +75,9 @@ async function captureSquareWebp(view: CaptureView): Promise<Blob> {
   const bitmap = await createImageBitmap(png);
   try {
     if (Math.abs(bitmap.width - bitmap.height) > 2 || bitmap.width < 256) {
-      throw new Error(`Aladin exported a non-square image: ${bitmap.width}x${bitmap.height}`);
+      throw new Error(
+        `Aladin exported a non-square image: ${bitmap.width}x${bitmap.height}`,
+      );
     }
     const canvas = document.createElement("canvas");
     canvas.width = 512;
@@ -70,19 +88,25 @@ async function captureSquareWebp(view: CaptureView): Promise<Blob> {
     context.imageSmoothingQuality = "high";
     context.drawImage(bitmap, 0, 0, 512, 512);
     if (!hasSkySignal(context.getImageData(0, 0, 512, 512).data, 512, 512)) {
-      throw new Error("DSS2 image is not yet visible in the captured sky field");
+      throw new Error(
+        "DSS2 image is not yet visible in the captured sky field",
+      );
     }
     const webp = await new Promise<Blob>((resolve, reject) => {
       canvas.toBlob(
-        (result) => result ? resolve(result) : reject(new Error("WebP encoding failed")),
-        "image/webp", 0.92,
+        (result) =>
+          result ? resolve(result) : reject(new Error("WebP encoding failed")),
+        "image/webp",
+        0.92,
       );
     });
     // File size reflects image compressibility; it is NOT evidence of validity.
     // Verify actual WebP container bytes instead of rejecting small astronomy images.
     const signature = new Uint8Array(await webp.slice(0, 12).arrayBuffer());
     if (webp.type !== "image/webp" || !hasWebpSignature(signature)) {
-      throw new Error(`WebP encoding failed (type=${webp.type || "unknown"}, bytes=${webp.size})`);
+      throw new Error(
+        `WebP encoding failed (type=${webp.type || "unknown"}, bytes=${webp.size})`,
+      );
     }
     return webp;
   } finally {
@@ -164,7 +188,10 @@ export function groupFullExtentFov(
     maxOffset = Math.max(maxOffset, Math.abs(x), Math.abs(y));
   }
   // Fill approximately 91% of the half-width, keeping a small margin for markers.
-  return Math.max(0.15, Math.min(178, (2 * Math.asin(Math.min(1, maxOffset / 0.91))) / DEG));
+  return Math.max(
+    0.15,
+    Math.min(178, (2 * Math.asin(Math.min(1, maxOffset / 0.91))) / DEG),
+  );
 }
 
 function allMembersFit(
@@ -224,7 +251,12 @@ export function GroupSkyMap({
       const pgc = Number(locate.dataset.mdPgc);
       const md = catalogueRef.current?.byPgc.get(pgc);
       const map = viewRef.current;
-      if (md && typeof md.ra === "number" && typeof md.dec === "number" && map) {
+      if (
+        md &&
+        typeof md.ra === "number" &&
+        typeof md.dec === "number" &&
+        map
+      ) {
         event.preventDefault();
         event.stopPropagation();
         map.gotoRaDec(md.ra, md.dec);
@@ -269,7 +301,9 @@ export function GroupSkyMap({
     const byPgc = new Map(members.map((member) => [member.pgc, member]));
     // Identical adopted angular framing to the individual object's map.
     const initialFov = portrait
-      ? (Number.isFinite(portraitFov) && portraitFov > 0 ? portraitFov : 1)
+      ? Number.isFinite(portraitFov) && portraitFov > 0
+        ? portraitFov
+        : 1
       : groupFullExtentFov(members, root);
     const rootRa = root.ra;
     const rootDec = root.dec;
@@ -293,7 +327,13 @@ export function GroupSkyMap({
       const height = element.clientHeight;
       if (width < 80 || height < 80) return;
       const padding = miniature ? 17 : 18;
-      const { factor, missing } = allMembersFit(view, members, width, height, padding);
+      const { factor, missing } = allMembersFit(
+        view,
+        members,
+        width,
+        height,
+        padding,
+      );
       if (factor <= 1.015 && missing === 0) return;
       const currentFov = view.getFov()[0];
       if (!Number.isFinite(currentFov) || currentFov <= 0) return;
@@ -311,7 +351,9 @@ export function GroupSkyMap({
       const atlas = portrait ? null : await fetchAtlasSnapshot();
       if (cancelled) return;
       if (atlas !== null) {
-        const missing = members.filter((member) => !atlas.byPgc.has(member.pgc));
+        const missing = members.filter(
+          (member) => !atlas.byPgc.has(member.pgc),
+        );
         if (missing.length > 0) {
           throw new Error(
             `The current Atlas lacks ${missing.length} group object(s): ${missing.map((member) => member.pgc).join(", ")}`,
@@ -319,7 +361,10 @@ export function GroupSkyMap({
         }
         catalogueRef.current = atlas;
       }
-      const visibleObjects = atlas === null ? [] : members.map((member) => atlas.byPgc.get(member.pgc)!);
+      const visibleObjects =
+        atlas === null
+          ? []
+          : members.map((member) => atlas.byPgc.get(member.pgc)!);
 
       const createdView = A.aladin(element, {
         survey: SURVEY,
@@ -375,118 +420,133 @@ export function GroupSkyMap({
       // Close-up preview is the unannotated DSS2 field of the root galaxy.
       // Only the hierarchy preview and interactive group map draw relations.
       if (!portrait && atlas !== null) {
-      // Aladin owns both layers, so they follow the same coordinate transform
-      // and the same render cycle when panning and zooming.
-      lines = drawingApi.graphicOverlay({
-        name: "Group main-disturber relations",
-        color: "#e9bd70",
-        lineWidth: miniature ? 0.9 : 1.0,
-      });
-      view.addOverlay(lines);
-      const bounds = members.map((member) => {
-        const object = atlas.byPgc.get(member.pgc);
-        const diameter = Math.max(
-          4,
-          Math.round(markerDiameter(object?.b_mag ?? null, OVERVIEW_MARKER_MAX_DIAMETER)),
-        );
-        return [member.pgc, diameter / 2] as const;
-      });
-      markerRadius = new Map(bounds);
-      // Regenerate only when pixel scale changes. The native Aladin overlay
-      // continues to track pan movements without a separate animated canvas.
-      mapView.on("zoomChanged", updateGroupEdges);
-      unregisterEdgeUpdate = () => mapView.off?.("zoomChanged");
+        // Aladin owns both layers, so they follow the same coordinate transform
+        // and the same render cycle when panning and zooming.
+        lines = drawingApi.graphicOverlay({
+          name: "Group main-disturber relations",
+          color: "#e9bd70",
+          lineWidth: miniature ? 0.9 : 1.0,
+        });
+        view.addOverlay(lines);
+        const bounds = members.map((member) => {
+          const object = atlas.byPgc.get(member.pgc);
+          const diameter = Math.max(
+            4,
+            Math.round(
+              markerDiameter(
+                object?.b_mag ?? null,
+                OVERVIEW_MARKER_MAX_DIAMETER,
+              ),
+            ),
+          );
+          return [member.pgc, diameter / 2] as const;
+        });
+        markerRadius = new Map(bounds);
+        // Regenerate only when pixel scale changes. The native Aladin overlay
+        // continues to track pan movements without a separate animated canvas.
+        mapView.on("zoomChanged", updateGroupEdges);
+        unregisterEdgeUpdate = () => mapView.off?.("zoomChanged");
 
-      const catalog: AladinCatalog = A.catalog({
-        name: "Group galaxies",
-        shape: drawOverviewMarker,
-        sourceSize: 7,
-        color: (source: AladinSource) =>
-          morphologyColor(
-            typeof source.data?.morphology_t === "number"
-              ? source.data.morphology_t
-              : null,
-          ),
-      });
-      // Reuse the exact Atlas marker/popup implementation, including global
-      // Theta1 stroke bounds, photometric diameters and MD navigation fields.
-      view.addCatalog(catalog);
-      setCatalogSources(
-        catalog,
-        visibleObjects,
-        1,
-        OVERVIEW_MARKER_MAX_DIAMETER,
-        atlas.tidalRange,
-        atlas.objects,
-      );
-      view.gotoRaDec(rootRa, rootDec);
-      view.setFoV(initialFov);
-      updateGroupEdges();
-      observer = new ResizeObserver(() => {
-        fitToMembers();
+        const catalog: AladinCatalog = A.catalog({
+          name: "Group galaxies",
+          shape: drawOverviewMarker,
+          sourceSize: 7,
+          color: (source: AladinSource) =>
+            morphologyColor(
+              typeof source.data?.morphology_t === "number"
+                ? source.data.morphology_t
+                : null,
+            ),
+        });
+        // Reuse the exact Atlas marker/popup implementation, including global
+        // Theta1 stroke bounds, photometric diameters and MD navigation fields.
+        view.addCatalog(catalog);
+        setCatalogSources(
+          catalog,
+          visibleObjects,
+          1,
+          OVERVIEW_MARKER_MAX_DIAMETER,
+          atlas.tidalRange,
+          atlas.objects,
+        );
+        view.gotoRaDec(rootRa, rootDec);
+        view.setFoV(initialFov);
         updateGroupEdges();
-      });
-      observer.observe(element);
-      for (const delay of [100, 350, 850, 1400]) {
-        timers.push(window.setTimeout(fitToMembers, delay));
-      }
+        observer = new ResizeObserver(() => {
+          fitToMembers();
+          updateGroupEdges();
+        });
+        observer.observe(element);
+        for (const delay of [100, 350, 850, 1400]) {
+          timers.push(window.setTimeout(fitToMembers, delay));
+        }
       } else {
         // No marker/catalogue/overlay for an MD portrait.
         view.gotoRaDec(rootRa, rootDec);
         view.setFoV(initialFov);
       }
       if (onSnapshot) {
-        timers.push(window.setTimeout(() => {
-          if (cancelled || !view || snapshotRequested) return;
-          snapshotRequested = true;
-          fitToMembers();
-          if (!portrait) {
-            const { factor, missing } = allMembersFit(
-              view,
-              members,
-              element.clientWidth,
-              element.clientHeight,
-              17,
-            );
-            if (missing > 0 || factor > 1.02) {
+        timers.push(
+          window.setTimeout(() => {
+            if (cancelled || !view || snapshotRequested) return;
+            snapshotRequested = true;
+            fitToMembers();
+            if (!portrait) {
+              const { factor, missing } = allMembersFit(
+                view,
+                members,
+                element.clientWidth,
+                element.clientHeight,
+                17,
+              );
+              if (missing > 0 || factor > 1.02) {
+                onSnapshotError?.(
+                  `Preview incomplete: ${missing} off-projection markers; boundary factor ${factor.toFixed(2)}`,
+                );
+                return;
+              }
+            }
+            if (
+              typeof view.getViewDataURL !== "function" ||
+              typeof view.getSize !== "function"
+            ) {
               onSnapshotError?.(
-                `Preview incomplete: ${missing} off-projection markers; boundary factor ${factor.toFixed(2)}`,
+                "Installed Aladin Lite lacks sized screenshot export",
               );
               return;
             }
-          }
-          if (typeof view.getViewDataURL !== "function" || typeof view.getSize !== "function") {
-            onSnapshotError?.("Installed Aladin Lite lacks sized screenshot export");
-            return;
-          }
-          // DSS2 HiPS tile loading is asynchronous. Retry captures of a sky
-          // field that is not yet painted; never persist an empty placeholder.
-          const captureView = view;
-          const reportImage = onSnapshot;
-          const delays = [0, 1800, 2600, 3800];
-          async function captureAttempt(attempt: number, previousError: unknown = null): Promise<void> {
-            if (isCaptureAborted()) return;
-            if (attempt >= delays.length) {
-              onSnapshotError?.(
-                `Preview capture failed after ${delays.length} attempts: ${String(previousError)}`,
-              );
-              return;
+            // DSS2 HiPS tile loading is asynchronous. Retry captures of a sky
+            // field that is not yet painted; never persist an empty placeholder.
+            const captureView = view;
+            const reportImage = onSnapshot;
+            const delays = [0, 1800, 2600, 3800];
+            async function captureAttempt(
+              attempt: number,
+              previousError: unknown = null,
+            ): Promise<void> {
+              if (isCaptureAborted()) return;
+              if (attempt >= delays.length) {
+                onSnapshotError?.(
+                  `Preview capture failed after ${delays.length} attempts: ${String(previousError)}`,
+                );
+                return;
+              }
+              if (delays[attempt] > 0) {
+                await new Promise<void>((resolve) => {
+                  window.setTimeout(resolve, delays[attempt]);
+                });
+              }
+              if (isCaptureAborted()) return;
+              try {
+                const blob = await captureSquareWebp(captureView);
+                if (!isCaptureAborted()) reportImage(blob);
+              } catch (error: unknown) {
+                await captureAttempt(attempt + 1, error);
+              }
             }
-            if (delays[attempt] > 0) {
-              await new Promise<void>((resolve) => {
-                window.setTimeout(resolve, delays[attempt]);
-              });
-            }
-            if (isCaptureAborted()) return;
-            try {
-              const blob = await captureSquareWebp(captureView);
-              if (!isCaptureAborted()) reportImage(blob);
-            } catch (error: unknown) {
-              await captureAttempt(attempt + 1, error);
-            }
-          }
-          void captureAttempt(0);
-        }, 4800));
+            void captureAttempt(0);
+          }, 4800),
+        );
       }
     }
 
@@ -497,7 +557,9 @@ export function GroupSkyMap({
       if (!cancelled) {
         element.dataset.layerError = String(error);
         setMapError(`Group map unavailable: ${String(error)}`);
-        onSnapshotError?.(`Aladin layer initialization failed: ${String(error)}`);
+        onSnapshotError?.(
+          `Aladin layer initialization failed: ${String(error)}`,
+        );
       }
     });
     return () => {
@@ -514,7 +576,14 @@ export function GroupSkyMap({
       catalogueRef.current = null;
       element.replaceChildren();
     };
-  }, [group, miniature, previewVariant, portraitFov, onSnapshot, onSnapshotError]);
+  }, [
+    group,
+    miniature,
+    previewVariant,
+    portraitFov,
+    onSnapshot,
+    onSnapshotError,
+  ]);
 
   return (
     <div

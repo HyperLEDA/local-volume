@@ -19,7 +19,10 @@ export default function App() {
             <Route path="/" element={<ObjectsPage />} />
             <Route path="/object/:pgc" element={<ObjectPage />} />
             <Route path="/groups" element={<GroupsPage />} />
-            <Route path="/groups/preview-builder" element={<GroupPreviewBuilderPage />} />
+            <Route
+              path="/groups/preview-builder"
+              element={<GroupPreviewBuilderPage />}
+            />
             <Route path="/groups/:rootPgc" element={<GroupPage />} />
             <Route path="/publications" element={<PublicationsPage />} />
           </Routes>

@@ -11,7 +11,7 @@ describe('Groups v16 UI and preview cache', () => {
     const s = read('frontend/src/components/GroupSkyMap.tsx');
     expect(s).toContain('maxOffset / 0.91');
     expect(s).toContain('const padding = miniature ? 17 : 18');
-    expect(s).toContain('allMembersFit(view, members, width, height, padding)');
+    expect(s).toMatch(/allMembersFit\(\s*view,\s*members,\s*width,\s*height,\s*padding,?\s*\)/);
     expect(s).toContain('Preview incomplete:');
   });
   test('renderer version invalidates outdated hierarchy images and preserves portraits', () => {

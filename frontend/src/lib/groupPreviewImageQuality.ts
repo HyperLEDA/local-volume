@@ -2,8 +2,14 @@
 export function hasWebpSignature(bytes: Uint8Array): boolean {
   if (bytes.length < 12) return false;
   return (
-    bytes[0] === 82 && bytes[1] === 73 && bytes[2] === 70 && bytes[3] === 70 && // RIFF
-    bytes[8] === 87 && bytes[9] === 69 && bytes[10] === 66 && bytes[11] === 80 // WEBP
+    bytes[0] === 82 &&
+    bytes[1] === 73 &&
+    bytes[2] === 70 &&
+    bytes[3] === 70 && // RIFF
+    bytes[8] === 87 &&
+    bytes[9] === 69 &&
+    bytes[10] === 66 &&
+    bytes[11] === 80 // WEBP
   );
 }
 
@@ -17,8 +23,14 @@ export function hasSkySignal(
   width: number,
   height: number,
 ): boolean {
-  if (!Number.isInteger(width) || !Number.isInteger(height) ||
-      width < 32 || height < 32 || rgba.length < width * height * 4) return false;
+  if (
+    !Number.isInteger(width) ||
+    !Number.isInteger(height) ||
+    width < 32 ||
+    height < 32 ||
+    rgba.length < width * height * 4
+  )
+    return false;
   const x0 = Math.floor(width * 0.12);
   const x1 = Math.ceil(width * 0.88);
   const y0 = Math.floor(height * 0.12);
@@ -30,7 +42,8 @@ export function hasSkySignal(
   for (let y = y0; y < y1; y += step) {
     for (let x = x0; x < x1; x += step) {
       const index = (y * width + x) * 4;
-      const luma = (54 * rgba[index] + 183 * rgba[index + 1] + 19 * rgba[index + 2]) / 256;
+      const luma =
+        (54 * rgba[index] + 183 * rgba[index + 1] + 19 * rgba[index + 2]) / 256;
       minimum = Math.min(minimum, luma);
       maximum = Math.max(maximum, luma);
       if (luma >= 20) brighter++;
