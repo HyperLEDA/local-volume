@@ -2,3 +2,14 @@ postgres/migrations/000[6-9].*.sql text eol=lf
 lv_backend/data/lvgdb_physical.py text eol=lf
 scripts/lv_physical_stage_p0.py text eol=lf
 tests/lvgdb_physical_test.py text eol=lf
+
+# Keep frontend source files LF in Windows working copies (Prettier / core.autocrlf).
+frontend/**/*.ts text eol=lf
+frontend/**/*.tsx text eol=lf
+frontend/**/*.mjs text eol=lf
+frontend/**/*.js text eol=lf
+frontend/**/*.jsx text eol=lf
+frontend/**/*.css text eol=lf
+frontend/**/*.html text eol=lf
+frontend/**/*.json text eol=lf
+frontend/**/*.md text eol=lf
