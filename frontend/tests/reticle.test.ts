@@ -17,6 +17,7 @@ function object(
     ra,
     dec: 0,
     bt,
+    b_mag: bt,
     v_hel: null,
     type_name: null,
     names: [],

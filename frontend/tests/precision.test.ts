@@ -45,14 +45,14 @@ describe("display-only precision", () => {
     });
   });
 
-  test("preserves trailing zeroes needed for two significant error digits", () => {
+  test("does not add unsupported trailing digits to a rounded uncertainty", () => {
     expect(pair("bt", 13.2, 0.1, magnitudes)).toEqual({
-      value: "13.20",
-      error: "0.10",
+      value: "13.2",
+      error: "0.1",
     });
     expect(pair("bt", 13.25, 0.0999, magnitudes)).toEqual({
-      value: "13.25",
-      error: "0.10",
+      value: "13.3",
+      error: "0.1",
     });
   });
 
@@ -66,7 +66,7 @@ describe("display-only precision", () => {
   test("does not couple degree value and arcsecond uncertainty", () => {
     expect(pair("ra", 12.123456789, 0.5, degrees, "arcsec")).toEqual({
       value: "12.123457",
-      error: "0.50",
+      error: "0.5",
     });
   });
 
@@ -99,7 +99,7 @@ describe("display-only precision", () => {
   test("preserves reported zero error and never invents error", () => {
     expect(pair("ra", 12.25, 0, degrees)).toEqual({
       value: "12.25",
-      error: "0",
+      error: null,
     });
     expect(formatParameterDisplay("ra", 12.25, null, degrees, null)).toEqual({
       value: "12.25",

@@ -1,0 +1,1190 @@
+.groups-layout {
+  width: 100%;
+  max-width: 1450px;
+  min-width: 0;
+  margin: 0 auto;
+  padding: 6px 0 55px;
+  color: var(--ink);
+}
+
+.groups-heading {
+  margin-bottom: 22px;
+}
+.groups-heading h2 {
+  margin: 0 0 6px;
+  font-size: 1.65rem;
+  font-weight: 650;
+}
+.groups-heading p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.91rem;
+}
+
+.groups-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 23px;
+}
+.groups-tools input,
+.groups-tools select {
+  min-height: 42px;
+  min-width: 170px;
+  padding: 9px 12px;
+  color: var(--ink);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.88rem;
+}
+.groups-tools input {
+  flex: 1;
+  min-width: 235px;
+}
+.groups-tools :is(input, select):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Exactly four columns at desktop widths, not auto-fill's narrow fifth column. */
+.groups-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+.group-card {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ink);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  text-decoration: none;
+  transition:
+    border-color 0.15s,
+    transform 0.15s;
+}
+.group-card:hover,
+.group-card:focus-visible {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+.group-card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.group-card-image {
+  position: relative;
+  display: grid;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  place-items: center;
+  color: #aabcc9;
+  background: #111c27;
+  font-size: 0.8rem;
+}
+.group-card-content {
+  padding: 15px 16px 16px;
+}
+.group-card-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 16px;
+  font-size: 1.03rem;
+}
+.group-card-title strong {
+  font-weight: 650;
+}
+.group-card-title small {
+  color: var(--muted);
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+.group-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.group-stats div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 5px;
+}
+.group-stats small {
+  color: var(--muted);
+  font-size: 0.73rem;
+}
+.group-stats strong {
+  font-weight: 600;
+  font-size: 0.96rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.group-stats em {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 400;
+}
+.group-card-note {
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+.groups-more {
+  display: block;
+  margin: 25px auto;
+  padding: 9px 23px;
+  color: var(--ink);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.groups-more:hover {
+  border-color: var(--accent);
+}
+
+/* Aladin renders sky, markers and relations in a single synchronized view. */
+.group-sky-map {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background: #101922;
+}
+.group-sky-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.group-sky-map--miniature {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* The gallery thumbnail is a sky image, not a miniature Aladin control panel. */
+.group-sky-map--miniature
+  .group-sky-image
+  :is(
+    button,
+    input,
+    select,
+    .aladin-location,
+    .aladin-location-text,
+    .aladin-logo,
+    .aladin-fov,
+    .aladin-toolbar,
+    .aladin-zoomControl,
+    .aladin-layersControl,
+    .aladin-projectionChoice,
+    .aladin-cooFrameChoice,
+    .aladin-frameChoice,
+    .aladin-stack-control,
+    .aladin-stack-box,
+    .aladin-projection-control,
+    .aladin-widgets-toolbar,
+    .aladin-status-bar,
+    .aladin-cooFrame,
+    .aladin-tooltip,
+    .aladin-context-menu,
+    .aladin-simbadPointerControl,
+    .aladin-reticle,
+    .aladin-boxes,
+    .aladin-imageSurveyMarker
+  ) {
+  display: none !important;
+}
+
+.groups-back {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 20px;
+  color: var(--accent);
+  text-decoration: none;
+}
+.groups-back:hover {
+  text-decoration: underline;
+}
+.group-details .groups-heading {
+  margin-bottom: 20px;
+}
+.group-overview-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 820px) minmax(285px, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+.group-map-panel {
+  width: 100%;
+  min-width: 0;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #101922;
+  box-sizing: border-box;
+}
+.group-detail-summary {
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+}
+.group-detail-title {
+  margin: 0 0 7px;
+  font-size: 1.65rem;
+  line-height: 1.25;
+  font-weight: 650;
+}
+.group-detail-kicker {
+  margin: 0 0 29px;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+.group-detail-summary h3 {
+  margin: 0 0 22px;
+  font-size: 1.02rem;
+  font-weight: 650;
+}
+.group-detail-summary dl {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px 18px;
+  margin: 0;
+}
+.group-detail-summary dt {
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+.group-detail-summary dd {
+  margin: 0;
+  text-align: right;
+  font-size: 0.88rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.group-members {
+  margin-top: 27px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  overflow: hidden;
+}
+.group-members-trigger {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 17px 20px;
+  cursor: pointer;
+  font-size: 1.05rem;
+  font-weight: 650;
+  list-style: none;
+}
+.group-members-trigger::-webkit-details-marker {
+  display: none;
+}
+.group-members-trigger::after {
+  content: "";
+  display: block;
+  flex: none;
+  width: 9px;
+  height: 9px;
+  margin-left: 8px;
+  border-right: 2px solid var(--muted);
+  border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg);
+  transition: transform 0.15s;
+}
+.group-members[open] .group-members-trigger::after {
+  transform: rotate(225deg);
+}
+.group-members-trigger:hover {
+  background: var(--hover-tint);
+}
+.group-members-trigger:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -3px;
+}
+.group-members-count {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 0.81rem;
+  font-weight: 400;
+}
+.group-members-scroll {
+  overflow-x: auto;
+  border-top: 1px solid var(--line);
+}
+.group-members table {
+  width: 100%;
+  min-width: 900px;
+  border-collapse: collapse;
+  background: var(--card);
+  font-size: 0.83rem;
+}
+.group-members th,
+.group-members td {
+  padding: 11px 12px;
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--line);
+}
+.group-members th {
+  background: var(--table-header);
+  font-weight: 600;
+}
+.group-members tr:last-child td {
+  border-bottom: 0;
+}
+.group-members a {
+  color: var(--accent);
+}
+
+@media (max-width: 1180px) {
+  .groups-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .group-overview-layout {
+    grid-template-columns: minmax(0, 1.75fr) minmax(270px, 1fr);
+  }
+}
+@media (max-width: 930px) {
+  .group-overview-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .group-map-panel {
+    max-width: 850px;
+  }
+  .group-detail-summary {
+    max-width: 850px;
+  }
+}
+@media (max-width: 740px) {
+  .groups-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+  .group-card-content {
+    padding: 12px;
+  }
+}
+@media (max-width: 480px) {
+  .groups-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .groups-tools input,
+  .groups-tools select {
+    width: 100%;
+  }
+  .group-detail-summary {
+    padding: 16px;
+  }
+  .group-members-trigger {
+    padding: 15px;
+  }
+}
+
+/* The groups breadcrumb belongs to the global title row, not above the map. */
+.catalog-header--group {
+  position: relative;
+}
+.catalog-header--group .catalog-header-back {
+  position: absolute;
+  left: 0;
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 0;
+  color: var(--accent);
+  font-size: 0.88rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+.catalog-header--group .catalog-header-back:hover {
+  text-decoration: underline;
+}
+.catalog-header--group .catalog-header-back:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+@media (max-width: 800px) {
+  .catalog-header--group {
+    padding-top: 36px;
+  }
+  .catalog-header--group .catalog-header-back {
+    top: 0;
+  }
+}
+
+/* The gallery never initializes Aladin: its images are retrieved from PostgreSQL. */
+.group-card-image > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.group-preview-missing {
+  color: #9cadb9;
+  font-size: 0.81rem;
+  text-align: center;
+  padding: 1rem;
+}
+.group-preview-builder {
+  max-width: 850px;
+  margin: auto;
+}
+.group-preview-builder .group-preview-capture-map {
+  width: 512px;
+  height: 512px;
+  max-width: 100%;
+  margin-top: 1.25rem;
+  border: 1px solid var(--line);
+}
+.group-preview-builder button {
+  padding: 10px 16px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  border-radius: 7px;
+  cursor: pointer;
+}
+.group-preview-builder .groups-tools {
+  align-items: center;
+}
+
+/* v8: Scientific group detail layout and square-cornered data tables. */
+.group-detail-summary {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  border-radius: 0;
+}
+.group-detail-identity {
+  margin-bottom: 24px;
+  padding: 0 2px;
+}
+.group-detail-identity a {
+  color: var(--accent);
+  text-decoration: none;
+}
+.group-parameters h3 {
+  margin: 0 0 13px;
+  font-size: 1.04rem;
+  font-weight: 650;
+}
+.group-parameter-table {
+  padding: 19px 20px;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: var(--card);
+}
+.group-parameter-table dl {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(90px, auto);
+  gap: 17px 16px;
+  margin: 0;
+}
+.group-parameter-table dt {
+  color: var(--muted);
+}
+.group-parameter-table dd {
+  margin: 0;
+  text-align: right;
+}
+.group-membership-basis {
+  max-width: 220px;
+  color: var(--accent);
+}
+.group-membership-note {
+  margin: 10px 1px 0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--muted);
+}
+.group-members {
+  border-radius: 0;
+}
+.group-members table {
+  border-radius: 0;
+}
+.group-figures {
+  margin-top: 38px;
+}
+.group-figures h3 {
+  margin: 0 0 17px;
+  font-size: 1.25rem;
+  font-weight: 650;
+}
+.group-figures-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 19px;
+}
+.group-figure {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: var(--card);
+}
+.group-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1300 / 950;
+  background: white;
+}
+.group-figure figcaption {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 13px;
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+.group-figure figcaption a {
+  flex: none;
+  color: var(--accent);
+}
+@media (max-width: 780px) {
+  .group-figures-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* v9: square GroupSkyMap and scientific figures. Keep the object Atlas untouched. */
+.group-overview-layout {
+  grid-template-columns: minmax(0, 820px) minmax(280px, 1fr);
+  align-items: start;
+}
+.group-map-panel {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  height: auto;
+  aspect-ratio: 1 / 1;
+}
+.group-map-panel > .group-sky-map.aladin-frame {
+  display: block;
+  position: relative;
+  box-sizing: border-box;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  overflow: hidden;
+}
+.group-map-panel .group-sky-image {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0;
+  min-height: 0;
+}
+.group-map-panel .group-sky-image > .aladin-lite-div {
+  width: 100% !important;
+  height: 100% !important;
+}
+.group-figures {
+  clear: both;
+  margin-top: 36px;
+}
+.group-figures-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+}
+.group-figure-heading {
+  padding: 16px 17px 10px;
+  min-height: 68px;
+}
+.group-figure-heading h4 {
+  font-size: 1.02rem;
+  font-weight: 650;
+  line-height: 1.3;
+  margin: 0 0 7px;
+}
+.group-figure-heading p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.42;
+}
+.group-figure img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1300 / 950;
+  object-fit: contain;
+}
+.group-figure-pending {
+  display: grid;
+  width: 100%;
+  aspect-ratio: 1300 / 950;
+  place-items: center;
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+.group-figure figcaption {
+  align-items: center;
+  font-size: 0.78rem;
+}
+.group-figure-actions {
+  display: flex;
+  gap: 13px;
+  align-items: center;
+  flex: none;
+}
+.group-figure-actions button {
+  font: inherit;
+  color: var(--accent);
+  border: none;
+  padding: 2px 0;
+  background: none;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.group-figure-actions button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.group-figure-actions :is(a, button):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+@media (max-width: 930px) {
+  .group-overview-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 780px) {
+  .group-figures-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* v10: Groups summary uses the same matrix component as Observed / Physical. */
+.group-detail-summary .group-parameters {
+  margin: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow: visible;
+}
+.group-parameters-matrix {
+  width: 100%;
+  max-width: 100%;
+  table-layout: fixed;
+  border-radius: 0;
+  border-collapse: collapse;
+}
+.group-parameters-matrix .parameter-matrix-caption {
+  text-align: center;
+}
+.group-parameters-matrix .parameter-cell {
+  min-width: 0;
+  vertical-align: top;
+}
+.group-parameters-matrix .parameter-block-reading {
+  flex-wrap: wrap;
+}
+.group-parameters-matrix .parameter-block-value,
+.group-parameters-matrix .parameter-block-unit {
+  overflow-wrap: anywhere;
+}
+.group-parameters-matrix .parameter-block-label--help {
+  cursor: help;
+}
+.group-parameters-matrix .parameter-help-tooltip {
+  max-width: min(310px, 70vw);
+  white-space: normal;
+}
+.group-members,
+.group-members table,
+.group-members-scroll,
+.group-figures .group-figure {
+  border-radius: 0;
+}
+@media (max-width: 640px) {
+  .group-parameters-matrix .parameter-cell {
+    padding: 7px 9px;
+  }
+}
+
+/* v11: scientific properties. Only groups are affected, never ObjectPage. */
+.group-detail-summary .group-parameters-matrix {
+  table-layout: fixed;
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 0;
+}
+.group-detail-summary .group-parameters-matrix .parameter-cell {
+  padding-inline: 7px;
+  overflow: visible;
+  min-width: 0;
+  width: 33.333%;
+}
+.group-detail-summary .group-parameters-matrix .parameter-block-label {
+  font-size: 0.77rem;
+}
+.group-detail-summary .group-parameters-matrix .parameter-block-value {
+  font-size: 0.92rem;
+}
+.group-detail-summary .group-parameters-matrix .parameter-block-unit {
+  font-size: 0.72rem;
+}
+.group-detail-summary .group-parameters-matrix .parameter-block-reading {
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.group-overview-layout {
+  grid-template-columns: minmax(0, 820px) minmax(0, 1fr);
+}
+.group-figure-heading p {
+  max-width: 100%;
+}
+@media (max-width: 1000px) {
+  .group-overview-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* v12: eight compact figures (four columns by two rows), opening the
+   unchanged full-resolution JPEG in an accessible native dialog. */
+.group-figures-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+.group-figure-heading {
+  min-height: 88px;
+  padding: 12px 13px 8px;
+}
+.group-figure-heading h4 {
+  font-size: 0.91rem;
+}
+.group-figure-heading p {
+  font-size: 0.72rem;
+}
+.group-figure-open {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: #fff;
+  cursor: zoom-in;
+}
+.group-figure-open img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1300 / 950;
+  object-fit: contain;
+}
+.group-figure-open:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -3px;
+}
+.group-figure figcaption {
+  padding: 9px 11px;
+  font-size: 0.7rem;
+}
+.group-figure-dialog {
+  box-sizing: border-box;
+  width: min(96vw, 1360px);
+  max-width: 96vw;
+  max-height: 94vh;
+  padding: 0;
+  overflow: auto;
+  color: var(--ink);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 0;
+}
+.group-figure-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.79);
+}
+.group-figure-dialog-inner {
+  padding: 14px;
+}
+.group-figure-dialog-header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0 0 12px;
+}
+.group-figure-dialog-header h3 {
+  margin: 0 0 5px;
+  font-size: 1.14rem;
+}
+.group-figure-dialog-header p {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+.group-figure-dialog-header button {
+  flex: none;
+  font-size: 1.75rem;
+  background: transparent;
+  color: var(--ink);
+  border: 0;
+  cursor: pointer;
+}
+.group-figure-dialog img {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #fff;
+}
+.group-figure-dialog-actions {
+  display: flex;
+  justify-content: end;
+  gap: 18px;
+  padding-top: 12px;
+}
+.group-figure-dialog-actions a,
+.group-figure-dialog-actions button {
+  color: var(--accent);
+  font: inherit;
+  font-size: 0.84rem;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+.group-figure-dialog-actions button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Two stored WebP variants; never mount Aladin in gallery cards. */
+.group-card-image > .group-card-preview {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.group-card-preview--hierarchy {
+  opacity: 0;
+  transition: opacity 0.17s ease-out;
+}
+.group-card:where(:hover, :focus-visible, :focus-within)
+  .group-card-preview--hierarchy.is-ready {
+  opacity: 1;
+}
+.group-card-image--fallback .group-card-preview--hierarchy.is-ready {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .group-card-preview--hierarchy {
+    transition: none;
+  }
+}
+@media (max-width: 1280px) {
+  .group-figures-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 680px) {
+  .group-figures-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* v13: wide figure previews and bounded image dialog. */
+.group-figures-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.group-figure img,
+.group-figure-open img,
+.group-figure-pending {
+  aspect-ratio: 16 / 9;
+}
+.group-figure img,
+.group-figure-open img {
+  object-fit: contain;
+}
+.group-figure-dialog {
+  width: min(82vw, 980px);
+  max-width: 82vw;
+  max-height: 80vh;
+  overflow: auto;
+}
+.group-figure-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.68);
+}
+.group-figure-dialog-inner {
+  padding: 12px 14px;
+}
+.group-figure-dialog-header {
+  margin-bottom: 8px;
+}
+.group-figure-dialog img {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: min(58vh, 540px);
+  margin-inline: auto;
+  object-fit: contain;
+}
+.group-figure-dialog-actions {
+  padding-top: 8px;
+}
+/* Keep a scientific uncertainty inside its original observed cell, with
+   one unit and vertical +/- lines only for genuinely asymmetric errors. */
+.observed-reading--with-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: nowrap;
+  gap: 4px;
+  white-space: nowrap;
+}
+.observed-reading--with-error .parameter-block-value {
+  font-size: 0.97rem;
+}
+.observed-reading--with-error .parameter-block-error {
+  font-size: 0.76rem;
+}
+.observed-reading--with-error .parameter-block-unit {
+  font-size: 0.75rem;
+}
+.observed-error-stack {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0;
+  line-height: 1.04;
+  font-variant-numeric: tabular-nums;
+}
+.observed-error-stack span {
+  display: block;
+}
+@media (max-width: 1280px) {
+  .group-figures-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 680px) {
+  .group-figures-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .group-figure-dialog {
+    width: 94vw;
+    max-width: 94vw;
+    max-height: 82vh;
+  }
+  .group-figure-dialog img {
+    max-height: 53vh;
+  }
+}
+
+/* v14: scientific group matrix and true subscripts. */
+.group-detail-summary .group-parameters-matrix .parameter-cell {
+  width: auto; /* v11 fixed 33.333% conflicts with 2- and 4-cell rows */
+  padding-inline: 0;
+  min-width: 0;
+}
+.group-detail-summary .group-parameters-matrix .parameter-block {
+  padding: 9px 5px;
+}
+.group-detail-summary .group-parameters-matrix .parameter-block-label {
+  font-size: 0.76rem;
+  white-space: nowrap;
+}
+.group-detail-summary .group-parameters-matrix .parameter-block-reading {
+  flex-wrap: wrap;
+  column-gap: 3px;
+}
+/* Keep one mathematical baseline on the whole Groups page, including figure
+   titles, annotations, table captions, tooltips and labels. */
+.groups-layout sub,
+.groups-layout sup,
+.group-figures sub,
+.group-figures sup,
+.group-detail-summary sub,
+.group-detail-summary sup {
+  font-size: 0.72em;
+  line-height: 0;
+  vertical-align: baseline;
+  position: relative;
+}
+.groups-layout sub,
+.group-figures sub,
+.group-detail-summary sub {
+  bottom: -0.25em;
+}
+.groups-layout sup,
+.group-figures sup,
+.group-detail-summary sup {
+  top: -0.45em;
+}
+@media (max-width: 1180px) {
+  .group-detail-summary .group-parameters-matrix .parameter-block-label {
+    font-size: 0.73rem;
+  }
+}
+
+/* v15: scientific figure inspection and balanced source uncertainty cells. */
+.observed-reading--asymmetric {
+  display: grid;
+  grid-template-columns: max-content max-content max-content;
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  place-content: center;
+  align-items: center;
+  column-gap: 4px;
+  row-gap: 0;
+  white-space: nowrap;
+}
+.observed-reading--asymmetric > .parameter-block-value {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  align-self: center;
+  line-height: 1;
+  font-size: 0.98rem;
+}
+.observed-reading--asymmetric > .observed-error-stack {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  display: grid;
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  align-items: center;
+  justify-items: start;
+  line-height: 1.05;
+  font-size: 0.72rem;
+}
+.observed-reading--asymmetric > .parameter-block-unit {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  align-self: center;
+}
+.group-figure-heading p {
+  display: none;
+}
+.group-figure-heading {
+  min-height: 0;
+}
+.group-figure-dialog-header p {
+  display: none;
+}
+.group-figure-inspector {
+  position: relative;
+  width: min(100%, 103vh);
+  max-width: 100%;
+  margin-inline: auto;
+}
+.group-figure-dialog .group-figure-inspector > img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  max-height: none;
+  object-fit: fill;
+  cursor: crosshair;
+}
+.group-figure-tooltip {
+  position: absolute;
+  z-index: 15;
+  min-width: 170px;
+  max-width: 220px;
+  box-sizing: border-box;
+  border: 1px solid #9caeb6;
+  border-radius: 3px;
+  padding: 9px 11px;
+  background: rgba(250, 252, 253, 0.98);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  color: #1b2b34;
+  font-size: 0.79rem;
+  line-height: 1.55;
+  font-variant-numeric: tabular-nums;
+}
+.group-figure-tooltip a {
+  display: block;
+  color: #176580;
+  font-weight: 650;
+  text-decoration: underline;
+  margin-bottom: 5px;
+}
+.group-figure-tooltip sub {
+  font-size: 0.75em;
+  vertical-align: sub;
+}
+
+/* Groups v16: preview cache state is readable without enabling writes. */
+.group-preview-cache-status {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 18px;
+  padding: 10px 14px;
+  margin-block: 10px 16px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  font-size: 0.84rem;
+}
+.group-preview-cache-status p {
+  margin: 0;
+}
+@media (max-width: 650px) {
+  .group-preview-cache-status {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Groups v17: keep sky-capture viewport square and independent of page layout. */
+.group-preview-builder .group-preview-capture-map {
+  position: relative;
+  box-sizing: border-box;
+  width: 512px;
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  isolation: isolate;
+}
+.group-preview-builder
+  .group-preview-capture-map
+  > .group-sky-map--miniature.aladin-frame {
+  position: absolute !important;
+  inset: 0;
+  box-sizing: border-box;
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0;
+  min-height: 0 !important;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+}
+.group-preview-builder .group-preview-capture-map .group-sky-image,
+.group-preview-builder
+  .group-preview-capture-map
+  .group-sky-image
+  > .aladin-lite-div {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}

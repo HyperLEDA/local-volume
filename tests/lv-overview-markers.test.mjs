@@ -77,5 +77,5 @@ test("selected object marker draws a plus cross over its morphology-colored circ
     ["moveTo", 16, 30], ["lineTo", 24, 30],
     ["moveTo", 20, 26], ["lineTo", 20, 34],
   ]);
-  assert.deepEqual(styles, ["#6489bc", "#f6e5a8"]);
+  assert.deepEqual(styles, ["rgba(255, 255, 255, 0.68)", "#6489bc", "#f6e5a8"]);
 });

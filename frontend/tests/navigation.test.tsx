@@ -22,6 +22,7 @@ describe("fixed navigation rail", () => {
     expect(html.match(/href="\/publications"/g)).toHaveLength(1);
     expect(html).toContain('aria-label="Atlas"');
     expect(html).toContain('aria-label="Publications"');
+    expect(html).toContain('aria-label="Groups"');
     expect(html).toContain('aria-label="Primary navigation"');
     expect(html).toContain('aria-label="Secondary navigation"');
     expect(html).toContain("catalog-nav--footer");
@@ -46,14 +47,14 @@ describe("fixed navigation rail", () => {
 
   test("provides a keyboard-accessible theme button and tooltips", () => {
     const html = renderNavigation("/");
-    expect(html).toContain('aria-label="Switch to dark theme"');
-    expect(html).toContain('aria-pressed="false"');
-    expect(html.match(/class="catalog-nav-tooltip"/g)).toHaveLength(3);
+    expect(html).toContain('aria-label="Switch to light theme"');
+    expect(html).toContain('aria-pressed="true"');
+    expect(html.match(/class="catalog-nav-tooltip"/g)).toHaveLength(4);
   });
 
   test("defaults to light and recognizes a saved dark preference", () => {
-    expect(parseSavedTheme(null)).toBe("light");
-    expect(parseSavedTheme("system")).toBe("light");
+    expect(parseSavedTheme(null)).toBe("dark");
+    expect(parseSavedTheme("system")).toBe("dark");
     expect(parseSavedTheme("dark")).toBe("dark");
   });
 
@@ -64,7 +65,7 @@ describe("fixed navigation rail", () => {
       </MemoryRouter>,
     );
     const sao = html.indexOf('class="catalog-logo catalog-logo--sao"');
-    const title = html.indexOf("<h1>");
+    const title = html.indexOf("<h1");
     const leda = html.indexOf('class="catalog-logo catalog-logo--leda"');
     expect(sao).toBeGreaterThan(-1);
     expect(sao).toBeLessThan(title);

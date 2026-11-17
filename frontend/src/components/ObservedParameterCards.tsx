@@ -1,3 +1,6 @@
+import { useEffect, useState } from "react";
+import type { AdoptedPhysicalErrorSource } from "../lib/observedUncertainty.ts";
+import { observedUncertainty } from "../lib/observedUncertainty.ts";
 import type { ParameterRow } from "../api/objects.ts";
 import { formatUncertainty } from "../api/objects.ts";
 import {
@@ -6,7 +9,7 @@ import {
 } from "../lib/observedParameters.ts";
 import { ParameterLabel } from "./ParameterLabel.tsx";
 
-type ObservedParameterCardsProps = { rows: ParameterRow[] };
+type ObservedParameterCardsProps = { rows: ParameterRow[]; pgc: number };
 
 const COLUMNS = 3;
 const GRID_COLUMNS = 6;
@@ -48,7 +51,82 @@ const PARAMETER_HELP: Readonly<Record<string, string>> = {
   w50_kms: "H I 21-cm line width at 50% of peak flux",
 };
 
-export function ObservedParameterCards({ rows }: ObservedParameterCardsProps) {
+function ObservedReading({
+  row,
+  physical,
+}: {
+  row: DisplayParameter;
+  physical: AdoptedPhysicalErrorSource | null;
+}) {
+  const derived = observedUncertainty(row, physical);
+  const isDerived = derived !== null;
+  return (
+    <div
+      className={`parameter-block-reading${isDerived ? " observed-reading--with-error" : ""}${derived?.kind === "asymmetric" ? " observed-reading--asymmetric" : ""}`}
+    >
+      <span className="parameter-block-value">{displayValue(row)}</span>
+      {derived?.kind === "symmetric" ? (
+        <span className="parameter-block-error observed-error-symmetric">
+          ± {derived.sigma}
+        </span>
+      ) : null}
+      {derived?.kind === "asymmetric" ? (
+        <span
+          className="parameter-block-error observed-error-stack"
+          aria-label={`upper error +${derived.plus}, lower error −${derived.minus}`}
+        >
+          <span>+{derived.plus}</span>
+          <span>−{derived.minus}</span>
+        </span>
+      ) : null}
+      {!isDerived && row.errorUnit !== null && row.unit ? (
+        <span className="parameter-block-unit">{row.unit}</span>
+      ) : null}
+      {!isDerived && row.error !== null && row.error.trim() !== "" ? (
+        <span className="parameter-block-error">
+          {formatUncertainty(row.error)}
+          {row.errorUnit !== null ? ` ${row.errorUnit}` : ""}
+        </span>
+      ) : null}
+      {row.unit && (isDerived || row.errorUnit === null) ? (
+        <span className="parameter-block-unit">{row.unit}</span>
+      ) : null}
+    </div>
+  );
+}
+
+export function ObservedParameterCards({
+  rows,
+  pgc,
+}: ObservedParameterCardsProps) {
+  const [physical, setPhysical] = useState<AdoptedPhysicalErrorSource | null>(
+    null,
+  );
+  useEffect(() => {
+    const controller = new AbortController();
+    setPhysical(null);
+    async function loadErrorSource(): Promise<void> {
+      try {
+        const response = await fetch(`/api/v1/object/${pgc}/physical`, {
+          signal: controller.signal,
+        });
+        if (!response.ok) return;
+        const result = (await response.json()) as {
+          data: AdoptedPhysicalErrorSource;
+        };
+        if (
+          !controller.signal.aborted &&
+          result.data.physical_status === "ready"
+        ) {
+          setPhysical(result.data);
+        }
+      } catch {
+        // Missing physical generation is not evidence for any uncertainty.
+      }
+    }
+    void loadErrorSource();
+    return () => controller.abort();
+  }, [pgc]);
   const ksEstimated =
     rows
       .find((row) => row.name === "ks_estimated")
@@ -127,29 +205,7 @@ export function ObservedParameterCards({ rows }: ObservedParameterCardsProps) {
                             </span>
                           ) : null}
                         </div>
-                        <div className="parameter-block-reading">
-                          <span className="parameter-block-value">
-                            {displayValue(row)}
-                          </span>
-                          {row.errorUnit !== null && row.unit ? (
-                            <span className="parameter-block-unit">
-                              {row.unit}
-                            </span>
-                          ) : null}
-                          {row.error !== null && row.error.trim() !== "" ? (
-                            <span className="parameter-block-error">
-                              {formatUncertainty(row.error)}
-                              {row.errorUnit !== null
-                                ? ` ${row.errorUnit}`
-                                : ""}
-                            </span>
-                          ) : null}
-                          {row.errorUnit === null && row.unit ? (
-                            <span className="parameter-block-unit">
-                              {row.unit}
-                            </span>
-                          ) : null}
-                        </div>
+                        <ObservedReading row={row} physical={physical} />
                       </div>
                     </td>
                   ))}

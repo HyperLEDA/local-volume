@@ -26,6 +26,27 @@ function AtlasIcon() {
   );
 }
 
+function GroupsIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      width="20"
+      height="20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="5" cy="12" r="2.3" />
+      <circle cx="18.5" cy="5" r="2.3" />
+      <circle cx="18.5" cy="19" r="2.3" />
+      <path d="M7.3 11L16.2 6.1M7.3 13L16.2 17.9M18.5 7.3v9.4" />
+    </svg>
+  );
+}
+
 function PublicationsIcon() {
   return (
     <svg
@@ -93,6 +114,8 @@ export function CatalogSidebar() {
   const { pathname } = useLocation();
   const atlasActive = pathname === "/" || pathname.startsWith("/object/");
   const publicationsActive = pathname === "/publications";
+  const groupsActive =
+    pathname === "/groups" || pathname.startsWith("/groups/");
   const [theme, setTheme] = useState<Theme>(initialTheme);
 
   useEffect(() => {
@@ -116,6 +139,17 @@ export function CatalogSidebar() {
           <AtlasIcon />
           <span className="catalog-nav-tooltip" aria-hidden="true">
             Atlas
+          </span>
+        </Link>
+        <Link
+          to="/groups"
+          className="catalog-nav-link"
+          aria-label="Groups"
+          aria-current={groupsActive ? "page" : undefined}
+        >
+          <GroupsIcon />
+          <span className="catalog-nav-tooltip" aria-hidden="true">
+            Groups
           </span>
         </Link>
       </nav>

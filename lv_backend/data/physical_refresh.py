@@ -28,7 +28,9 @@ SELECT o.pgc, o.name, o.ra, o.dec,
        v.dist, v.mu, v.morphology_t, v.axis_ratio, v.a26_arcmin,
        v.a_b_galactic_mag, v.b_mag, v.ks_mag, v.ks_estimated,
        v.w50_kms, v.hi21_mag, v.hi21_limit,
-       v.ha_mag, v.ha_limit, v.fuv_mag, v.fuv_limit
+       v.ha_mag, v.ha_limit, v.fuv_mag, v.fuv_limit,
+       v.e_mu, v.v_lg, v.e_v_lg, v.v_hel, v.e_v_hel,
+       v.lvg_v_lg_kms, v.lvg_v_hel_kms, v.lvg_e_v_hel_kms
 FROM lv.objects AS o
 LEFT JOIN lv.observed AS v USING (pgc)
 ORDER BY o.pgc
@@ -64,6 +66,13 @@ _STORED = (
     "environment_donors_used",
     "environment_neighbors_1mpc",
     "physical_method",
+    "distance_mpc",
+    "e_distance_minus_mpc",
+    "e_distance_plus_mpc",
+    "distance_error_basis",
+    "v_lg_kms",
+    "e_v_lg_kms",
+    "velocity_error_basis",
 )
 _COLS = ("pgc", *_STORED, "computed_revision")
 _INSERT = (

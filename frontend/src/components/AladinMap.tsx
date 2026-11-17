@@ -138,7 +138,7 @@ function popupMdField(
   return `<div class="lv-popup-field"><span class="lv-popup-label">MD:</span><span class="lv-popup-value lv-popup-md-value"><a class="lv-popup-md-link" href="${href}" title="Open ${name} in LV LEDA">${name}</a>${locate}</span></div>`;
 }
 
-function popupTitle(object: CatalogObject): string {
+export function popupTitle(object: CatalogObject): string {
   const nature = escapeHtml(object.type_name ?? "—");
   const name = escapeHtml(object.name);
   const position = formatJ2000Coordinate(object.ra, object.dec);
@@ -148,7 +148,7 @@ function popupTitle(object: CatalogObject): string {
   return `<div class="lv-popup-header"><div class="lv-popup-heading"><a class="lv-popup-name" href="/object/${object.pgc}">${name}</a>${coordinate}</div><span class="lv-popup-nature">${nature}</span></div>`;
 }
 
-function popupDescription(
+export function popupDescription(
   object: CatalogObject,
   reference: readonly CatalogObject[] = [],
 ): string {
@@ -166,7 +166,7 @@ function popupDescription(
   return `<div class="lv-popup-grid">${fields.join("")}</div>`;
 }
 
-function setCatalogSources(
+export function setCatalogSources(
   catalog: AladinCatalog,
   objects: CatalogObject[],
   sizeScale = 1,

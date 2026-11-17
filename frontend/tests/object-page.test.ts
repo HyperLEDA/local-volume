@@ -12,24 +12,24 @@ const schema: Record<string, ColumnMeta> = {
   name: { description: "Main designation" },
   ra: { description: "Right ascension", unit: "deg" },
   e_ra: { description: "Right ascension error", unit: "deg" },
-  bt: { description: "B magnitude", unit: "mag" },
-  e_bt: { description: "B magnitude error", unit: "mag" },
-  v_hel: { description: "Heliocentric velocity", unit: "km/s" },
-  e_v_hel: { description: "Heliocentric velocity error", unit: "km/s" },
+  b_mag: { description: "B magnitude", unit: "mag" },
+  e_b_mag: { description: "B magnitude error", unit: "mag" },
+  lvg_v_hel_kms: { description: "Heliocentric velocity", unit: "km/s" },
+  lvg_e_v_hel_kms: { description: "Heliocentric velocity error", unit: "km/s" },
   type_name: { description: "Object type" },
   names: { description: "Additional designations" },
 };
 
-const data: CatalogObjectDetail = {
+const data: CatalogObjectDetail & { e_b_mag: number } = {
   pgc: 83,
   name: "NGC 123",
   names: ["LEDA 83"],
   type_name: "G",
   ra: 12.25,
   e_ra: 0,
-  bt: 13.2,
-  e_bt: 0.1,
-  v_hel: 350,
+  b_mag: 13.2,
+  e_b_mag: 0.1,
+  lvg_v_hel_kms: 350,
 };
 
 describe("nameIncludesPgc", () => {
@@ -49,25 +49,25 @@ describe("nameIncludesPgc", () => {
 describe("parameterRows", () => {
   test("groups uncertainties and excludes identity metadata", () => {
     const rows = parameterRows(data, schema);
-    expect(rows.map((row) => row.name)).toEqual(["ra", "bt", "v_hel"]);
+    expect(rows.map((row) => row.name)).toEqual(["ra", "b_mag", "lvg_v_hel_kms"]);
     expect(rows[0]).toMatchObject({
       unit: "deg",
       value: "12.25",
-      error: "0",
+      error: null,
       errorUnit: null,
     });
-    expect(rows[1]).toMatchObject({ value: "13.20", error: "0.10" });
+    expect(rows[1]).toMatchObject({ value: "13.2", error: "0.1" });
     expect(rows[2]).toMatchObject({ value: "350", error: null });
   });
 
   test("retains an orphan uncertainty rather than silently discarding it", () => {
     const orphan = parameterRows(
-      { pgc: 83, name: "NGC 123", names: [], e_bt: 0.4 },
+      { pgc: 83, name: "NGC 123", names: [], e_b_mag: 0.4 } as CatalogObjectDetail,
       schema,
     );
     expect(orphan).toEqual([
       {
-        name: "e_bt",
+        name: "e_b_mag",
         nice: null,
         description: "B magnitude error",
         unit: "mag",
@@ -86,7 +86,7 @@ describe("parameterRows", () => {
     expect(rows[0]).toMatchObject({
       name: "ra",
       value: "12",
-      error: "0.50",
+      error: "0.5",
       errorUnit: "arcsec",
       unit: "deg",
     });
@@ -119,23 +119,23 @@ describe("nice parameter labels", () => {
   test("forwards preferred names from column metadata without replacing identifiers", () => {
     const rows = parameterRows(data, {
       ...schema,
-      bt: { ...schema.bt, nice: "B<sub>T</sub>" },
+      b_mag: { ...schema.b_mag, nice: "B<sub>T</sub>" },
       ra: { ...schema.ra, nice: "α" },
     });
-    expect(rows.find((row) => row.name === "bt")?.nice).toBe("B<sub>T</sub>");
+    expect(rows.find((row) => row.name === "b_mag")?.nice).toBe("B<sub>T</sub>");
     expect(rows.find((row) => row.name === "ra")?.nice).toBe("α");
-    expect(rows.find((row) => row.name === "v_hel")?.nice).toBeNull();
+    expect(rows.find((row) => row.name === "lvg_v_hel_kms")?.nice).toBeNull();
   });
 
   test("never changes data or reported errors because of a nice label", () => {
     const rows = parameterRows(data, {
       ...schema,
-      bt: { ...schema.bt, nice: "B<sub>T</sub>" },
+      b_mag: { ...schema.b_mag, nice: "B<sub>T</sub>" },
     });
-    expect(rows.find((row) => row.name === "bt")).toMatchObject({
-      value: "13.20",
-      error: "0.10",
-      name: "bt",
+    expect(rows.find((row) => row.name === "b_mag")).toMatchObject({
+      value: "13.2",
+      error: "0.1",
+      name: "b_mag",
     });
   });
 });

@@ -4,9 +4,18 @@ import ledaLogo from "../images/leda.png";
 import ledaDarkLogo from "../images/leda-dark.png";
 
 export function CatalogHeader() {
-  const isOverview = useLocation().pathname === "/";
+  const pathname = useLocation().pathname;
+  const isOverview = pathname === "/";
+  const isGroupDetail = /^\/groups\/\d+\/?$/.test(pathname);
   return (
-    <header className="catalog-header">
+    <header
+      className={`catalog-header${isGroupDetail ? " catalog-header--group" : ""}`}
+    >
+      {isGroupDetail && (
+        <Link className="catalog-header-back" to="/groups">
+          ← Groups
+        </Link>
+      )}
       <a
         className="catalog-logo catalog-logo--sao"
         href="https://www.sao.ru"
