@@ -197,11 +197,11 @@ export async function fetchObject(pgc: number): Promise<ObjectGetResponse> {
   return (await response.json()) as ObjectGetResponse;
 }
 
-export function matchesQuery(object: CatalogObject, query: string): boolean {
-  const normalized = query.trim().toLowerCase();
-  if (normalized.length === 0) {
-    return true;
-  }
+function matchesNormalizedQuery(
+  object: CatalogObject,
+  normalized: string,
+): boolean {
+  if (normalized.length === 0) return true;
   return (
     object.name.toLowerCase().includes(normalized) ||
     String(object.pgc).includes(normalized) ||
@@ -209,6 +209,18 @@ export function matchesQuery(object: CatalogObject, query: string): boolean {
       extraName.toLowerCase().includes(normalized),
     )
   );
+}
+
+/** Normalize the search string once, not once for every galaxy in the Atlas. */
+export function createCatalogQueryMatcher(
+  query: string,
+): (object: CatalogObject) => boolean {
+  const normalized = query.trim().toLowerCase();
+  return (object) => matchesNormalizedQuery(object, normalized);
+}
+
+export function matchesQuery(object: CatalogObject, query: string): boolean {
+  return matchesNormalizedQuery(object, query.trim().toLowerCase());
 }
 
 export function nameIncludesPgc(name: string, pgc: number): boolean {

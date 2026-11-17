@@ -10,50 +10,42 @@ export type AtlasBounds = Record<NumericKey, AtlasRange | null> & {
   tidal: AtlasRange | null;
 };
 
-const FIELD: Record<NumericKey, keyof CatalogObject> = {
-  distance: "dist",
-  velocity: "lvg_v_lg_kms",
-  heliocentric: "lvg_v_hel_kms",
-  morphology: "morphology_t",
-  magnitude: "b_mag",
-  hi21: "hi21_mag",
-};
-
-function range(
-  values: readonly (number | null | undefined)[],
-): AtlasRange | null {
-  let min = Infinity;
-  let max = -Infinity;
-  for (const value of values) {
-    if (typeof value !== "number" || !Number.isFinite(value)) continue;
-    min = Math.min(min, value);
-    max = Math.max(max, value);
-  }
-  return Number.isFinite(min) && Number.isFinite(max) ? { min, max } : null;
-}
-
 /** Bounds are calculated once from ALL catalog rows, never from the selected subset. */
 export function atlasBounds(objects: readonly CatalogObject[]): AtlasBounds {
-  function fieldRange(key: keyof CatalogObject): AtlasRange | null {
-    return range(
-      objects.map((object) => object[key] as number | null | undefined),
-    );
-  }
-  return {
-    distance: fieldRange(FIELD.distance),
-    velocity: fieldRange(FIELD.velocity),
-    heliocentric: fieldRange(FIELD.heliocentric),
-    morphology: fieldRange(FIELD.morphology),
-    magnitude: fieldRange(FIELD.magnitude),
-    hi21: range(
-      objects.map((object) =>
-        typeof object.hi21_limit === "string" && object.hi21_limit.trim()
-          ? null
-          : object.hi21_mag,
-      ),
-    ),
-    tidal: fieldRange("theta1"),
+  const bounds: AtlasBounds = {
+    distance: null,
+    velocity: null,
+    heliocentric: null,
+    morphology: null,
+    magnitude: null,
+    hi21: null,
+    tidal: null,
   };
+
+  function extend(key: keyof AtlasBounds, value: unknown): void {
+    if (typeof value !== "number" || !Number.isFinite(value)) return;
+    const current = bounds[key];
+    if (current === null) {
+      bounds[key] = { min: value, max: value };
+    } else {
+      current.min = Math.min(current.min, value);
+      current.max = Math.max(current.max, value);
+    }
+  }
+
+  for (const object of objects) {
+    extend("distance", object.dist);
+    extend("velocity", object.lvg_v_lg_kms);
+    extend("heliocentric", object.lvg_v_hel_kms);
+    extend("morphology", object.morphology_t);
+    extend("magnitude", object.b_mag);
+    // Censored H I measurements must not set the numerical filter bounds.
+    if (!(typeof object.hi21_limit === "string" && object.hi21_limit.trim())) {
+      extend("hi21", object.hi21_mag);
+    }
+    extend("tidal", object.theta1);
+  }
+  return bounds;
 }
 
 export function clampNumericFilter(
