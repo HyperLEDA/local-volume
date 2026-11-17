@@ -35,10 +35,11 @@ test("popup keeps four LV measurements but not standalone coordinates or a26", (
   assert.doesNotMatch(popup, /LVGDB|a<sub>26<\/sub>|popupField\("RA"|popupField\("Dec"/);
 });
 
-test("ColorBrewer RdBu_r has exact blue/red endpoints and gray missing value", () => {
-  assert.equal(morphologyColor(-3), "#053061");
-  assert.equal(morphologyColor(3.5), "#f7f7f7");
-  assert.equal(morphologyColor(10), "#67001f");
+test("morphology palette preserves distinct early, intermediate and late types", () => {
+  assert.equal(morphologyColor(-3), "#c96d76");
+  assert.equal(morphologyColor(0), "#a995a6");
+  assert.equal(morphologyColor(5), "#6489bc");
+  assert.equal(morphologyColor(10), "#3f6fab");
   assert.equal(morphologyColor(-10), morphologyColor(-3));
   assert.equal(morphologyColor(12), morphologyColor(10));
   assert.notEqual(morphologyColor(-2), morphologyColor(8));

@@ -55,7 +55,7 @@ test("coordinate formatting covers wrap and negative zero", () => {
 
 test("known science fields all have an explicit group and display label", () => {
   assert.equal(Object.keys(PARAMETER_DEFINITIONS).length, 21);
-  assert.deepEqual(GROUP_ORDER, ["Geometry", "Morphology", "Photometry", "Velocities", "Distance", "H I"]);
+  assert.deepEqual(GROUP_ORDER, ["Geometry", "Morphology", "Photometry", "Velocities", "Distance", "Star formation", "H I"]);
   const orderKeys = GROUP_ORDER.flatMap((group) => PARAMETER_ORDER[group]);
   assert.equal(new Set(orderKeys).size, orderKeys.length);
   assert.deepEqual(orderKeys.sort(), Object.keys(PARAMETER_DEFINITIONS).sort());
@@ -87,8 +87,9 @@ test("Photometry display order follows B, Ks, AB, Hα, FUV", () => {
     row("a_b_galactic_mag", "0.09"), row("ha_mag", "17.3"), row("b_mag", "13.0"),
   ];
   assert.deepEqual(keysInGroup(input, "Photometry"), [
-    "b_mag", "ks_mag", "a_b_galactic_mag", "ha_mag", "fuv_mag",
+    "b_mag", "ks_mag", "a_b_galactic_mag",
   ]);
+  assert.deepEqual(keysInGroup(input, "Star formation"), ["ha_mag", "fuv_mag"]);
 });
 
 test("new unmapped science fields remain visible in Other", () => {
@@ -103,10 +104,10 @@ test("FUV limit qualifier prefixes the magnitude instead of becoming a separate 
     row("fuv_mag", "23"),
     row("b_mag", "12.8"),
   ]);
-  const photometry = grouped.find((group) => group.title === "Photometry");
-  assert.ok(photometry);
-  assert.deepEqual(photometry.rows.map((measurement) => measurement.name), ["b_mag", "fuv_mag"]);
-  assert.equal(photometry.rows.find((measurement) => measurement.name === "fuv_mag")?.value, "> 23");
+  assert.deepEqual(keysInGroup(grouped.flatMap((group) => group.rows), "Star formation"), ["fuv_mag"]);
+  const starFormation = grouped.find((group) => group.title === "Star formation");
+  assert.ok(starFormation);
+  assert.equal(starFormation.rows[0].value, "> 23");
 });
 
 test("FUV magnitude is unchanged without a limit and isolated qualifier is hidden", () => {
@@ -119,10 +120,10 @@ test("H-alpha limit qualifiers attach to the magnitude and disappear as tiles", 
     const groups = groupObservedParameters([
       row("ha_limit", sign), row("ha_mag", "22.1"), row("b_mag", "13"),
     ]);
-    const photometry = groups.find((group) => group.title === "Photometry");
-    assert.ok(photometry);
-    assert.deepEqual(photometry.rows.map((measurement) => measurement.name), ["b_mag", "ha_mag"]);
-    assert.equal(photometry.rows[1].value, `${sign} 22.1`);
+    const starFormation = groups.find((group) => group.title === "Star formation");
+    assert.ok(starFormation);
+    assert.deepEqual(starFormation.rows.map((measurement) => measurement.name), ["ha_mag"]);
+    assert.equal(starFormation.rows[0].value, `${sign} 22.1`);
   }
 });
 
@@ -187,15 +188,15 @@ test("one ordered series retains measurement values and uncertainties", () => {
   const displayed = groups.flatMap((group) => group.rows)
     .filter((parameter) => parameter.name !== "ks_estimated");
   assert.deepEqual(groups.map((group) => group.title), [
-    "Geometry", "Photometry", "Velocities", "Distance", "H I",
+    "Geometry", "Photometry", "Velocities", "Distance", "Star formation", "H I",
   ]);
   assert.deepEqual(displayed.map((parameter) => parameter.name), [
-    "a26_arcmin", "fuv_mag", "lvg_v_hel_kms", "mu", "w50_kms",
+    "a26_arcmin", "lvg_v_hel_kms", "mu", "fuv_mag", "w50_kms",
   ]);
-  assert.equal(displayed[1].value, "> 20.2");
-  assert.equal(displayed[2].error, "3.0");
-  assert.equal(displayed[2].unit, "km/s");
-  assert.equal(displayed[3].displayLabel, "(m−M)<sub>0</sub>");
+  assert.equal(displayed[3].value, "> 20.2");
+  assert.equal(displayed[1].error, "3.0");
+  assert.equal(displayed[1].unit, "km/s");
+  assert.equal(displayed[2].displayLabel, "(m−M)<sub>0</sub>");
 });
 
 test("observed measurements retain group boundaries without visible group headings", () => {

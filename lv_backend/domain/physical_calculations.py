@@ -11,9 +11,10 @@ import math
 from collections.abc import Mapping
 from typing import Any
 
+from lv_backend.domain.physical_uncertainties import derived_adopted_uncertainties
 from lv_backend.domain.star_formation import log_sfr
 
-FORMULA_VERSION = "lv-physical-precomputed-2026-11-16-v1"
+FORMULA_VERSION = "lv-physical-precomputed-2026-11-17-v2-uncertainties"
 M_K_SUN = 3.28
 A_KS_OVER_A_B = 0.085
 ARC_MIN_TO_RAD = math.pi / (180.0 * 60.0)
@@ -195,6 +196,7 @@ def physical_from_observed(observed: Mapping[str, Any]) -> dict[str, object]:
         tracer="fuv",
     )
     return {
+        **derived_adopted_uncertainties(observed),
         "a26_kpc": a26_kpc,
         "inclination_deg": i,
         "vrot_kms": vm,

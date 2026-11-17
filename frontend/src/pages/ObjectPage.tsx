@@ -206,7 +206,7 @@ export function ObjectPage() {
                 ) : null}
               </section>
               <ObjectCoordinates object={data} />
-              <ObservedParameterCards rows={rows} />
+              <ObservedParameterCards rows={rows} pgc={pgc} />
               <PhysicalParametersTable pgc={pgc} />
             </div>
           </div>

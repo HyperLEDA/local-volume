@@ -8,7 +8,7 @@ test("Ks estimation is marked in the label instead of the measured number", () =
   assert.match(source, /row\.name === "ks_mag" && ksEstimated/);
   assert.match(source, /`\$\{row\.displayLabel\} \(est\)`/);
   assert.doesNotMatch(source, /\(estimated\)/);
-  assert.match(source, /className="parameter-block-reading"/);
+  assert.match(source, /className=\{`parameter-block-reading/);
 });
 
 test("estimated flag is retained as a boolean attribute rather than a data tile", () => {

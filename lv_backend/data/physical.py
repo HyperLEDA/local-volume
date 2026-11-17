@@ -33,6 +33,13 @@ DISPLAY_FIELDS = (
     "environment_donors_used",
     "environment_neighbors_1mpc",
     "physical_method",
+    "distance_mpc",
+    "e_distance_minus_mpc",
+    "e_distance_plus_mpc",
+    "distance_error_basis",
+    "v_lg_kms",
+    "e_v_lg_kms",
+    "velocity_error_basis",
     "computed_revision",
     "computed_at",
 )
