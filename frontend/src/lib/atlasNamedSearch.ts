@@ -29,22 +29,32 @@ export function findAtlasNamedTarget<T extends SearchableGalaxy>(
 ): T | null {
   const search = normalize(query);
   if (!search) return null;
-  const positioned = objects.filter(hasCoordinates);
   const identifier = /^(?:pgc\s*)?0*(\d+)$/i.exec(search);
-  const matchesExact = positioned.filter((object) => {
-    if (identifier && object.pgc === Number(identifier[1])) return true;
-    return (
+  const targetPgc = identifier === null ? null : Number(identifier[1]);
+  let exact: T | null = null;
+
+  for (const object of objects) {
+    if (!hasCoordinates(object)) continue;
+    const exactMatch =
+      (targetPgc !== null && object.pgc === targetPgc) ||
       normalize(object.name) === search ||
-      object.names.some((name) => normalize(name) === search)
-    );
-  });
-  if (matchesExact.length === 1) return matchesExact[0];
-  if (matchesExact.length > 1) return null;
-  const matchesPartial = positioned.filter(
-    (object) =>
+      object.names.some((name) => normalize(name) === search);
+    if (!exactMatch) continue;
+    if (exact !== null) return null;
+    exact = object;
+  }
+  if (exact !== null) return exact;
+
+  let partial: T | null = null;
+  for (const object of objects) {
+    if (!hasCoordinates(object)) continue;
+    const partialMatch =
       normalize(object.name).includes(search) ||
       String(object.pgc).includes(search) ||
-      object.names.some((name) => normalize(name).includes(search)),
-  );
-  return matchesPartial.length === 1 ? matchesPartial[0] : null;
+      object.names.some((name) => normalize(name).includes(search));
+    if (!partialMatch) continue;
+    if (partial !== null) return null;
+    partial = object;
+  }
+  return partial;
 }
