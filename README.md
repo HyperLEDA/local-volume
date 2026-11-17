@@ -37,6 +37,11 @@ request. Its `tests` and `build` jobs are required before merging into `main`.
 
 ## Database safety
 
-`make check-schema` removes and recreates the local `lvdb` Compose container,
-including associated anonymous volumes. Do not run it against a database
-containing data you need to retain.
+`make check-schema` lints the schema of an **already running** database. It
+does not start, migrate, stop, recreate, or delete the database. The connection
+can be configured with `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, and
+`PGDATABASE`; defaults are in `.schemalintrc.js`. Only use it with a database
+you are authorized to inspect.
+
+For a fresh schema check, the `Check migrations` GitHub Actions workflow starts
+an isolated PostGIS container, applies all migrations, and runs the linter.

@@ -31,10 +31,6 @@ check-migrations:
 	fi
 
 check-schema:
-	docker compose stop lvdb
-	docker compose rm -f -v lvdb
-	docker compose up -d --wait lvdb
-	uv run lv-backend migrate
 	bunx schemalint@2.3.2
 
 check:
