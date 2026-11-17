@@ -84,6 +84,12 @@ check:
 	@cd frontend && bun --silent run lint
 	@echo "Frontend linter ok."
 
+	@$(MAKE) test-js
+	@echo "JavaScript/TypeScript tests ok."
+
+test-js:
+	@bun test
+
 fix:
 	@uv run ruff format \
 		--quiet \
