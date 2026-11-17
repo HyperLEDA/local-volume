@@ -25,7 +25,7 @@ describe("catalog in-flight request deduplication", () => {
       release = resolve;
     });
     const urls: string[] = [];
-    globalThis.fetch = async (input) => {
+    globalThis.fetch = (input) => {
       urls.push(String(input));
       return pending;
     };
@@ -50,9 +50,9 @@ describe("catalog in-flight request deduplication", () => {
 
   test("completed requests never cache stale catalogue responses", async () => {
     let calls = 0;
-    globalThis.fetch = async () => {
+    globalThis.fetch = () => {
       calls += 1;
-      return Response.json(payload(calls));
+      return Promise.resolve(Response.json(payload(calls)));
     };
     try {
       const first = await fetchObjects();
@@ -67,11 +67,13 @@ describe("catalog in-flight request deduplication", () => {
 
   test("HTTP failures propagate to all callers and allow retries", async () => {
     let calls = 0;
-    globalThis.fetch = async () => {
+    globalThis.fetch = () => {
       calls += 1;
-      return calls === 1
-        ? new Response(null, { status: 503 })
-        : Response.json(payload());
+      return Promise.resolve(
+        calls === 1
+          ? new Response(null, { status: 503 })
+          : Response.json(payload()),
+      );
     };
     try {
       const first = fetchObjects();
@@ -95,11 +97,13 @@ describe("catalog in-flight request deduplication", () => {
 
   test("JSON parse failures do not poison the next request", async () => {
     let calls = 0;
-    globalThis.fetch = async () => {
+    globalThis.fetch = () => {
       calls += 1;
-      return calls === 1
-        ? new Response("{invalid", { status: 200 })
-        : Response.json(payload());
+      return Promise.resolve(
+        calls === 1
+          ? new Response("{invalid", { status: 200 })
+          : Response.json(payload()),
+      );
     };
     try {
       await expect(fetchObjects()).rejects.toThrow();
