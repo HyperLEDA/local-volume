@@ -91,22 +91,15 @@ DETAIL_COLUMNS: tuple[str, ...] = (
 _OBJECT_COLUMNS = frozenset(("pgc", "name", "ra", "e_ra", "dec", "e_dec", "type_name"))
 
 _SCHEMA_QUERY = """
-SELECT column_name, param
+SELECT CASE WHEN table_name = 'names' THEN 'names' ELSE column_name END AS column_name, param
 FROM meta.column_info
 WHERE schema_name = 'lv'
   AND (
     (table_name = 'objects' AND column_name = ANY(%s))
     OR (table_name = 'observed' AND column_name = ANY(%s))
     OR (table_name = 'physical' AND column_name = ANY(%s))
+    OR (table_name = 'names' AND column_name = 'name' AND %s)
   )
-"""
-
-_NAMES_SCHEMA_QUERY = """
-SELECT param
-FROM meta.column_info
-WHERE schema_name = 'lv'
-  AND table_name = 'names'
-  AND column_name = 'name'
 """
 
 _NAMES_AGG = """
@@ -207,14 +200,11 @@ def select_schema(storage: Storage, columns: Sequence[str]) -> dict[str, schemas
     observed_columns = [
         column for column in selected if column not in _OBJECT_COLUMNS and column not in physical_columns
     ]
-    rows = storage.query(_SCHEMA_QUERY, [object_columns, observed_columns, physical_columns])
+    # An alias avoids mixing lv.names.name metadata with lv.objects.name.
+    # Fetch all requested metadata in one DB round trip, including names.
+    rows = storage.query(_SCHEMA_QUERY, [object_columns, observed_columns, physical_columns, "names" in columns])
     by_name = {row["column_name"]: _as_param(row["param"]) for row in rows}
-    result = {column: _column_meta(by_name.get(column, {})) for column in selected}
-    if "names" in columns:
-        meta_rows = storage.query(_NAMES_SCHEMA_QUERY)
-        param = _as_param(meta_rows[0]["param"]) if meta_rows else {}
-        result["names"] = _column_meta(param)
-    return {name: result[name] for name in columns}
+    return {name: _column_meta(by_name.get(name, {})) for name in columns}
 
 
 def select_objects(storage: Storage) -> list[dict[str, Any]]:
