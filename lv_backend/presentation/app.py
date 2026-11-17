@@ -1,6 +1,7 @@
 import hmac
 import os
 import pathlib
+import re
 import threading
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
@@ -8,6 +9,7 @@ from contextlib import asynccontextmanager
 import fastapi
 import fastapi.responses
 import fastapi.staticfiles
+from starlette.types import Scope
 
 from lv_backend.data import group_previews as data_group_previews
 from lv_backend.data import migrations as data_migrations
@@ -220,6 +222,18 @@ def _frontend_page(full_path: str) -> fastapi.responses.FileResponse:
     return fastapi.responses.FileResponse(dist_dir / "index.html")
 
 
+# Vite includes content fingerprints in generated /assets filenames.
+_FINGERPRINTED_ASSET_RE = re.compile(r"-[A-Za-z0-9_-]{8,}\.[A-Za-z0-9]+$")
+
+
+class _VersionedStaticFiles(fastapi.staticfiles.StaticFiles):
+    async def get_response(self, path: str, scope: Scope) -> fastapi.Response:
+        response = await super().get_response(path, scope)
+        if response.status_code in (200, 304) and _FINGERPRINTED_ASSET_RE.search(pathlib.PurePosixPath(path).name):
+            response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        return response
+
+
 def _mount_frontend(application: fastapi.FastAPI, dist_dir: pathlib.Path) -> None:
     if not dist_dir.is_dir():
         return
@@ -227,7 +241,7 @@ def _mount_frontend(application: fastapi.FastAPI, dist_dir: pathlib.Path) -> Non
     if assets_dir.is_dir():
         application.mount(
             "/assets",
-            fastapi.staticfiles.StaticFiles(directory=assets_dir),
+            _VersionedStaticFiles(directory=assets_dir),
             name="assets",
         )
     application.add_api_route(

@@ -35,6 +35,10 @@ make test-js     # All JavaScript/TypeScript tests (Bun)
 The CI workflow runs `make check` and builds a Docker image for every pull
 request. Its `tests` and `build` jobs are required before merging into `main`.
 
+Vite-generated fingerprinted assets under `/assets/` use immutable one-year
+browser caching. Unfingerprinted assets and the app's HTML are not given this
+long-lived caching policy.
+
 ## Database safety
 
 `make check-schema` lints the schema of an **already running** database. It
