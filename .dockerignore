@@ -1,5 +1,10 @@
 .git
 .github
+# Never copy local secrets into the runtime image (Dockerfile uses COPY . .).
+.env
+.env.*
+**/.env
+**/.env.*
 .venv
 __pycache__
 *.py[oc]
