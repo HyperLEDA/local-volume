@@ -132,13 +132,7 @@
   font-style: normal;
   font-weight: 400;
 }
-.group-card-note {
-  margin-top: 14px;
-  padding-top: 10px;
-  border-top: 1px solid var(--line);
-  color: var(--muted);
-  font-size: 0.72rem;
-}
+
 .groups-more {
   display: block;
   margin: 25px auto;
@@ -207,16 +201,6 @@
   display: none !important;
 }
 
-.groups-back {
-  display: inline-flex;
-  align-items: center;
-  margin-bottom: 20px;
-  color: var(--accent);
-  text-decoration: none;
-}
-.groups-back:hover {
-  text-decoration: underline;
-}
 .group-details .groups-heading {
   margin-bottom: 20px;
 }
@@ -483,35 +467,7 @@
   font-size: 1.04rem;
   font-weight: 650;
 }
-.group-parameter-table {
-  padding: 19px 20px;
-  border: 1px solid var(--line);
-  border-radius: 0;
-  background: var(--card);
-}
-.group-parameter-table dl {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(90px, auto);
-  gap: 17px 16px;
-  margin: 0;
-}
-.group-parameter-table dt {
-  color: var(--muted);
-}
-.group-parameter-table dd {
-  margin: 0;
-  text-align: right;
-}
-.group-membership-basis {
-  max-width: 220px;
-  color: var(--accent);
-}
-.group-membership-note {
-  margin: 10px 1px 0;
-  font-size: 0.78rem;
-  line-height: 1.4;
-  color: var(--muted);
-}
+
 .group-members {
   border-radius: 0;
 }

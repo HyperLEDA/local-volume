@@ -223,22 +223,6 @@ h1 {
   max-width: 1400px;
 }
 
-.catalog-search {
-  width: 100%;
-  box-sizing: border-box;
-  font: inherit;
-  color: var(--ink);
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 10px 12px;
-}
-
-.catalog-search:focus {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
-}
-
 .publications {
   line-height: 1.55;
 }
@@ -315,12 +299,6 @@ h1 {
   .aladin-frame {
     height: 280px;
   }
-}
-
-.catalog-count {
-  margin: 0 0 8px;
-  color: var(--muted);
-  font-size: 0.85rem;
 }
 
 .object-grid {
@@ -454,69 +432,6 @@ h1 {
   color: var(--muted);
 }
 
-.params-table {
-  width: 100%;
-  min-width: 440px;
-  border-collapse: collapse;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  overflow: hidden;
-  font-size: 0.9rem;
-}
-
-.params-table th,
-.params-table td {
-  padding: 8px 12px;
-  text-align: left;
-  border-bottom: 1px solid var(--line);
-}
-
-.params-table thead th {
-  font-weight: 600;
-  background: var(--table-header);
-}
-
-.params-table tbody th {
-  font-weight: 500;
-}
-
-.params-table tbody tr:last-child th,
-.params-table tbody tr:last-child td {
-  border-bottom: 0;
-}
-
-.params-table tbody tr:nth-child(even) {
-  background: var(--table-stripe);
-}
-
-.param-name {
-  border-bottom: 1px dotted var(--muted);
-  cursor: help;
-}
-
-.param-unit {
-  color: var(--muted);
-  white-space: nowrap;
-}
-
-.param-value,
-.param-error {
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
-.param-error-unit {
-  color: var(--muted);
-}
-
-.params-table thead th:nth-child(2),
-.params-table thead th:nth-child(3),
-.params-table td.param-value,
-.params-table td.param-error {
-  text-align: right;
-}
-
 .object-card-locate {
   margin-left: auto;
   display: inline-flex;
@@ -550,7 +465,6 @@ h1 {
 
 .aladin-frame .aladin-popup-container {
   box-sizing: border-box;
-  width: 320px;
   max-width: calc(100% - 16px);
 }
 
@@ -821,9 +735,7 @@ h1 {
 .parameter-block-unit {
   color: var(--muted);
 }
-.parameter-estimated {
-  color: var(--muted);
-}
+
 .object-params-empty {
   color: var(--muted);
   font-size: 0.9rem;
@@ -919,48 +831,6 @@ h1 {
 /* Vertical spacing in the single observed-parameter grid. */
 .parameter-matrix .parameter-block {
   padding-block: 9px;
-}
-
-/* All-sky atlas color key; no effect on object detail maps or parameter tables. */
-.morphology-scale {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px 16px;
-  margin-top: 9px;
-  color: var(--muted);
-  font-size: 0.85rem;
-}
-.morphology-scale-title {
-  flex: none;
-  color: var(--ink);
-  font-weight: 500;
-}
-.morphology-scale-middle {
-  flex: 1 1 240px;
-  max-width: 430px;
-  min-width: 190px;
-}
-.morphology-scale-bar {
-  height: 10px;
-  border: 1px solid var(--line);
-  border-radius: 3px;
-}
-.morphology-scale-ticks {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 2px;
-  font-variant-numeric: tabular-nums;
-}
-.morphology-scale-missing {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-.morphology-scale-missing-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
 }
 
 /* Compact Aladin popup: each measurement is a single `label: value` line. */
