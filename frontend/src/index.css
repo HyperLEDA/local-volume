@@ -336,13 +336,22 @@ h1 {
 
 .catalog--object {
   max-width: 1320px;
+  /* Query the usable page width, not the screen/device name. */
+  container-type: inline-size;
+  container-name: galaxy-page;
 }
 
 .object-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
+  /* Shrink the square Aladin view before moving catalog measurements below. */
+  grid-template-columns: minmax(0, min(45%, 700px)) minmax(0, 1fr);
   align-items: start;
-  gap: 20px;
+  gap: clamp(12px, 1.5vw, 20px);
+}
+
+/* Prevent intrinsic widths from forcing the responsive grid wider. */
+.object-layout > .catalog-sky {
+  min-width: 0;
 }
 
 .object-layout--no-map {
@@ -352,11 +361,13 @@ h1 {
 .object-details {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: clamp(12px, 1.4vw, 18px);
   min-width: 0;
 }
 
 .catalog--object .aladin-frame {
+  box-sizing: border-box;
+  width: 100%;
   height: auto;
   aspect-ratio: 1 / 1;
 }
@@ -563,17 +574,6 @@ h1 {
   line-height: 1.35;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-@media (max-width: 1200px) {
-  .object-layout {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .catalog--object .catalog-sky {
-    width: 100%;
-    max-width: 620px;
-  }
 }
 
 @media (max-width: 800px) {
@@ -907,5 +907,31 @@ h1 {
   .object-details > .object-params,
   .object-details > .object-params .parameter-matrix {
     width: 100%;
+  }
+}
+
+/* Mobile transition occurs only when two useful columns no longer fit. */
+@container galaxy-page (max-width: 680px) {
+  .object-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .catalog--object .catalog-sky {
+    width: 100%;
+    max-width: 500px;
+    min-width: 0;
+  }
+
+  /* Large measurement tables may scroll inside their own card, not the page. */
+  .object-details > .object-params {
+    width: 100%;
+    align-self: stretch;
+    overflow-x: auto;
+  }
+
+  .object-details > .object-params .parameter-matrix {
+    width: max-content;
+    min-width: 100%;
+    max-width: none;
   }
 }

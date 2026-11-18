@@ -10,11 +10,16 @@ body:has(.catalog--object) .app-workspace {
   margin-inline: auto;
 }
 
-/* Center the intrinsic-width group as a whole; keep the sky at 714 CSS px. */
+/* Keep the sky and measurements balanced across notebook/desktop sizes. */
 .catalog--object .object-layout {
-  grid-template-columns: 714px max-content;
-  justify-content: center;
-  gap: 20px;
+  grid-template-columns: minmax(0, min(45%, 700px)) minmax(0, 1fr);
+  justify-content: stretch;
+  gap: clamp(10px, 1.1vw, 18px);
+}
+
+.catalog--object .catalog-sky,
+.catalog--object .object-details {
+  min-width: 0;
 }
 
 .catalog--object .object-layout--no-map {
@@ -29,8 +34,10 @@ body:has(.catalog--object) .app-workspace {
    the entire pair pinned to the left of an oversized grid track. */
 .catalog--object .object-details {
   display: grid;
-  grid-template-columns: max-content max-content;
-  justify-content: start;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  justify-content: stretch;
+  width: 100%;
+  min-width: 0;
   align-items: start;
   align-content: start;
   column-gap: 12px;
@@ -106,13 +113,22 @@ body:has(.catalog--object) .app-workspace {
 .catalog--object .object-details > [aria-label="Physical Properties"] {
   min-width: 0;
   max-width: 100%;
+  width: 100%;
+  justify-self: stretch;
+  /* Allow full-height property cards; avoid independent desktop scrollbars. */
+  overflow: visible;
 }
 
-/* Both cards share the original Observed matrix styles and caption geometry. */
-.catalog--object .parameter-matrix {
-  width: max-content;
-  max-width: 100%;
-  table-layout: auto;
+/* Keep the two measurement grids equal-width when there is room. */
+.catalog--object .object-details > .object-params .parameter-matrix {
+  width: 100%;
+  max-width: none;
+  table-layout: fixed;
+}
+
+.catalog--object .object-details > .object-params .parameter-block {
+  min-width: 0;
+  padding-inline: clamp(4px, 0.45vw, 9px);
 }
 
 .catalog--object .parameter-matrix .parameter-matrix-caption {
@@ -134,34 +150,49 @@ body:has(.catalog--object) .app-workspace {
   text-decoration: underline;
 }
 
-@media (max-width: 1590px) {
+/* Adapt to the actual object panel, regardless of monitor or browser zoom. */
+@container galaxy-page (max-width: 1320px) {
   .catalog--object .object-layout {
-    grid-template-columns: minmax(0, 1fr);
-    justify-content: stretch;
-  }
-
-  .catalog--object .catalog-sky {
-    width: 100%;
-    max-width: 714px;
-    justify-self: center;
+    gap: 12px;
   }
 
   .catalog--object .object-details {
-    justify-self: center;
-    max-width: 100%;
+    column-gap: 8px;
+    row-gap: 12px;
   }
 }
 
-@media (max-width: 930px) {
+/* On small laptops keep Aladin LEFT and stack the two property cards RIGHT. */
+@container galaxy-page (max-width: 1050px) {
   .catalog--object .object-details {
     grid-template-columns: minmax(0, 1fr);
-    width: max-content;
-    max-width: 100%;
   }
 
   .catalog--object .object-details > [aria-label="Observed Properties"],
   .catalog--object .object-details > [aria-label="Physical Properties"] {
     grid-column: 1;
+  }
+}
+
+/* Only genuinely narrow content boxes get the mobile image-first layout. */
+@container galaxy-page (max-width: 680px) {
+  .catalog--object .object-details > .object-params {
+    overflow-x: auto;
+  }
+
+  .catalog--object .object-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .catalog--object .catalog-sky {
+    width: 100%;
+    max-width: 500px;
+    justify-self: start;
+  }
+
+  .catalog--object .object-details {
+    width: 100%;
+    justify-self: stretch;
   }
 }
 

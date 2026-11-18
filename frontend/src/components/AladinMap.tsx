@@ -1,3 +1,4 @@
+import { stageAtlasFirstFrame } from "../lib/atlasInitialFrame.ts";
 import A, {
   type AladinCatalog,
   type AladinSource,
@@ -36,7 +37,10 @@ import {
   reticlePopupAllowed,
 } from "../lib/reticle.ts";
 import { popupObjectRoute } from "../lib/popupNavigation.ts";
-import { needsInitialFovCorrection } from "../lib/objectFov.ts";
+import {
+  initialAladinTarget,
+  isValidInitialAladinFocus,
+} from "../lib/aladinInitialView.ts";
 import { shouldDismissSkyPopup } from "../lib/mapInteraction.ts";
 import { morphologyColor } from "../lib/morphologyColors.ts";
 import {
@@ -69,10 +73,6 @@ type AtlasDrawingView = {
 const atlasDrawingApi = A as typeof A & AtlasDrawingApi;
 
 const DEFAULT_HIPS_SURVEY = "https://skies.esac.esa.int/DSSColor";
-
-// AIT full-sky disk occupies ~98% of the viewport; edges never clip.
-// Values below 1 zoom in and crop the 360° × 180° all-sky ellipse.
-const ALL_SKY_AIT_FIT_ZOOM_FACTOR = 1.02;
 
 export type SkyFocus = {
   ra: number;
@@ -216,6 +216,76 @@ export function setCatalogSources(
   catalog.addSources(sources);
 }
 
+// ISSUE49_PRE_PUBLISH_LINT_FIX_20261118
+// Keep the initial Atlas AIT fit isolated from React renders. This helper
+// preserves Phase E/F behavior, including the first-resize correction and
+// stopping all automatic updates as soon as the user takes control.
+function installInitialAtlasResizeFit(
+  view: AladinView,
+  element: HTMLDivElement,
+  getCurrentFocus: () => SkyFocus | null,
+  isCancelled: () => boolean,
+): () => void {
+  const resizeApi = view as unknown as {
+    on: (event: "resizeChanged", callback: () => void) => void;
+    off?: (event: "resizeChanged") => void;
+  };
+  let stopped = false;
+  let scheduledFrame: number | null = null;
+
+  function stopAtlasFit(): void {
+    if (stopped) return;
+    stopped = true;
+    if (scheduledFrame !== null) {
+      cancelAnimationFrame(scheduledFrame);
+      scheduledFrame = null;
+    }
+    resizeApi.off?.("resizeChanged");
+    element.removeEventListener("pointerdown", stopAtlasFit);
+    element.removeEventListener("wheel", stopAtlasFit);
+    element.removeEventListener("touchstart", stopAtlasFit);
+  }
+
+  function fitAtlasAfterResize(): void {
+    scheduledFrame = null;
+    if (isCancelled() || stopped) return;
+    if (getCurrentFocus() !== null) {
+      stopAtlasFit();
+      return;
+    }
+    const bounds = element.getBoundingClientRect();
+    const [width, height] = view.getSize();
+    if (
+      bounds.width < 2 ||
+      bounds.height < 2 ||
+      Math.abs(bounds.width - width) > 2 ||
+      Math.abs(bounds.height - height) > 2
+    ) {
+      // The internal Aladin viewport is still catching up with the CSS box.
+      // Retry on the next frame, never on a timer or a React re-render.
+      scheduledFrame = requestAnimationFrame(fitAtlasAfterResize);
+      return;
+    }
+    const actual = view.getFov()[0];
+    if (Number.isFinite(actual) && actual > 0 && actual < 359.5) {
+      view.setZoomFactor(1.02);
+    }
+  }
+
+  function scheduleAtlasFit(): void {
+    if (isCancelled() || stopped) return;
+    if (scheduledFrame !== null) cancelAnimationFrame(scheduledFrame);
+    scheduledFrame = requestAnimationFrame(fitAtlasAfterResize);
+  }
+
+  resizeApi.on("resizeChanged", scheduleAtlasFit);
+  element.addEventListener("pointerdown", stopAtlasFit);
+  element.addEventListener("wheel", stopAtlasFit, { passive: true });
+  element.addEventListener("touchstart", stopAtlasFit, { passive: true });
+  scheduleAtlasFit();
+  return stopAtlasFit;
+}
+
 export function AladinMap({
   objects,
   contextObjects,
@@ -235,11 +305,17 @@ export function AladinMap({
   const catalogRef = useRef<AladinCatalog | null>(null);
   const contextCatalogRef = useRef<AladinCatalog | null>(null);
   const viewRef = useRef<AladinView | null>(null);
-  // Async Aladin initialization and first-resize calibration must use the latest FoV.
+  // Initial FoV is passed to A.aladin; subsequent changes must be explicit.
   const latestFovRef = useRef(mapFov);
+  const latestFocusRef = useRef(focus);
+  const mountedFocusRef = useRef<SkyFocus | null>(null);
+  const mountedFovRef = useRef<number | null>(null);
   useEffect(() => {
     latestFovRef.current = mapFov;
   }, [mapFov]);
+  useEffect(() => {
+    latestFocusRef.current = focus;
+  }, [focus]);
   const objectsRef = useRef(objects);
   const referenceObjectsRef = useRef(referenceObjects ?? objects);
   const mdOverlayRef = useRef<AtlasGraphicOverlay | null>(null);
@@ -333,25 +409,87 @@ export function AladinMap({
       return;
     }
     let cancelled = false;
+    function isCancelled(): boolean {
+      return cancelled;
+    }
     const listeners = { detach: null as (() => void) | null };
-    const initialFovCleanup = { detach: null as (() => void) | null };
-    const overviewFitCleanup = { detach: null as (() => void) | null };
+    const atlasFitCleanup = { detach: null as (() => void) | null };
+    const firstFrameCleanup = { detach: null as (() => void) | null };
 
     async function mount(element: HTMLDivElement): Promise<void> {
       await A.init;
-      if (cancelled) {
-        return;
+      if (cancelled) return;
+      // Let the first responsive layout settle before creating the WebGL canvas.
+      // The map is initialized only once for this mount, with its final target/FoV.
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+      });
+      if (isCancelled()) return;
+      const initialFocus = latestFocusRef.current;
+      const requestedFocusFov = initialFocus?.fov;
+      const hasFocusFov =
+        requestedFocusFov !== undefined &&
+        Number.isFinite(requestedFocusFov) &&
+        requestedFocusFov > 0;
+      const initialFov = hasFocusFov ? requestedFocusFov : latestFovRef.current;
+      // ISSUE49_PHASE_G_FIRST_FRAME_20261118
+      // Reserve the final-size Atlas box, but do not display its default
+      // 300x150 WebGL backing canvas or partially loaded survey.
+      const stageFirstFrame =
+        isOverview && initialFocus === null && !hasFocusFov;
+      if (stageFirstFrame) {
+        element.style.visibility = "hidden";
+        element.setAttribute("aria-busy", "true");
       }
       const view = A.aladin(element, {
-        fov: latestFovRef.current,
+        fov: initialFov,
         projection: isOverview ? "AIT" : "SIN",
         cooFrame: "equatorial",
         survey: DEFAULT_HIPS_SURVEY,
-        target: "180 +0",
+        target: initialAladinTarget(initialFocus),
         showReticle: true,
         showSimbadPointerControl: false,
         showFullscreenControl: false,
       });
+      // ISSUE49_PHASE_F_ATLAS_FIRST_RESIZE_20261118
+      // In Aladin Lite v3 the WASM viewport initially uses window.innerWidth.
+      // Its deferred FIRST resize multiplies the current zoom by
+      // (Aladin element width / window.innerWidth). Precompensate now so that
+      // the first rendered AIT view remains all-sky instead of briefly
+      // jumping to a ~250-degree field before Phase E corrects it later.
+      // Do this only for the initial unfocused Atlas; never for galaxy detail,
+      // searches, user zoom/pan or subsequent browser/window resizes.
+      if (isOverview && initialFocus === null && !hasFocusFov) {
+        const atlasWidth = view.getSize()[0];
+        const initialWasmWidth = window.innerWidth;
+        const zoomApi = view as AladinView & {
+          getZoomFactor?: () => number;
+        };
+        const currentZoom = zoomApi.getZoomFactor?.();
+        if (
+          Number.isFinite(atlasWidth) &&
+          atlasWidth > 2 &&
+          Number.isFinite(initialWasmWidth) &&
+          initialWasmWidth >= atlasWidth &&
+          typeof currentZoom === "number" &&
+          Number.isFinite(currentZoom) &&
+          currentZoom > 0
+        ) {
+          // The observed first resize factor was 1399/1897. The device pixel
+          // ratio cancels in the WASM width ratio, so both widths are CSS px.
+          const compensatedZoom =
+            (currentZoom * initialWasmWidth * 1.02) / atlasWidth;
+          if (compensatedZoom >= 1 && compensatedZoom <= 8) {
+            view.setZoomFactor(compensatedZoom);
+          }
+        }
+      }
+      if (stageFirstFrame) {
+        firstFrameCleanup.detach = stageAtlasFirstFrame(view, element);
+      }
+      mountedFocusRef.current = isValidInitialAladinFocus(initialFocus)
+        ? initialFocus
+        : null;
       const catalog = A.catalog({
         name: "Local volume",
         shape: isOverview ? drawOverviewMarker : drawSelectedObjectMarker,
@@ -362,57 +500,38 @@ export function AladinMap({
               ?.morphology_t,
           ),
       });
-      function installOverviewFit(): void {
-        if (typeof ResizeObserver === "undefined") return;
-
-        let userInteracted = false;
-        let fitTimer: ReturnType<typeof setTimeout> | null = null;
-        let lastSize = "";
-        const observer = new ResizeObserver(() => {
-          if (cancelled || userInteracted) return;
-          const rect = element.getBoundingClientRect();
-          if (rect.width < 2 || rect.height < 2) return;
-          const size = Math.round(rect.width) + "x" + Math.round(rect.height);
-          if (size === lastSize) return;
-          lastSize = size;
-          if (fitTimer !== null) clearTimeout(fitTimer);
-          fitTimer = setTimeout(() => {
-            fitTimer = null;
-            if (!cancelled && !userInteracted) {
-              view.setZoomFactor(ALL_SKY_AIT_FIT_ZOOM_FACTOR);
-            }
-          }, 180);
-        });
-        function stopAutomaticFit(): void {
-          userInteracted = true;
-          if (fitTimer !== null) {
-            clearTimeout(fitTimer);
-            fitTimer = null;
+      mountedFovRef.current = initialFov;
+      // Detail pages retain the existing Phase D initial FoV calibration.
+      // Atlas is handled below, after Aladin has resized its WebGL viewport.
+      if (!isOverview) {
+        const measuredWidth = view.getFov()[0];
+        const zoomView = view as AladinView & {
+          getZoomFactor?: () => number;
+        };
+        const currentZoom = zoomView.getZoomFactor?.();
+        if (
+          Number.isFinite(measuredWidth) &&
+          measuredWidth > 0 &&
+          Number.isFinite(initialFov) &&
+          initialFov > 0 &&
+          typeof currentZoom === "number" &&
+          Number.isFinite(currentZoom) &&
+          currentZoom > 0
+        ) {
+          const ratio = initialFov / measuredWidth;
+          if (ratio >= 0.2 && ratio <= 5 && Math.abs(ratio - 1) > 0.01) {
+            view.setZoomFactor(currentZoom * ratio);
           }
-          observer.disconnect();
-          element.removeEventListener("pointerdown", stopAutomaticFit);
-          element.removeEventListener("wheel", stopAutomaticFit);
-          element.removeEventListener("touchstart", stopAutomaticFit);
         }
-        element.addEventListener("pointerdown", stopAutomaticFit);
-        element.addEventListener("wheel", stopAutomaticFit, {
-          passive: true,
-        });
-        element.addEventListener("touchstart", stopAutomaticFit, {
-          passive: true,
-        });
-        observer.observe(element);
-        overviewFitCleanup.detach = stopAutomaticFit;
       }
 
-      view.setFoV(latestFovRef.current);
-      if (isOverview) {
-        view.setZoomFactor(ALL_SKY_AIT_FIT_ZOOM_FACTOR);
-
-        // Aladin Lite rescales its internal zoom factor whenever its canvas
-        // width changes. Restore the all-sky fit AFTER that resize, without
-        // resetting the user's own zoom/pan interactions.
-        installOverviewFit();
+      if (isOverview && !hasFocusFov) {
+        atlasFitCleanup.detach = installInitialAtlasResizeFit(
+          view,
+          element,
+          () => latestFocusRef.current,
+          isCancelled,
+        );
       }
       if (!isOverview) {
         const contextCatalog = A.catalog({
@@ -461,52 +580,6 @@ export function AladinMap({
       });
       (view as AladinView & AtlasDrawingView).addOverlay(mdOverlay);
       mdOverlayRef.current = mdOverlay;
-
-      // Aladin can rescale the initial FoV while the square map is settling.
-      // Correct it only once after layout, never after a user zooms or drags.
-      let calibrationTimer: ReturnType<typeof setTimeout> | null = null;
-      let calibrationObserver: ResizeObserver | null = null;
-      let userInteracted = false;
-
-      function endInitialFovCalibration(event?: Event): void {
-        if (event !== undefined) {
-          userInteracted = true;
-        }
-        if (calibrationTimer !== null) {
-          clearTimeout(calibrationTimer);
-          calibrationTimer = null;
-        }
-        calibrationObserver?.disconnect();
-        element.removeEventListener("pointerdown", endInitialFovCalibration);
-        element.removeEventListener("wheel", endInitialFovCalibration);
-      }
-
-      if (!isOverview && typeof ResizeObserver !== "undefined") {
-        calibrationObserver = new ResizeObserver(() => {
-          if (cancelled || userInteracted) {
-            return;
-          }
-          if (calibrationTimer !== null) {
-            clearTimeout(calibrationTimer);
-          }
-          calibrationTimer = setTimeout(() => {
-            calibrationTimer = null;
-            if (!cancelled && !userInteracted) {
-              const actualFov = view.getFov()[0];
-              if (needsInitialFovCorrection(actualFov, latestFovRef.current)) {
-                view.setFoV(latestFovRef.current);
-              }
-            }
-            endInitialFovCalibration();
-          }, 250);
-        });
-        element.addEventListener("pointerdown", endInitialFovCalibration);
-        element.addEventListener("wheel", endInitialFovCalibration, {
-          passive: true,
-        });
-        calibrationObserver.observe(element);
-        initialFovCleanup.detach = endInitialFovCalibration;
-      }
 
       let autoPopupPgc: number | null = null;
       let manualPopup = false;
@@ -664,14 +737,16 @@ export function AladinMap({
 
     return () => {
       cancelled = true;
-      initialFovCleanup.detach?.();
-      overviewFitCleanup.detach?.();
+      firstFrameCleanup.detach?.();
+      atlasFitCleanup.detach?.();
       listeners.detach?.();
       clearReticlePopupRef.current = null;
       refreshReticlePopupRef.current = null;
       catalogRef.current = null;
       contextCatalogRef.current = null;
       viewRef.current = null;
+      mountedFocusRef.current = null;
+      mountedFovRef.current = null;
       regionOverlayRef.current = null;
       previewOverlayRef.current = null;
       mdOverlayRef.current = null;
@@ -722,7 +797,9 @@ export function AladinMap({
       mapFov <= 0
     )
       return;
+    if (mountedFovRef.current === mapFov) return;
     view.setFoV(mapFov);
+    mountedFovRef.current = mapFov;
   }, [ready, mapFov, isOverview]);
 
   useEffect(() => {
@@ -730,6 +807,16 @@ export function AladinMap({
     if (!ready || focus === null || view === null) {
       return;
     }
+    const previous = mountedFocusRef.current;
+    if (
+      previous?.requestId === focus.requestId &&
+      previous.ra === focus.ra &&
+      previous.dec === focus.dec &&
+      previous.fov === focus.fov
+    )
+      return;
+    // A requested new focus is handled independently of initialization.
+    mountedFocusRef.current = focus;
     if (
       focus.fov !== undefined &&
       Number.isFinite(focus.fov) &&
