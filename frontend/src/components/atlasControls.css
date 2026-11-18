@@ -1208,3 +1208,33 @@
   line-height: 1;
   vertical-align: baseline;
 }
+
+/* #56: keyboard-accessible export choices; separate from Aladin controls. */
+.atlas-export-anchor {
+  position: relative;
+}
+
+.atlas-export-menu {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 6px);
+  z-index: 160;
+  display: grid;
+  min-width: 92px;
+  gap: 3px;
+  padding: 5px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--card);
+  box-shadow: 0 4px 14px rgb(0 0 0 / 20%);
+}
+
+.atlas-results-actions .atlas-export-menu button {
+  text-align: left;
+  width: 100%;
+}
+
+.atlas-export-menu button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 0;
+}

@@ -206,7 +206,7 @@ export function ObjectsPage() {
                 />
               </div>
               <AtlasSelectionSummary
-                objects={filtered}
+                objects={gridObjects}
                 total={objects.length}
                 query={query}
                 filters={filters}

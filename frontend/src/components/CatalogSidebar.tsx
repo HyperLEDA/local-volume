@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import {
   loadGroupsPage,
   loadPublicationsPage,
+  loadAcknowledgementsPage,
   preloadPage,
 } from "../pageLoaders.ts";
 
@@ -71,6 +72,27 @@ function PublicationsIcon() {
   );
 }
 
+function AcknowledgementsIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      width="20"
+      height="20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  );
+}
+
 function ThemeIcon({ theme }: { theme: Theme }) {
   return theme === "light" ? (
     <svg
@@ -119,6 +141,7 @@ export function CatalogSidebar() {
   const { pathname } = useLocation();
   const atlasActive = pathname === "/" || pathname.startsWith("/object/");
   const publicationsActive = pathname === "/publications";
+  const acknowledgementsActive = pathname === "/acknowledgements";
   const groupsActive =
     pathname === "/groups" || pathname.startsWith("/groups/");
   const [theme, setTheme] = useState<Theme>(initialTheme);
@@ -177,6 +200,20 @@ export function CatalogSidebar() {
           <PublicationsIcon />
           <span className="catalog-nav-tooltip" aria-hidden="true">
             Publications
+          </span>
+        </Link>
+        <Link
+          to="/acknowledgements"
+          className="catalog-nav-link"
+          aria-label="Acknowledgements"
+          aria-current={acknowledgementsActive ? "page" : undefined}
+          onMouseEnter={() => void preloadPage(loadAcknowledgementsPage)}
+          onFocus={() => void preloadPage(loadAcknowledgementsPage)}
+          onTouchStart={() => void preloadPage(loadAcknowledgementsPage)}
+        >
+          <AcknowledgementsIcon />
+          <span className="catalog-nav-tooltip" aria-hidden="true">
+            Acknowledgements
           </span>
         </Link>
         <button

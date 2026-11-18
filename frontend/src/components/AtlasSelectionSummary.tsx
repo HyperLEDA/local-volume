@@ -1,9 +1,15 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import type { CatalogObject } from "../api/objects.ts";
 import { summarizeAtlas } from "../lib/atlasSummary.ts";
 import { medianHeliocentricVelocity } from "../lib/atlasVelocitySummary.ts";
 import { trgbDistanceCount } from "../lib/atlasTrgbSummary.ts";
-import { buildAtlasCsv } from "../lib/atlasExport.ts";
+import {
+  buildAtlasCsv,
+  buildAtlasTsv,
+  buildAtlasJson,
+  type AtlasExportFormat,
+  type AtlasExportMetadata,
+} from "../lib/atlasExport.ts";
 import type { ScientificFiltersState } from "../lib/scientificFilters.ts";
 import type { SkyRegion } from "../lib/skyRegion.ts";
 import type { SkyCoordinates } from "../lib/skySearch.ts";
@@ -40,6 +46,8 @@ export function AtlasSelectionSummary({
   radiusArcmin,
 }: Props) {
   const [shareStatus, setShareStatus] = useState<string | null>(null);
+  const [exportOpen, setExportOpen] = useState(false);
+  const exportMenuId = useId();
   const summary = summarizeAtlas(objects);
   const velocity = medianHeliocentricVelocity(objects);
   const trgbCount = trgbDistanceCount(objects);
@@ -49,7 +57,7 @@ export function AtlasSelectionSummary({
       object.distance_method.trim() !== "",
   );
 
-  async function exportMetadata(): Promise<void> {
+  async function buildMetadata(): Promise<AtlasExportMetadata> {
     let generation: Record<string, unknown> | null = null;
     try {
       const response = await fetch("/api/v1/physical/refresh-status");
@@ -79,11 +87,40 @@ export function AtlasSelectionSummary({
       reproducibility_note:
         "Live catalogue is not a frozen snapshot. The refresh state is queried at export time.",
     };
+    return metadata;
+  }
+
+  async function exportMetadata(): Promise<void> {
+    const metadata = await buildMetadata();
     saveDownload(
       "lv-atlas-selection-metadata.json",
       `${JSON.stringify(metadata, null, 2)}\n`,
       "application/json",
     );
+  }
+
+  async function exportSelection(format: AtlasExportFormat): Promise<void> {
+    setExportOpen(false);
+    if (format === "csv") {
+      saveDownload(
+        "lv-atlas-selection.csv",
+        buildAtlasCsv(objects),
+        "text/csv;charset=utf-8",
+      );
+    } else if (format === "tsv") {
+      saveDownload(
+        "lv-atlas-selection.tsv",
+        buildAtlasTsv(objects),
+        "text/tab-separated-values;charset=utf-8",
+      );
+    } else {
+      const metadata = await buildMetadata();
+      saveDownload(
+        "lv-atlas-selection.json",
+        buildAtlasJson(objects, metadata),
+        "application/json;charset=utf-8",
+      );
+    }
   }
 
   async function share(): Promise<void> {
@@ -137,18 +174,47 @@ export function AtlasSelectionSummary({
         </div>
       </div>
       <div className="atlas-results-actions">
-        <button
-          type="button"
-          onClick={() =>
-            saveDownload(
-              "lv-atlas-selection.csv",
-              buildAtlasCsv(objects),
-              "text/csv;charset=utf-8",
-            )
-          }
+        <div
+          className="atlas-export-anchor"
+          onBlur={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget))
+              setExportOpen(false);
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") setExportOpen(false);
+          }}
         >
-          Export CSV
-        </button>
+          <button
+            type="button"
+            aria-expanded={exportOpen}
+            aria-controls={exportMenuId}
+            aria-label="Export current Atlas selection"
+            onClick={() => setExportOpen((open) => !open)}
+          >
+            Export ▾
+          </button>
+          {exportOpen ? (
+            <div
+              id={exportMenuId}
+              className="atlas-export-menu"
+              role="group"
+              aria-label="Export formats"
+            >
+              <button type="button" onClick={() => void exportSelection("csv")}>
+                CSV
+              </button>
+              <button type="button" onClick={() => void exportSelection("tsv")}>
+                TSV
+              </button>
+              <button
+                type="button"
+                onClick={() => void exportSelection("json")}
+              >
+                JSON
+              </button>
+            </div>
+          ) : null}
+        </div>
         <button
           type="button"
           title="Selection criteria and physical-refresh generation"
