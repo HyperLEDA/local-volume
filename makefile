@@ -33,15 +33,11 @@ check-migrations:
 check-schema:
 	bunx schemalint@2.3.2
 
+check-template:
+	@command -v copier >/dev/null 2>&1 || { echo "Copier is not installed; install it to check the upstream template."; exit 2; }
+	@copier check-update --answers-file .template.yaml
+
 check:
-	@output=$$(copier check-update --answers-file .template.yaml 2>&1) || true; \
-	if echo "$$output" | grep -q "up-to-date"; then \
-		true; \
-	elif echo "$$output" | grep -q "New template version"; then \
-		echo "Template update available, run make update-template"; \
-	else \
-		echo "$$output"; \
-	fi
 
 	@find . \
 		-name "*.py" \
