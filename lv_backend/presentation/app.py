@@ -113,22 +113,49 @@ def _preview_variant(variant: str) -> str:
     return variant
 
 
+def _preview_row(
+    storage: data_storage.Storage,
+    pgc: int,
+    definition: str,
+    variant: str,
+    *,
+    metadata_only: bool,
+) -> dict[str, object]:
+    variant = _preview_variant(variant)
+    validated_definition = _preview_definition(definition)
+    lookup = data_group_previews.select_preview_metadata if metadata_only else data_group_previews.select_preview
+    try:
+        row = lookup(storage, pgc, validated_definition, variant)
+    except RuntimeError as exc:
+        raise fastapi.HTTPException(status_code=409, detail=str(exc)) from exc
+    if row is None:
+        raise fastapi.HTTPException(status_code=404, detail="Preview missing or outdated")
+    return row
+
+
 def _preview_response(
     storage: data_storage.Storage,
     pgc: int,
     definition: str,
     variant: str = "hierarchy",
 ) -> fastapi.Response:
-    variant = _preview_variant(variant)
-    try:
-        row = data_group_previews.select_preview(storage, pgc, _preview_definition(definition), variant)
-    except RuntimeError as exc:
-        raise fastapi.HTTPException(status_code=409, detail=str(exc)) from exc
-    if row is None:
-        raise fastapi.HTTPException(status_code=404, detail="Preview missing or outdated")
+    row = _preview_row(storage, pgc, definition, variant, metadata_only=False)
     return fastapi.Response(
         content=row["image_webp"],
         media_type="image/webp",
+        headers={"ETag": '"' + str(row["image_sha256"]) + '"', "Cache-Control": "no-cache"},
+    )
+
+
+def _preview_metadata_response(
+    storage: data_storage.Storage,
+    pgc: int,
+    definition: str,
+    variant: str = "hierarchy",
+) -> fastapi.Response:
+    row = _preview_row(storage, pgc, definition, variant, metadata_only=True)
+    return fastapi.Response(
+        status_code=200,
         headers={"ETag": '"' + str(row["image_sha256"]) + '"', "Cache-Control": "no-cache"},
     )
 
@@ -140,6 +167,19 @@ def get_group_preview(
     definition: str = "physical",
     variant: str = "hierarchy",
 ) -> fastapi.Response:
+    validators = request.headers.get("if-none-match")
+    if validators is not None:
+        metadata = _preview_metadata_response(request.app.state.storage, root_pgc, definition, variant)
+        # Weak comparison is valid for If-None-Match on GET (RFC 9110).
+        expected = metadata.headers["ETag"]
+        matches = any(
+            candidate.strip().removeprefix("W/").strip() in ("*", expected) for candidate in validators.split(",")
+        )
+        if matches:
+            return fastapi.Response(
+                status_code=304,
+                headers={"ETag": expected, "Cache-Control": "no-cache"},
+            )
     return _preview_response(request.app.state.storage, root_pgc, definition, variant)
 
 
@@ -150,8 +190,7 @@ def head_group_preview(
     definition: str = "physical",
     variant: str = "hierarchy",
 ) -> fastapi.Response:
-    result = _preview_response(request.app.state.storage, root_pgc, definition, variant)
-    return fastapi.Response(status_code=200, headers={"ETag": result.headers["ETag"]})
+    return _preview_metadata_response(request.app.state.storage, root_pgc, definition, variant)
 
 
 @api.put("/group-preview/{root_pgc}")

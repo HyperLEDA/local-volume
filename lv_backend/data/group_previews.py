@@ -14,12 +14,14 @@ SELECT source_revision, applied_revision, formula_version
 FROM lv.physical_refresh_state WHERE singleton = TRUE
 """
 
-_READ_SQL = """
-SELECT image_webp, image_sha256
+# A metadata lookup must never transfer WebP bytes from PostgreSQL.
+_READ_CONDITIONS = """
 FROM lv.group_previews
 WHERE root_pgc = %s AND definition = %s AND variant = %s
  AND source_revision = %s AND formula_version = %s AND render_version = %s
 """
+_READ_SQL = "SELECT image_webp, image_sha256\n" + _READ_CONDITIONS
+_READ_METADATA_SQL = "SELECT image_sha256\n" + _READ_CONDITIONS
 
 _UPSERT_SQL = """
 INSERT INTO lv.group_previews (
@@ -55,18 +57,39 @@ def preview_render_version(variant: str) -> str:
     raise ValueError(f"Unsupported preview variant: {variant}")
 
 
+def _read_preview(
+    storage: Storage,
+    root_pgc: int,
+    definition: str,
+    variant: str,
+    *,
+    metadata_only: bool,
+) -> dict[str, object] | None:
+    if variant == "hierarchy" and root_pgc in NO_HIERARCHY_PREVIEW_ROOTS:
+        return None
+    render_version = preview_render_version(variant)
+    rev = current_revision(storage)
+    query = _READ_METADATA_SQL if metadata_only else _READ_SQL
+    rows = storage.query(query, [root_pgc, definition, variant, rev, FORMULA_VERSION, render_version])
+    return rows[0] if rows else None
+
+
 def select_preview(
     storage: Storage,
     root_pgc: int,
     definition: str,
     variant: str = "hierarchy",
 ) -> dict[str, object] | None:
-    if variant == "hierarchy" and root_pgc in NO_HIERARCHY_PREVIEW_ROOTS:
-        return None
-    render_version = preview_render_version(variant)
-    rev = current_revision(storage)
-    rows = storage.query(_READ_SQL, [root_pgc, definition, variant, rev, FORMULA_VERSION, render_version])
-    return rows[0] if rows else None
+    return _read_preview(storage, root_pgc, definition, variant, metadata_only=False)
+
+
+def select_preview_metadata(
+    storage: Storage,
+    root_pgc: int,
+    definition: str,
+    variant: str = "hierarchy",
+) -> dict[str, object] | None:
+    return _read_preview(storage, root_pgc, definition, variant, metadata_only=True)
 
 
 def validate_webp(blob: bytes) -> None:
