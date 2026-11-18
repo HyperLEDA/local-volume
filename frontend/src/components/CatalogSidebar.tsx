@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import {
+  loadGroupsPage,
+  loadPublicationsPage,
+  preloadPage,
+} from "../pageLoaders.ts";
 
 type Theme = "light" | "dark";
 
@@ -146,6 +151,9 @@ export function CatalogSidebar() {
           className="catalog-nav-link"
           aria-label="Groups"
           aria-current={groupsActive ? "page" : undefined}
+          onMouseEnter={() => void preloadPage(loadGroupsPage)}
+          onFocus={() => void preloadPage(loadGroupsPage)}
+          onTouchStart={() => void preloadPage(loadGroupsPage)}
         >
           <GroupsIcon />
           <span className="catalog-nav-tooltip" aria-hidden="true">
@@ -162,6 +170,9 @@ export function CatalogSidebar() {
           className="catalog-nav-link"
           aria-label="Publications"
           aria-current={publicationsActive ? "page" : undefined}
+          onMouseEnter={() => void preloadPage(loadPublicationsPage)}
+          onFocus={() => void preloadPage(loadPublicationsPage)}
+          onTouchStart={() => void preloadPage(loadPublicationsPage)}
         >
           <PublicationsIcon />
           <span className="catalog-nav-tooltip" aria-hidden="true">

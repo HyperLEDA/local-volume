@@ -124,12 +124,28 @@ const TABLE_EXCLUDED = new Set([
   "lvg_e_v_hel_kms",
 ]);
 
-export async function fetchObjects(): Promise<CatalogObject[]> {
-  const response = await fetch("/api/v1/objects");
-  if (!response.ok) {
-    throw new Error(`Failed to load objects (${response.status})`);
+// Share only an in-progress network request; completed results are never cached.
+let pendingCatalog: Promise<ObjectsListResponse> | null = null;
+
+async function fetchCatalogPayload(): Promise<ObjectsListResponse> {
+  if (pendingCatalog !== null) return pendingCatalog;
+  const request = (async () => {
+    const response = await fetch("/api/v1/objects");
+    if (!response.ok) {
+      throw new Error(`Failed to load objects (${response.status})`);
+    }
+    return (await response.json()) as ObjectsListResponse;
+  })();
+  pendingCatalog = request;
+  try {
+    return await request;
+  } finally {
+    if (pendingCatalog === request) pendingCatalog = null;
   }
-  const body = (await response.json()) as ObjectsListResponse;
+}
+
+export async function fetchObjects(): Promise<CatalogObject[]> {
+  const body = await fetchCatalogPayload();
   const {
     pgc,
     name,
@@ -182,7 +198,7 @@ export async function fetchObjects(): Promise<CatalogObject[]> {
     type_name: typeName?.[index] ?? null,
     d_26: d26?.[index] ?? null,
     w_50: w50?.[index] ?? null,
-    names: names[index] ?? [],
+    names: [...(names[index] ?? [])],
   }));
 }
 
@@ -197,11 +213,11 @@ export async function fetchObject(pgc: number): Promise<ObjectGetResponse> {
   return (await response.json()) as ObjectGetResponse;
 }
 
-export function matchesQuery(object: CatalogObject, query: string): boolean {
-  const normalized = query.trim().toLowerCase();
-  if (normalized.length === 0) {
-    return true;
-  }
+function matchesNormalizedQuery(
+  object: CatalogObject,
+  normalized: string,
+): boolean {
+  if (normalized.length === 0) return true;
   return (
     object.name.toLowerCase().includes(normalized) ||
     String(object.pgc).includes(normalized) ||
@@ -209,6 +225,18 @@ export function matchesQuery(object: CatalogObject, query: string): boolean {
       extraName.toLowerCase().includes(normalized),
     )
   );
+}
+
+/** Normalize the search string once, not once for every galaxy in the Atlas. */
+export function createCatalogQueryMatcher(
+  query: string,
+): (object: CatalogObject) => boolean {
+  const normalized = query.trim().toLowerCase();
+  return (object) => matchesNormalizedQuery(object, normalized);
+}
+
+export function matchesQuery(object: CatalogObject, query: string): boolean {
+  return matchesNormalizedQuery(object, query.trim().toLowerCase());
 }
 
 export function nameIncludesPgc(name: string, pgc: number): boolean {

@@ -1,12 +1,92 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { lazy, Suspense, useDeferredValue } from "react";
+import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { CatalogHeader } from "./components/CatalogHeader.tsx";
 import { CatalogSidebar } from "./components/CatalogSidebar.tsx";
-import { ObjectPage } from "./pages/ObjectPage.tsx";
-import { ObjectsPage } from "./pages/ObjectsPage.tsx";
-import { PublicationsPage } from "./pages/PublicationsPage.tsx";
-import { GroupsPage } from "./pages/GroupsPage.tsx";
-import { GroupPreviewBuilderPage } from "./pages/GroupPreviewBuilderPage.tsx";
-import { GroupPage } from "./pages/GroupPage.tsx";
+import { RouteLoadErrorBoundary } from "./components/RouteLoadErrorBoundary.tsx";
+import {
+  loadGroupPage,
+  loadGroupPreviewBuilderPage,
+  loadGroupsPage,
+  loadObjectPage,
+  loadObjectsPage,
+  loadPublicationsPage,
+} from "./pageLoaders.ts";
+
+// React.lazy and navigation hints reuse the same cached loader promises.
+const ObjectsPage = lazy(loadObjectsPage);
+const ObjectPage = lazy(loadObjectPage);
+const GroupsPage = lazy(loadGroupsPage);
+const GroupPreviewBuilderPage = lazy(loadGroupPreviewBuilderPage);
+const GroupPage = lazy(loadGroupPage);
+const PublicationsPage = lazy(loadPublicationsPage);
+
+// Keep the already rendered route visible while a new lazy page is loading.
+// Initial direct visits still suspend until their route module is ready.
+function PageRoutes() {
+  const location = useLocation();
+  const deferredLocation = useDeferredValue(location);
+
+  return (
+    <Suspense
+      fallback={
+        <p className="catalog-status" role="status">
+          Loading page…
+        </p>
+      }
+    >
+      <Routes location={deferredLocation}>
+        <Route
+          path="/"
+          element={
+            <RouteLoadErrorBoundary key="atlas">
+              <ObjectsPage />
+            </RouteLoadErrorBoundary>
+          }
+        />
+        <Route
+          path="/object/:pgc"
+          element={
+            <RouteLoadErrorBoundary key="object">
+              <ObjectPage />
+            </RouteLoadErrorBoundary>
+          }
+        />
+        <Route
+          path="/groups"
+          element={
+            <RouteLoadErrorBoundary key="groups">
+              <GroupsPage />
+            </RouteLoadErrorBoundary>
+          }
+        />
+        <Route
+          path="/groups/preview-builder"
+          element={
+            <RouteLoadErrorBoundary key="preview-builder">
+              <GroupPreviewBuilderPage />
+            </RouteLoadErrorBoundary>
+          }
+        />
+        <Route
+          path="/groups/:rootPgc"
+          element={
+            <RouteLoadErrorBoundary key="group">
+              <GroupPage />
+            </RouteLoadErrorBoundary>
+          }
+        />
+        <Route
+          path="/publications"
+          element={
+            <RouteLoadErrorBoundary key="publications">
+              <PublicationsPage />
+            </RouteLoadErrorBoundary>
+          }
+        />
+      </Routes>
+    </Suspense>
+  );
+}
 
 export default function App() {
   return (
@@ -15,17 +95,7 @@ export default function App() {
         <CatalogSidebar />
         <div className="app-workspace">
           <CatalogHeader />
-          <Routes>
-            <Route path="/" element={<ObjectsPage />} />
-            <Route path="/object/:pgc" element={<ObjectPage />} />
-            <Route path="/groups" element={<GroupsPage />} />
-            <Route
-              path="/groups/preview-builder"
-              element={<GroupPreviewBuilderPage />}
-            />
-            <Route path="/groups/:rootPgc" element={<GroupPage />} />
-            <Route path="/publications" element={<PublicationsPage />} />
-          </Routes>
+          <PageRoutes />
         </div>
       </div>
     </BrowserRouter>

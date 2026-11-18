@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   fetchObjects,
-  matchesQuery,
+  createCatalogQueryMatcher,
   type CatalogObject,
 } from "../api/objects.ts";
 import { AladinMap, type SkyFocus } from "../components/AladinMap.tsx";
@@ -107,9 +107,10 @@ export function ObjectsPage() {
   const filtered = useMemo(() => {
     if (objects === null) return [];
     const coordinateQuery = parseAtlasCoordinates(query) !== null;
+    const matchesName = createCatalogQueryMatcher(query);
     return objects.filter(
       (object) =>
-        (coordinateQuery || matchesQuery(object, query)) &&
+        (coordinateQuery || matchesName(object)) &&
         matchesScientificFilters(object, filters) &&
         (nearby === null || isWithinSkyRadius(object, nearby, radiusArcmin)) &&
         (region === null || regionContains(region, object.ra, object.dec)),

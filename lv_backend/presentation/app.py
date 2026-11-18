@@ -1,6 +1,7 @@
 import hmac
 import os
 import pathlib
+import re
 import threading
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
@@ -8,6 +9,8 @@ from contextlib import asynccontextmanager
 import fastapi
 import fastapi.responses
 import fastapi.staticfiles
+from starlette.middleware.gzip import GZipMiddleware
+from starlette.types import Receive, Scope, Send
 
 from lv_backend.data import group_previews as data_group_previews
 from lv_backend.data import migrations as data_migrations
@@ -46,7 +49,23 @@ async def lifespan(app: fastapi.FastAPI) -> AsyncIterator[None]:
         storage.close()
 
 
+class _PreviewSafeGZipMiddleware(GZipMiddleware):
+    # Starlette's GZipMiddleware does not automatically exclude image/webp
+    # returned by a normal Response, unlike static FileResponse pathsend.
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if (
+            scope["type"] == "http"
+            and scope["method"] in ("GET", "HEAD")
+            and scope["path"].startswith("/api/v1/group-preview/")
+        ):
+            await self.app(scope, receive, send)
+            return
+        await super().__call__(scope, receive, send)
+
+
 app = fastapi.FastAPI(lifespan=lifespan)
+# Compress textual responses while preserving raw WebP bytes and their ETags.
+app.add_middleware(_PreviewSafeGZipMiddleware, minimum_size=1024, compresslevel=5)
 api = fastapi.APIRouter(prefix="/api/v1")
 
 
@@ -108,22 +127,49 @@ def _preview_variant(variant: str) -> str:
     return variant
 
 
+def _preview_row(
+    storage: data_storage.Storage,
+    pgc: int,
+    definition: str,
+    variant: str,
+    *,
+    metadata_only: bool,
+) -> dict[str, object]:
+    variant = _preview_variant(variant)
+    validated_definition = _preview_definition(definition)
+    lookup = data_group_previews.select_preview_metadata if metadata_only else data_group_previews.select_preview
+    try:
+        row = lookup(storage, pgc, validated_definition, variant)
+    except RuntimeError as exc:
+        raise fastapi.HTTPException(status_code=409, detail=str(exc)) from exc
+    if row is None:
+        raise fastapi.HTTPException(status_code=404, detail="Preview missing or outdated")
+    return row
+
+
 def _preview_response(
     storage: data_storage.Storage,
     pgc: int,
     definition: str,
     variant: str = "hierarchy",
 ) -> fastapi.Response:
-    variant = _preview_variant(variant)
-    try:
-        row = data_group_previews.select_preview(storage, pgc, _preview_definition(definition), variant)
-    except RuntimeError as exc:
-        raise fastapi.HTTPException(status_code=409, detail=str(exc)) from exc
-    if row is None:
-        raise fastapi.HTTPException(status_code=404, detail="Preview missing or outdated")
+    row = _preview_row(storage, pgc, definition, variant, metadata_only=False)
     return fastapi.Response(
         content=row["image_webp"],
         media_type="image/webp",
+        headers={"ETag": '"' + str(row["image_sha256"]) + '"', "Cache-Control": "no-cache"},
+    )
+
+
+def _preview_metadata_response(
+    storage: data_storage.Storage,
+    pgc: int,
+    definition: str,
+    variant: str = "hierarchy",
+) -> fastapi.Response:
+    row = _preview_row(storage, pgc, definition, variant, metadata_only=True)
+    return fastapi.Response(
+        status_code=200,
         headers={"ETag": '"' + str(row["image_sha256"]) + '"', "Cache-Control": "no-cache"},
     )
 
@@ -135,6 +181,19 @@ def get_group_preview(
     definition: str = "physical",
     variant: str = "hierarchy",
 ) -> fastapi.Response:
+    validators = request.headers.get("if-none-match")
+    if validators is not None:
+        metadata = _preview_metadata_response(request.app.state.storage, root_pgc, definition, variant)
+        # Weak comparison is valid for If-None-Match on GET (RFC 9110).
+        expected = metadata.headers["ETag"]
+        matches = any(
+            candidate.strip().removeprefix("W/").strip() in ("*", expected) for candidate in validators.split(",")
+        )
+        if matches:
+            return fastapi.Response(
+                status_code=304,
+                headers={"ETag": expected, "Cache-Control": "no-cache"},
+            )
     return _preview_response(request.app.state.storage, root_pgc, definition, variant)
 
 
@@ -145,8 +204,7 @@ def head_group_preview(
     definition: str = "physical",
     variant: str = "hierarchy",
 ) -> fastapi.Response:
-    result = _preview_response(request.app.state.storage, root_pgc, definition, variant)
-    return fastapi.Response(status_code=200, headers={"ETag": result.headers["ETag"]})
+    return _preview_metadata_response(request.app.state.storage, root_pgc, definition, variant)
 
 
 @api.put("/group-preview/{root_pgc}")
@@ -220,6 +278,18 @@ def _frontend_page(full_path: str) -> fastapi.responses.FileResponse:
     return fastapi.responses.FileResponse(dist_dir / "index.html")
 
 
+# Vite includes content fingerprints in generated /assets filenames.
+_FINGERPRINTED_ASSET_RE = re.compile(r"-[A-Za-z0-9_-]{8,}\.[A-Za-z0-9]+$")
+
+
+class _VersionedStaticFiles(fastapi.staticfiles.StaticFiles):
+    async def get_response(self, path: str, scope: Scope) -> fastapi.Response:
+        response = await super().get_response(path, scope)
+        if response.status_code in (200, 304) and _FINGERPRINTED_ASSET_RE.search(pathlib.PurePosixPath(path).name):
+            response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        return response
+
+
 def _mount_frontend(application: fastapi.FastAPI, dist_dir: pathlib.Path) -> None:
     if not dist_dir.is_dir():
         return
@@ -227,7 +297,7 @@ def _mount_frontend(application: fastapi.FastAPI, dist_dir: pathlib.Path) -> Non
     if assets_dir.is_dir():
         application.mount(
             "/assets",
-            fastapi.staticfiles.StaticFiles(directory=assets_dir),
+            _VersionedStaticFiles(directory=assets_dir),
             name="assets",
         )
     application.add_api_route(

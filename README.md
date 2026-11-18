@@ -35,8 +35,21 @@ make test-js     # All JavaScript/TypeScript tests (Bun)
 The CI workflow runs `make check` and builds a Docker image for every pull
 request. Its `tests` and `build` jobs are required before merging into `main`.
 
+An optional `make check-template` checks for updates to the original Python
+template. It requires the `copier` command to be installed separately and is
+not part of `make check` or CI. It does not update project files.
+
+Vite-generated fingerprinted assets under `/assets/` use immutable one-year
+browser caching. Unfingerprinted assets and the app's HTML are not given this
+long-lived caching policy.
+
 ## Database safety
 
-`make check-schema` removes and recreates the local `lvdb` Compose container,
-including associated anonymous volumes. Do not run it against a database
-containing data you need to retain.
+`make check-schema` lints the schema of an **already running** database. It
+does not start, migrate, stop, recreate, or delete the database. The connection
+can be configured with `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, and
+`PGDATABASE`; defaults are in `.schemalintrc.js`. Only use it with a database
+you are authorized to inspect.
+
+For a fresh schema check, the `Check migrations` GitHub Actions workflow starts
+an isolated PostGIS container, applies all migrations, and runs the linter.
