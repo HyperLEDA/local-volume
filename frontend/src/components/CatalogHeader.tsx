@@ -5,7 +5,6 @@ import ledaDarkLogo from "../images/leda-dark.png";
 
 export function CatalogHeader() {
   const pathname = useLocation().pathname;
-  const isOverview = pathname === "/";
   const isGroupDetail = /^\/groups\/\d+\/?$/.test(pathname);
   return (
     <header
@@ -23,18 +22,12 @@ export function CatalogHeader() {
       >
         <img src={saoLogo} alt="SAO" />
       </a>
-      <h1 className={isOverview ? "catalog-header-title--atlas" : undefined}>
+      <h1 className="catalog-header-title--atlas">
         <Link to="/">
-          {isOverview ? (
-            <>
-              <span className="catalog-title-main">LV LEDA</span>
-              <span className="catalog-title-subtitle">
-                Galaxies of the Nearby Universe
-              </span>
-            </>
-          ) : (
-            "Catalog & Atlas of the LV galaxies"
-          )}
+          <span className="catalog-title-main">LV LEDA</span>
+          <span className="catalog-title-subtitle">
+            Galaxies of the Nearby Universe
+          </span>
         </Link>
       </h1>
       <a

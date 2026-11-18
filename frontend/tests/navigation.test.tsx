@@ -22,6 +22,8 @@ describe("fixed navigation rail", () => {
     expect(html.match(/href="\/publications"/g)).toHaveLength(1);
     expect(html).toContain('aria-label="Atlas"');
     expect(html).toContain('aria-label="Publications"');
+    expect(html).toContain('aria-label="Acknowledgements"');
+    expect(html).toContain('href="/acknowledgements"');
     expect(html).toContain('aria-label="Groups"');
     expect(html).toContain('aria-label="Primary navigation"');
     expect(html).toContain('aria-label="Secondary navigation"');
@@ -45,11 +47,25 @@ describe("fixed navigation rail", () => {
     );
   });
 
+  test("keeps Publications and Acknowledgements as distinct active routes", () => {
+    const publications = renderNavigation("/publications");
+    const acknowledgements = renderNavigation("/acknowledgements");
+    expect(publications).toMatch(
+      /<a\b(?=[^>]*href="\/publications")(?=[^>]*aria-current="page")[^>]*>/,
+    );
+    expect(acknowledgements).toMatch(
+      /<a\b(?=[^>]*href="\/acknowledgements")(?=[^>]*aria-current="page")[^>]*>/,
+    );
+    expect(acknowledgements).not.toMatch(
+      /<a\b(?=[^>]*href="\/publications")(?=[^>]*aria-current="page")[^>]*>/,
+    );
+  });
+
   test("provides a keyboard-accessible theme button and tooltips", () => {
     const html = renderNavigation("/");
     expect(html).toContain('aria-label="Switch to light theme"');
     expect(html).toContain('aria-pressed="true"');
-    expect(html.match(/class="catalog-nav-tooltip"/g)).toHaveLength(4);
+    expect(html.match(/class="catalog-nav-tooltip"/g)).toHaveLength(5);
   });
 
   test("defaults to light and recognizes a saved dark preference", () => {

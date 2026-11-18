@@ -380,10 +380,8 @@
   }
 }
 
-/* The groups breadcrumb belongs to the global title row, not above the map. */
-.catalog-header--group {
-  position: relative;
-}
+/* The Groups breadcrumb belongs to the globally sticky title row.
+   Do not override the shared header's position: sticky. */
 .catalog-header--group .catalog-header-back {
   position: absolute;
   left: 0;
