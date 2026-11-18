@@ -9,6 +9,7 @@ from contextlib import asynccontextmanager
 import fastapi
 import fastapi.responses
 import fastapi.staticfiles
+from starlette.middleware.gzip import GZipMiddleware
 from starlette.types import Scope
 
 from lv_backend.data import group_previews as data_group_previews
@@ -49,6 +50,8 @@ async def lifespan(app: fastapi.FastAPI) -> AsyncIterator[None]:
 
 
 app = fastapi.FastAPI(lifespan=lifespan)
+# Compress textual responses; Starlette preserves byte ranges and excludes image formats.
+app.add_middleware(GZipMiddleware, minimum_size=1024, compresslevel=5)
 api = fastapi.APIRouter(prefix="/api/v1")
 
 
