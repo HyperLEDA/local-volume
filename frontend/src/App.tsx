@@ -2,6 +2,7 @@ import { lazy, Suspense, useDeferredValue } from "react";
 import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { CatalogHeader } from "./components/CatalogHeader.tsx";
 import { CatalogSidebar } from "./components/CatalogSidebar.tsx";
+import { RouteLoadErrorBoundary } from "./components/RouteLoadErrorBoundary.tsx";
 import {
   loadGroupPage,
   loadGroupPreviewBuilderPage,
@@ -26,17 +27,62 @@ function PageRoutes() {
   const deferredLocation = useDeferredValue(location);
 
   return (
-    <Suspense fallback={null}>
+    <Suspense
+      fallback={
+        <p className="catalog-status" role="status">
+          Loading page…
+        </p>
+      }
+    >
       <Routes location={deferredLocation}>
-        <Route path="/" element={<ObjectsPage />} />
-        <Route path="/object/:pgc" element={<ObjectPage />} />
-        <Route path="/groups" element={<GroupsPage />} />
+        <Route
+          path="/"
+          element={
+            <RouteLoadErrorBoundary key="atlas">
+              <ObjectsPage />
+            </RouteLoadErrorBoundary>
+          }
+        />
+        <Route
+          path="/object/:pgc"
+          element={
+            <RouteLoadErrorBoundary key="object">
+              <ObjectPage />
+            </RouteLoadErrorBoundary>
+          }
+        />
+        <Route
+          path="/groups"
+          element={
+            <RouteLoadErrorBoundary key="groups">
+              <GroupsPage />
+            </RouteLoadErrorBoundary>
+          }
+        />
         <Route
           path="/groups/preview-builder"
-          element={<GroupPreviewBuilderPage />}
+          element={
+            <RouteLoadErrorBoundary key="preview-builder">
+              <GroupPreviewBuilderPage />
+            </RouteLoadErrorBoundary>
+          }
         />
-        <Route path="/groups/:rootPgc" element={<GroupPage />} />
-        <Route path="/publications" element={<PublicationsPage />} />
+        <Route
+          path="/groups/:rootPgc"
+          element={
+            <RouteLoadErrorBoundary key="group">
+              <GroupPage />
+            </RouteLoadErrorBoundary>
+          }
+        />
+        <Route
+          path="/publications"
+          element={
+            <RouteLoadErrorBoundary key="publications">
+              <PublicationsPage />
+            </RouteLoadErrorBoundary>
+          }
+        />
       </Routes>
     </Suspense>
   );
