@@ -19,9 +19,10 @@ def _client(tmp_path: Path) -> fastapi.testclient.TestClient:
     application.add_middleware(GZipMiddleware, minimum_size=1024, compresslevel=5)
     application.mount("/assets", _VersionedStaticFiles(directory=tmp_path), name="assets")
 
-    @application.get("/api/v1/objects")
     def objects() -> dict[str, object]:
         return {"data": {"pgc": list(range(800)), "name": ["LV LEDA"] * 800}}
+
+    application.add_api_route("/api/v1/objects", objects, methods=["GET"])
 
     return fastapi.testclient.TestClient(application)
 
