@@ -1,3 +1,5 @@
+from collections.abc import Sequence
+
 from lv_backend.data.storage import Storage
 from lv_backend.domain.physical_calculations import FORMULA_VERSION
 
@@ -41,7 +43,7 @@ WHERE g.definition = %s
 ORDER BY g.group_id
 """
 
-_PUBLISHED_MEMBERS_SQL = """
+_PUBLISHED_MEMBERS_SELECT_SQL = """
 SELECT gm.group_id, gm.member_pgc AS pgc, gm.parent_md_pgc, gm.hierarchy_depth,
        gm.membership_status, gm.source_status, gm.theta1_source,
        o.name, o.ra, o.dec, COALESCE(p.distance_mpc, obs.dist) AS dist_mpc, obs.morphology_t, obs.b_mag,
@@ -60,9 +62,21 @@ LEFT JOIN lv.physical p ON p.pgc = gm.member_pgc
  AND s.source_revision = s.applied_revision
  AND s.formula_version = %s
  AND p.computed_revision = s.applied_revision
-WHERE gm.group_id = %s
+"""
+
+_PUBLISHED_MEMBERS_SQL = (
+    _PUBLISHED_MEMBERS_SELECT_SQL
+    + """WHERE gm.group_id = %s
 ORDER BY gm.hierarchy_depth, o.name, o.pgc
 """
+)
+
+_PUBLISHED_MEMBERS_BATCH_SQL = (
+    _PUBLISHED_MEMBERS_SELECT_SQL
+    + """WHERE gm.group_id = ANY(%s)
+ORDER BY gm.group_id, gm.hierarchy_depth, o.name, o.pgc
+"""
+)
 
 _TIDAL_SQL = """
 SELECT MIN(p.theta1) AS min_theta, MAX(p.theta1) AS max_theta
@@ -92,6 +106,12 @@ def select_published_groups(storage: Storage) -> list[dict[str, object]]:
 
 def select_published_members(storage: Storage, group_id: int) -> list[dict[str, object]]:
     return storage.query(_PUBLISHED_MEMBERS_SQL, [FORMULA_VERSION, group_id])
+
+
+def select_published_members_bulk(storage: Storage, group_ids: Sequence[int]) -> list[dict[str, object]]:
+    if not group_ids:
+        return []
+    return storage.query(_PUBLISHED_MEMBERS_BATCH_SQL, [FORMULA_VERSION, list(group_ids)])
 
 
 def select_tidal_range(storage: Storage) -> tuple[float | None, float | None]:

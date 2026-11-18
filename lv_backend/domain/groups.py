@@ -248,11 +248,22 @@ def list_groups(storage: Storage, definition: str = "physical") -> list[dict[str
     if definition not in ("physical", "suite", "published"):
         raise ValueError("Unsupported group definition")
     if definition == "published":
-        groups: list[dict[str, object]] = []
-        for row in data_groups.select_published_groups(storage):
-            members = data_groups.select_published_members(storage, int(row["group_id"]))
-            if len(members) >= 3:
-                groups.append(_summary(row, members, data_groups.select_tidal_range(storage)))
+        published = data_groups.select_published_groups(storage)
+        if not published:
+            return []
+        members_by_group: dict[int, list[dict[str, object]]] = defaultdict(list)
+        group_ids = [int(row["group_id"]) for row in published]
+        for member in data_groups.select_published_members_bulk(storage, group_ids):
+            members_by_group[int(member["group_id"])].append(member)
+        eligible = [
+            (row, members_by_group[int(row["group_id"])])
+            for row in published
+            if len(members_by_group[int(row["group_id"])]) >= 3
+        ]
+        if not eligible:
+            return []
+        tidal_range = data_groups.select_tidal_range(storage)
+        groups = [_summary(row, members, tidal_range) for row, members in eligible]
         return sorted(groups, key=lambda x: (-int(x["member_count"]), str(x["name"])))
     return [
         {key: value for key, value in group.items() if key not in ("members", "tidal_min", "tidal_max")}
