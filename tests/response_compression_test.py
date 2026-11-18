@@ -2,9 +2,8 @@ from pathlib import Path
 
 import fastapi
 import fastapi.testclient
-from starlette.middleware.gzip import GZipMiddleware
 
-from lv_backend.presentation.app import _VersionedStaticFiles
+from lv_backend.presentation.app import _PreviewSafeGZipMiddleware, _VersionedStaticFiles
 from lv_backend.presentation.app import app as production_app
 
 _JS_BODY = ("const galaxy = 'LV LEDA';\n" * 8000).encode("utf-8")
@@ -16,7 +15,7 @@ def _client(tmp_path: Path) -> fastapi.testclient.TestClient:
     (tmp_path / "image-CwBMIs-4.webp").write_bytes(_WEBP_BODY)
 
     application = fastapi.FastAPI()
-    application.add_middleware(GZipMiddleware, minimum_size=1024, compresslevel=5)
+    application.add_middleware(_PreviewSafeGZipMiddleware, minimum_size=1024, compresslevel=5)
     application.mount("/assets", _VersionedStaticFiles(directory=tmp_path), name="assets")
 
     def objects() -> dict[str, object]:
@@ -24,11 +23,20 @@ def _client(tmp_path: Path) -> fastapi.testclient.TestClient:
 
     application.add_api_route("/api/v1/objects", objects, methods=["GET"])
 
+    def preview() -> fastapi.Response:
+        return fastapi.Response(
+            content=_WEBP_BODY,
+            media_type="image/webp",
+            headers={"ETag": '"preview"', "Cache-Control": "no-cache"},
+        )
+
+    application.add_api_route("/api/v1/group-preview/42", preview, methods=["GET"])
+
     return fastapi.testclient.TestClient(application)
 
 
 def test_production_application_enables_gzip() -> None:
-    middleware = [item for item in production_app.user_middleware if item.cls is GZipMiddleware]
+    middleware = [item for item in production_app.user_middleware if item.cls is _PreviewSafeGZipMiddleware]
     assert len(middleware) == 1
     assert middleware[0].kwargs["minimum_size"] == 1024
     assert middleware[0].kwargs["compresslevel"] == 5
@@ -96,6 +104,18 @@ def test_head_retains_empty_body_and_valid_length(tmp_path: Path) -> None:
         assert head.status_code == 200
         assert head.content == b""
         assert head.headers["cache-control"] == "public, max-age=31536000, immutable"
+
+
+def test_api_preview_webp_bypasses_gzip_and_retains_etag(tmp_path: Path) -> None:
+    with _client(tmp_path) as client:
+        response = client.get("/api/v1/group-preview/42", headers={"Accept-Encoding": "gzip"})
+        assert response.status_code == 200
+        assert response.content == _WEBP_BODY
+        assert response.headers["content-type"] == "image/webp"
+        assert "content-encoding" not in response.headers
+        assert response.headers["content-length"] == str(len(_WEBP_BODY))
+        assert response.headers["etag"] == '"preview"'
+        assert response.headers["cache-control"] == "no-cache"
 
 
 def test_webp_files_are_not_compressed(tmp_path: Path) -> None:

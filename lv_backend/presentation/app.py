@@ -10,7 +10,7 @@ import fastapi
 import fastapi.responses
 import fastapi.staticfiles
 from starlette.middleware.gzip import GZipMiddleware
-from starlette.types import Scope
+from starlette.types import Receive, Scope, Send
 
 from lv_backend.data import group_previews as data_group_previews
 from lv_backend.data import migrations as data_migrations
@@ -49,9 +49,23 @@ async def lifespan(app: fastapi.FastAPI) -> AsyncIterator[None]:
         storage.close()
 
 
+class _PreviewSafeGZipMiddleware(GZipMiddleware):
+    # Starlette's GZipMiddleware does not automatically exclude image/webp
+    # returned by a normal Response, unlike static FileResponse pathsend.
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if (
+            scope["type"] == "http"
+            and scope["method"] in ("GET", "HEAD")
+            and scope["path"].startswith("/api/v1/group-preview/")
+        ):
+            await self.app(scope, receive, send)
+            return
+        await super().__call__(scope, receive, send)
+
+
 app = fastapi.FastAPI(lifespan=lifespan)
-# Compress textual responses; Starlette preserves byte ranges and excludes image formats.
-app.add_middleware(GZipMiddleware, minimum_size=1024, compresslevel=5)
+# Compress textual responses while preserving raw WebP bytes and their ETags.
+app.add_middleware(_PreviewSafeGZipMiddleware, minimum_size=1024, compresslevel=5)
 api = fastapi.APIRouter(prefix="/api/v1")
 
 
