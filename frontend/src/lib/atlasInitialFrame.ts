@@ -15,12 +15,22 @@ function isAllSkyImage(url: string): boolean {
   }
 }
 
-function atlasBackingCanvasReady(view: AladinView, element: HTMLElement): boolean {
-  const canvas = element.querySelector<HTMLCanvasElement>("canvas.aladin-imageCanvas");
+function atlasBackingCanvasReady(
+  view: AladinView,
+  element: HTMLElement,
+): boolean {
+  const canvas = element.querySelector<HTMLCanvasElement>(
+    "canvas.aladin-imageCanvas",
+  );
   if (canvas === null) return false;
   const [width, height] = view.getSize();
   const dpr = window.devicePixelRatio;
-  if (!Number.isFinite(width) || !Number.isFinite(height) || width < 2 || height < 2) {
+  if (
+    !Number.isFinite(width) ||
+    !Number.isFinite(height) ||
+    width < 2 ||
+    height < 2
+  ) {
     return false;
   }
   // Aladin's backing canvas is resized from its browser-default 300x150 to
@@ -34,12 +44,15 @@ function atlasBackingCanvasReady(view: AladinView, element: HTMLElement): boolea
 }
 
 /** Call immediately after A.aladin(), while its div has been hidden. */
-export function stageAtlasFirstFrame(view: AladinView, element: HTMLDivElement): () => void {
+export function stageAtlasFirstFrame(
+  view: AladinView,
+  element: HTMLDivElement,
+): () => void {
   let finished = false;
   let readyFrames = 0;
-  let allSkyImageFetched = performance.getEntriesByType("resource").some(
-    (entry) => isAllSkyImage(entry.name),
-  );
+  let allSkyImageFetched = performance
+    .getEntriesByType("resource")
+    .some((entry) => isAllSkyImage(entry.name));
   let rafId: number | null = null;
   let observer: PerformanceObserver | null = null;
   const fallbackTimer: { id: number | null } = { id: null };
@@ -91,7 +104,10 @@ export function stageAtlasFirstFrame(view: AladinView, element: HTMLDivElement):
   }
 
   // A missing survey must never leave the map permanently invisible.
-  fallbackTimer.id = window.setTimeout(dispose, INITIAL_ATLAS_FRAME_FALLBACK_MS);
+  fallbackTimer.id = window.setTimeout(
+    dispose,
+    INITIAL_ATLAS_FRAME_FALLBACK_MS,
+  );
   rafId = requestAnimationFrame(pollFrame);
   return dispose;
 }

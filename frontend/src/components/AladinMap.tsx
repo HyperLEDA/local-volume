@@ -435,7 +435,8 @@ export function AladinMap({
       // ISSUE49_PHASE_G_FIRST_FRAME_20261118
       // Reserve the final-size Atlas box, but do not display its default
       // 300x150 WebGL backing canvas or partially loaded survey.
-      const stageFirstFrame = isOverview && initialFocus === null && !hasFocusFov;
+      const stageFirstFrame =
+        isOverview && initialFocus === null && !hasFocusFov;
       if (stageFirstFrame) {
         element.style.visibility = "hidden";
         element.setAttribute("aria-busy", "true");
