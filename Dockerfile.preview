@@ -1,0 +1,9 @@
+# Dedicated one-shot Chromium worker. Never expose HTTP ports or public PUT.
+FROM mcr.microsoft.com/playwright/python:v1.56.0-noble
+WORKDIR /app
+COPY pyproject.toml README.md ./
+COPY lv_backend ./lv_backend
+RUN python -m pip install --no-cache-dir 'playwright==1.56.0' .
+ENV PYTHONUNBUFFERED=1
+USER pwuser
+ENTRYPOINT ["python", "-m", "lv_backend.preview_worker"]
