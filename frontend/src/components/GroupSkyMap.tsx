@@ -9,6 +9,7 @@ import type { GroupDetail, GroupMember } from "../api/groups.ts";
 import { fetchObjects, type CatalogObject } from "../api/objects.ts";
 import { atlasBounds, type AtlasRange } from "../lib/atlasBounds.ts";
 import { popupObjectRoute } from "../lib/popupNavigation.ts";
+import { groupPopupRoute } from "../lib/groupBrowsing.ts";
 import { greatCircleVertices } from "../lib/mdConnection.ts";
 import { trimGroupEdge } from "../lib/groupEdgeTrim.ts";
 import { markerDiameter } from "../lib/reticle.ts";
@@ -224,6 +225,7 @@ function allMembersFit(
 
 export function GroupSkyMap({
   group,
+  onMemberNavigate,
   miniature = false,
   previewVariant = "hierarchy",
   portraitFov = 1,
@@ -231,6 +233,7 @@ export function GroupSkyMap({
   onSnapshotError,
 }: {
   group: GroupDetail;
+  onMemberNavigate?: (pgc: number) => string | null;
   miniature?: boolean;
   previewVariant?: "hierarchy" | "portrait";
   portraitFov?: number;
@@ -283,9 +286,10 @@ export function GroupSkyMap({
       anchor.getAttribute("target") ?? "",
     );
     if (route === null) return;
+    const destination = groupPopupRoute(route, group.members, onMemberNavigate);
     event.preventDefault();
     event.stopPropagation();
-    void navigate(route);
+    void navigate(destination);
   }
 
   useEffect(() => {

@@ -61,3 +61,9 @@ export const loadAcknowledgementsPage = createCachedPageLoader(() =>
     default: module.AcknowledgementsPage,
   })),
 );
+
+export const loadDocumentsPage = createCachedPageLoader(() =>
+  import("./pages/DocumentsPage.tsx").then((module) => ({
+    default: module.DocumentsPage,
+  })),
+);

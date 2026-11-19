@@ -1,6 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
+  newCollectionToken,
+  consumeCollectionReturn,
+} from "../lib/collectionNavigation.ts";
+import {
+  readGroupListState,
+  groupListUrl,
+  saveGroupBrowse,
+  type GroupListState,
+} from "../lib/groupBrowsing.ts";
+import {
   fetchGroups,
   previewUrl,
   type GroupDefinition,
@@ -18,9 +28,13 @@ function quantity(value: number | null, digits: number): string {
 function GroupCard({
   group,
   definition,
+  browseKey,
+  onOpen,
 }: {
   group: GroupSummary;
   definition: GroupDefinition;
+  browseKey: string;
+  onOpen: () => void;
 }) {
   const allowHierarchy = supportsHierarchyPreview(group.root_pgc);
   const [portraitFailed, setPortraitFailed] = useState(false);
@@ -38,7 +52,8 @@ function GroupCard({
   return (
     <Link
       className="group-card"
-      to={`/groups/${group.root_pgc}?definition=${definition}`}
+      to={`/groups/${group.root_pgc}?definition=${definition}&browse=${encodeURIComponent(browseKey)}`}
+      onClick={onOpen}
       onMouseEnter={() => {
         if (allowHierarchy) setHierarchyRequested(true);
       }}
@@ -111,10 +126,21 @@ function GroupCard({
 }
 
 export function GroupsPage() {
-  const [definition, setDefinition] = useState<GroupDefinition>("physical");
-  const [sort, setSort] = useState("members");
-  const [query, setQuery] = useState("");
-  const [limit, setLimit] = useState(24);
+  const initialList = useMemo(
+    () => readGroupListState(window.location.search),
+    [],
+  );
+  const [definition, setDefinition] = useState<GroupListState["definition"]>(
+    initialList.definition,
+  );
+  const [sort, setSort] = useState<GroupListState["sort"]>(initialList.sort);
+  const [query, setQuery] = useState(initialList.query);
+  const [limit, setLimit] = useState(initialList.limit);
+  const browseKey = useMemo(
+    () =>
+      `groups-${definition}-${sort}-${limit}-${query.length}-${newCollectionToken()}`,
+    [definition, sort, limit, query],
+  );
   const [groups, setGroups] = useState<GroupSummary[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -156,6 +182,42 @@ export function GroupsPage() {
       );
   }, [groups, query, sort]);
 
+  // Persist the small search/sort/definition state in the Groups URL.
+  useEffect(() => {
+    const destination = groupListUrl({ definition, sort, query, limit });
+    if (
+      `${window.location.pathname}${window.location.search}` !== destination
+    ) {
+      window.history.replaceState(
+        window.history.state,
+        "",
+        destination + window.location.hash,
+      );
+    }
+  }, [definition, sort, query, limit]);
+
+  useEffect(() => {
+    if (loading || error !== null) return;
+    const scroll = consumeCollectionReturn();
+    if (scroll !== null) {
+      window.requestAnimationFrame(() =>
+        window.scrollTo({ top: scroll, behavior: "auto" }),
+      );
+    }
+  }, [loading, error]);
+
+  function saveBrowseContext(): void {
+    saveGroupBrowse(browseKey, {
+      definition,
+      returnTo: groupListUrl({ definition, sort, query, limit }),
+      scrollY: window.scrollY,
+      entries: filtered.slice(0, limit).map((group) => ({
+        rootPgc: group.root_pgc,
+        groupId: group.group_id,
+      })),
+    });
+  }
+
   return (
     <main className="groups-layout">
       <div className="groups-heading">
@@ -177,7 +239,10 @@ export function GroupsPage() {
           aria-label="Group definition"
           value={definition}
           onChange={(event) => {
-            setDefinition(event.target.value as GroupDefinition);
+            const nextDefinition = event.target.value;
+            if (nextDefinition !== "physical" && nextDefinition !== "suite")
+              return;
+            setDefinition(nextDefinition);
             setLimit(24);
           }}
         >
@@ -187,7 +252,9 @@ export function GroupsPage() {
         <select
           aria-label="Sort groups"
           value={sort}
-          onChange={(event) => setSort(event.target.value)}
+          onChange={(event) =>
+            setSort(event.target.value as GroupListState["sort"])
+          }
         >
           <option value="members">Most members</option>
           <option value="distance">Nearest first</option>
@@ -210,6 +277,8 @@ export function GroupsPage() {
               key={`${definition}-${group.root_pgc}`}
               group={group}
               definition={definition}
+              browseKey={browseKey}
+              onOpen={saveBrowseContext}
             />
           ))}
         </section>

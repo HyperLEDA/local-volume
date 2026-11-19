@@ -25,12 +25,25 @@ function cell(
   return { key, label, value, help, unit };
 }
 
-export function GroupParameters({ group }: { group: GroupDetail }) {
+export function GroupParameters({
+  group,
+  navToken,
+  onMemberOpen,
+}: {
+  group: GroupDetail;
+  navToken?: string;
+  onMemberOpen?: () => void;
+}) {
   const s = calculateGroupScience(group);
   const host = group.members.find((member) => member.pgc === group.root_pgc);
   const N = group.member_count;
   const hostLink = host ? (
-    <Link to={`/object/${host.pgc}`}>{host.name}</Link>
+    <Link
+      to={`/object/${host.pgc}${navToken ? `?nav=${navToken}` : ""}`}
+      onClick={onMemberOpen}
+    >
+      {host.name}
+    </Link>
   ) : (
     `PGC ${group.root_pgc}`
   );

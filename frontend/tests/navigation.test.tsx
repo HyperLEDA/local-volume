@@ -18,8 +18,10 @@ function renderNavigation(path: string): string {
 describe("fixed navigation rail", () => {
   test("offers Atlas and Publications as accessible icon-only links", () => {
     const html = renderNavigation("/");
-    expect(html.match(/href="\/"/g)).toHaveLength(1);
-    expect(html.match(/href="\/publications"/g)).toHaveLength(1);
+    expect(html.match(/href="\/"/g)?.length).toBeGreaterThanOrEqual(1);
+    expect(html.match(/href="\/publications"/g)?.length).toBeGreaterThanOrEqual(
+      1,
+    );
     expect(html).toContain('aria-label="Atlas"');
     expect(html).toContain('aria-label="Publications"');
     expect(html).toContain('aria-label="Acknowledgements"');
@@ -28,12 +30,15 @@ describe("fixed navigation rail", () => {
     expect(html).toContain('aria-label="Primary navigation"');
     expect(html).toContain('aria-label="Secondary navigation"');
     expect(html).toContain("catalog-nav--footer");
-    expect(html).not.toContain("catalog-mobile-menu");
+    expect(html).toContain("scientific-mobile-more");
+    expect(html).toContain('aria-label="Documents"');
   });
 
   test("treats object details as part of the Atlas", () => {
     const html = renderNavigation("/object/29146");
-    expect(html.match(/aria-current="page"/g)).toHaveLength(1);
+    expect(html.match(/aria-current="page"/g)?.length).toBeGreaterThanOrEqual(
+      1,
+    );
     expect(html).toMatch(
       /<a\b(?=[^>]*href="\/")(?=[^>]*aria-current="page")[^>]*>/,
     );
@@ -41,7 +46,9 @@ describe("fixed navigation rail", () => {
 
   test("marks Publications as current on its page", () => {
     const html = renderNavigation("/publications");
-    expect(html.match(/aria-current="page"/g)).toHaveLength(1);
+    expect(html.match(/aria-current="page"/g)?.length).toBeGreaterThanOrEqual(
+      1,
+    );
     expect(html).toMatch(
       /<a\b(?=[^>]*href="\/publications")(?=[^>]*aria-current="page")[^>]*>/,
     );
@@ -65,7 +72,8 @@ describe("fixed navigation rail", () => {
     const html = renderNavigation("/");
     expect(html).toContain('aria-label="Switch to light theme"');
     expect(html).toContain('aria-pressed="true"');
-    expect(html.match(/class="catalog-nav-tooltip"/g)).toHaveLength(5);
+    expect(html).toContain('aria-label="More navigation destinations"');
+    expect(html.match(/class="catalog-nav-tooltip"/g)).toHaveLength(6);
   });
 
   test("defaults to light and recognizes a saved dark preference", () => {

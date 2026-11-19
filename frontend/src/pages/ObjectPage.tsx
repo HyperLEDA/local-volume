@@ -11,6 +11,7 @@ import {
 } from "../api/objects.ts";
 import { AladinMap, type SkyFocus } from "../components/AladinMap.tsx";
 import { ObjectCoordinates } from "../components/ObjectCoordinates.tsx";
+import { ExternalCatalogLinks } from "../components/ExternalCatalogLinks.tsx";
 import { ObservedParameterCards } from "../components/ObservedParameterCards.tsx";
 import { PhysicalParametersTable } from "../components/PhysicalParametersTable.tsx";
 import { objectFovDegrees } from "../lib/objectFov.ts";
@@ -152,6 +153,7 @@ export function ObjectPage() {
       {data === null && error === null ? (
         <p className="catalog-status">Loading object…</p>
       ) : null}
+
       {data !== null ? (
         <>
           <div
@@ -169,6 +171,7 @@ export function ObjectPage() {
                   focus={focus}
                   fov={objectFovDegrees(data)}
                 />
+                <ExternalCatalogLinks pgc={data.pgc} />
                 {skyCatalogError ? (
                   <p className="catalog-status" role="status">
                     Other catalog objects could not be loaded.
@@ -180,14 +183,6 @@ export function ObjectPage() {
               <section className="object-identity" aria-label="Object">
                 <div className="object-title-row">
                   <h2 className="object-title">{data.name}</h2>
-                  <a
-                    className="object-hyperleda-link"
-                    href={`https://leda.sao.ru/object/${data.pgc}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    HyperLEDA
-                  </a>
                   {data.type_name?.trim() ? (
                     <span className="object-nature" title="Object type">
                       {data.type_name}
@@ -206,6 +201,7 @@ export function ObjectPage() {
                 ) : null}
               </section>
               <ObjectCoordinates object={data} />
+              {focus === null ? <ExternalCatalogLinks pgc={data.pgc} /> : null}
               <ObservedParameterCards rows={rows} pgc={pgc} />
               <PhysicalParametersTable pgc={pgc} />
             </div>

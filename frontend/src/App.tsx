@@ -11,6 +11,7 @@ import {
   loadObjectsPage,
   loadPublicationsPage,
   loadAcknowledgementsPage,
+  loadDocumentsPage,
 } from "./pageLoaders.ts";
 
 // React.lazy and navigation hints reuse the same cached loader promises.
@@ -21,6 +22,7 @@ const GroupPreviewBuilderPage = lazy(loadGroupPreviewBuilderPage);
 const GroupPage = lazy(loadGroupPage);
 const PublicationsPage = lazy(loadPublicationsPage);
 const AcknowledgementsPage = lazy(loadAcknowledgementsPage);
+const DocumentsPage = lazy(loadDocumentsPage);
 
 // Keep the already rendered route visible while a new lazy page is loading.
 // Initial direct visits still suspend until their route module is ready.
@@ -82,6 +84,14 @@ function PageRoutes() {
           element={
             <RouteLoadErrorBoundary key="publications">
               <PublicationsPage />
+            </RouteLoadErrorBoundary>
+          }
+        />
+        <Route
+          path="/documents"
+          element={
+            <RouteLoadErrorBoundary key="documents">
+              <DocumentsPage />
             </RouteLoadErrorBoundary>
           }
         />
