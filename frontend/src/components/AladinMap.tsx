@@ -93,6 +93,7 @@ type AladinMapProps = {
   tidalRange?: AtlasRange | null;
   onRegionDraw?: (region: SkyRegion) => void;
   onCancelDraw?: () => void;
+  onObjectNavigate?: (pgc: number) => string | null;
 };
 
 function escapeHtml(value: string): string {
@@ -298,6 +299,7 @@ export function AladinMap({
   drawingMode = null,
   onRegionDraw,
   onCancelDraw,
+  onObjectNavigate,
 }: AladinMapProps) {
   const isOverview = fov >= 180;
   const mapFov = isOverview ? 360 : fov;
@@ -400,7 +402,9 @@ export function AladinMap({
       return;
     }
     event.preventDefault();
-    void navigate(destination);
+    const destinationPgc = Number(destination.slice("/object/".length));
+    const contextual = onObjectNavigate?.(destinationPgc);
+    void navigate(contextual ?? destination);
   }
 
   useEffect(() => {

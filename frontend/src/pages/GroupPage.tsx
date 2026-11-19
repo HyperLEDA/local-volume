@@ -8,6 +8,11 @@ import {
 import { GroupSkyMap } from "../components/GroupSkyMap.tsx";
 import { GroupFigures } from "../components/GroupFigures.tsx";
 import { GroupParameters } from "../components/GroupParameters.tsx";
+import {
+  newCollectionToken,
+  saveCollection,
+  consumeCollectionReturn,
+} from "../lib/collectionNavigation.ts";
 import "../styles/groups.css";
 
 function value(v: number | null, digits: number): string {
@@ -17,10 +22,15 @@ function value(v: number | null, digits: number): string {
 export function GroupPage() {
   const { rootPgc } = useParams();
   const [searchParams] = useSearchParams();
+  const browseToken = searchParams.get("browse");
   const definition: GroupDefinition =
     searchParams.get("definition") === "suite" ? "suite" : "physical";
   const [group, setGroup] = useState<GroupDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const collectionToken = useMemo(
+    () => `group-${rootPgc}-${definition}-${newCollectionToken()}`,
+    [rootPgc, definition],
+  );
   useEffect(() => {
     const id = Number(rootPgc);
     if (!Number.isInteger(id) || id <= 0) {
@@ -49,6 +59,32 @@ export function GroupPage() {
     [group],
   );
 
+  useEffect(() => {
+    if (!group) return;
+    const restoreY = consumeCollectionReturn();
+    if (restoreY !== null) {
+      window.requestAnimationFrame(() =>
+        window.scrollTo({ top: restoreY, behavior: "auto" }),
+      );
+    }
+  }, [group]);
+
+  function saveGroupNavigation(): void {
+    if (!group) return;
+    saveCollection(collectionToken, {
+      origin: "group",
+      label: `${group.name} Group`,
+      returnTo: `/groups/${group.root_pgc}?definition=${definition}${browseToken ? `&browse=${encodeURIComponent(browseToken)}` : ""}`,
+      pgcs: [...new Set(group.members.map((member) => member.pgc))],
+      scrollY: window.scrollY,
+      group: {
+        id: group.group_id,
+        rootPgc: group.root_pgc,
+        definition: definition === "suite" ? "suite" : "physical",
+      },
+    });
+  }
+
   return (
     <main className="groups-layout group-details">
       {error && (
@@ -65,19 +101,34 @@ export function GroupPage() {
         <>
           <div className="group-overview-layout">
             <section className="group-map-panel" aria-label="Group sky map">
-              <GroupSkyMap group={group} />
+              <GroupSkyMap
+                group={group}
+                onMemberNavigate={(pgc) => {
+                  if (!group.members.some((member) => member.pgc === pgc))
+                    return null;
+                  saveGroupNavigation();
+                  return `/object/${pgc}?nav=${encodeURIComponent(collectionToken)}`;
+                }}
+              />
             </section>
             <div className="group-detail-summary">
               <div className="group-detail-identity">
                 <h2 className="group-detail-title">{group.name} Group</h2>
                 <p className="group-detail-kicker">
                   Main Disturber ·{" "}
-                  <Link to={`/object/${group.root_pgc}`}>
+                  <Link
+                    to={`/object/${group.root_pgc}?nav=${collectionToken}`}
+                    onClick={saveGroupNavigation}
+                  >
                     PGC {group.root_pgc}
                   </Link>
                 </p>
               </div>
-              <GroupParameters group={group} />
+              <GroupParameters
+                group={group}
+                navToken={collectionToken}
+                onMemberOpen={saveGroupNavigation}
+              />
             </div>
           </div>
           <details className="group-members">
@@ -111,7 +162,12 @@ export function GroupPage() {
                           paddingLeft: `${12 + member.hierarchy_depth * 14}px`,
                         }}
                       >
-                        <Link to={`/object/${member.pgc}`}>{member.name}</Link>
+                        <Link
+                          to={`/object/${member.pgc}?nav=${collectionToken}`}
+                          onClick={saveGroupNavigation}
+                        >
+                          {member.name}
+                        </Link>
                       </td>
                       <td>{member.pgc}</td>
                       <td>

@@ -11,6 +11,11 @@ import { AtlasRegionControls } from "../components/AtlasRegionControls.tsx";
 import { AtlasScientificControls } from "../components/AtlasScientificControls.tsx";
 import { AtlasSelectionSummary } from "../components/AtlasSelectionSummary.tsx";
 import { ObjectCard } from "../components/ObjectCard.tsx";
+import {
+  newCollectionToken,
+  saveCollection,
+  consumeCollectionReturn,
+} from "../lib/collectionNavigation.ts";
 import { atlasBounds, clampScientificFilters } from "../lib/atlasBounds.ts";
 import {
   DEFAULT_SCIENTIFIC_FILTERS,
@@ -49,6 +54,7 @@ export function ObjectsPage() {
   const [error, setError] = useState<string | null>(null);
   const [focus, setFocus] = useState<SkyFocus | null>(null);
   const focusRequestId = useRef(0);
+  const collectionToken = useMemo(() => newCollectionToken(), []);
 
   const bounds = useMemo(() => atlasBounds(objects ?? []), [objects]);
   const tidalRange = bounds.tidal;
@@ -139,6 +145,26 @@ export function ObjectsPage() {
 
   const gridObjects = useMemo(() => sortObjectsByRa(filtered), [filtered]);
 
+  useEffect(() => {
+    if (objects === null) return;
+    const restoreY = consumeCollectionReturn();
+    if (restoreY !== null) {
+      window.requestAnimationFrame(() =>
+        window.scrollTo({ top: restoreY, behavior: "auto" }),
+      );
+    }
+  }, [objects]);
+
+  function saveAtlasNavigation() {
+    saveCollection(collectionToken, {
+      origin: "atlas",
+      label: "Atlas",
+      returnTo: `${window.location.pathname}${window.location.search}`,
+      pgcs: gridObjects.map((object) => object.pgc),
+      scrollY: window.scrollY,
+    });
+  }
+
   return (
     <main className="catalog catalog--overview" data-atlas-version="v5">
       {error !== null ? (
@@ -153,6 +179,11 @@ export function ObjectsPage() {
             <AladinMap
               objects={filtered}
               referenceObjects={objects}
+              onObjectNavigate={(pgc) => {
+                if (!gridObjects.some((row) => row.pgc === pgc)) return null;
+                saveAtlasNavigation();
+                return `/object/${pgc}?nav=${encodeURIComponent(collectionToken)}`;
+              }}
               focus={focus}
               enableReticlePopups
               tidalRange={tidalRange}
@@ -255,6 +286,8 @@ export function ObjectsPage() {
                     key={object.pgc}
                     object={object}
                     onLocate={locate}
+                    navigationKey={collectionToken}
+                    onOpen={saveAtlasNavigation}
                   />
                 ))}
               </div>

@@ -4,6 +4,8 @@ import type { CatalogObject } from "../api/objects.ts";
 type ObjectCardProps = {
   object: CatalogObject;
   onLocate: (object: CatalogObject) => void;
+  navigationKey?: string;
+  onOpen?: () => void;
 };
 
 function LocateIcon() {
@@ -28,12 +30,21 @@ function LocateIcon() {
   );
 }
 
-export function ObjectCard({ object, onLocate }: ObjectCardProps) {
+export function ObjectCard({
+  object,
+  onLocate,
+  navigationKey,
+  onOpen,
+}: ObjectCardProps) {
   const canLocate = object.ra !== null && object.dec !== null;
 
   return (
     <article className="object-card">
-      <Link className="object-card-name" to={`/object/${object.pgc}`}>
+      <Link
+        className="object-card-name"
+        to={`/object/${object.pgc}${navigationKey ? `?nav=${encodeURIComponent(navigationKey)}` : ""}`}
+        onClick={onOpen}
+      >
         {object.name}
       </Link>
       {canLocate ? (
