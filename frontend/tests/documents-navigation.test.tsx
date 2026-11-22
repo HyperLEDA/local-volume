@@ -37,6 +37,9 @@ describe("navigation and scientific documents", () => {
     expect(html).toContain('href="/publications"');
     expect(html).toContain("@misc{LVLEDAOnline2026,");
     expect(html).toContain("Accessed 2026-11-20 (UTC)");
+    const documentSource = read("../src/content/documents.md");
+    expect(documentSource).toContain("url          = {https://lv.leda.sao.ru/}");
+    expect(documentSource).not.toContain("url          = {https://leda.sao.ru/}");
     expect(html).not.toContain("doi.org/10.0000");
   });
   test("Atlas header places two shortcuts to each side of the centered identity", () => {

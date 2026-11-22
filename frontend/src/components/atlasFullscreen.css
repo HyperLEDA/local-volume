@@ -1,0 +1,109 @@
+/* Issue #77. The embedded Atlas remains the existing responsive 2:1 map. */
+.catalog--overview .catalog-sky {
+  position: relative;
+}
+.atlas-fullscreen-toggle {
+  position: absolute;
+  z-index: 60;
+  top: 54px; /* Below Aladin's projection menu in the top-right corner. */
+  right: 12px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 7px 11px;
+  background: rgb(15 25 33 / 94%);
+  border: 1px solid #88b7c2;
+  color: #f1f7fa;
+  border-radius: 7px;
+  font: inherit;
+  font-size: 0.79rem;
+  cursor: pointer;
+}
+.atlas-fullscreen-toggle:focus-visible {
+  outline: 2px solid #d1eff9;
+  outline-offset: 3px;
+}
+.atlas-fullscreen-hint { display: none; }
+
+/* The bottom mobile rail is present up to 700 CSS px. Touch landscape may be wider. */
+@media (min-width: 961px) and (pointer: fine) {
+  .atlas-fullscreen-toggle:not(.atlas-fullscreen-toggle--exit) { display: none; }
+}
+
+html.atlas-maximized-active,
+html.atlas-maximized-active body {
+  overflow: hidden !important;
+  overscroll-behavior: none;
+}
+html.atlas-maximized-active .catalog-header,
+html.atlas-maximized-active .scientific-sidebar,
+html.atlas-maximized-active .atlas-input-section,
+html.atlas-maximized-active .catalog-list,
+html.atlas-maximized-active .atlas-active-criteria {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+.catalog--overview .catalog-sky.atlas-sky--maximized {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  width: 100dvw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  max-height: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background: #070d12;
+  z-index: 6000;
+  overflow: hidden;
+}
+.catalog--overview .catalog-sky.atlas-sky--maximized .aladin-frame.aladin-frame--overview {
+  position: absolute !important;
+  inset: 0 !important;
+  box-sizing: border-box;
+  width: 100% !important;
+  height: 100% !important;
+  aspect-ratio: auto !important;
+  max-height: none !important;
+  max-width: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+}
+.catalog--overview .catalog-sky.atlas-sky--maximized .atlas-fullscreen-toggle {
+  top: calc(env(safe-area-inset-top, 0px) + 54px);
+  right: max(12px, env(safe-area-inset-right, 0px));
+  z-index: 200;
+}
+.catalog--overview .catalog-sky.atlas-sky--maximized .atlas-legend-anchor {
+  right: max(12px, env(safe-area-inset-right, 0px));
+  bottom: max(22px, env(safe-area-inset-bottom, 0px));
+}
+.catalog--overview .catalog-sky.atlas-sky--maximized .atlas-draw-surface {
+  inset: 0;
+}
+@media (max-width: 700px) and (orientation: portrait) {
+  .catalog-sky.atlas-sky--maximized .atlas-fullscreen-hint {
+    display: block;
+    position: absolute;
+    z-index: 60;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: max(16px, env(safe-area-inset-bottom, 0px));
+    width: max-content;
+    max-width: 80%;
+    text-align: center;
+    font-size: 0.72rem;
+    color: #e9f1f5;
+    background: rgb(10 20 30 / 80%);
+    border-radius: 6px;
+    padding: 6px 10px;
+    pointer-events: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .catalog--overview .catalog-sky.atlas-sky--maximized,
+  .atlas-fullscreen-toggle { transition: none !important; }
+}

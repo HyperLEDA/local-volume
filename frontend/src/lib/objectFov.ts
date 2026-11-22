@@ -1,34 +1,64 @@
 import type { CatalogObjectDetail } from "../api/objects.ts";
 
 const DEFAULT_FOV_DEGREES = 1;
-const MIN_FOV_DEGREES = 0.025;
-const MAX_FOV_DEGREES = 60;
-const ANGULAR_DIAMETER_MARGIN = 1.5;
+// Application safety guards, not scientifically meaningful cut-offs on a26.
+// Normal positive diameters, including galaxies smaller than 1.5', are exact.
+const MIN_DISPLAY_FOV_DEGREES = 0.0001;
+const MAX_DISPLAY_FOV_DEGREES = 60;
 const ARCMINUTES_PER_DEGREE = 60;
-const FOV_TOLERANCE_FRACTION = 0.08;
+const FOV_TOLERANCE_FRACTION = 0.015;
+
+export type ObjectFovDecision = {
+  degrees: number;
+  exactA26: boolean;
+  note: string | null;
+};
 
 /**
- * a26_arcmin is the LVGDB Holmberg MAJOR DIAMETER, not a radius.
- * Field width = 1.5 * diameter => a 50% margin beyond each angular radius.
- * Missing/invalid a26 uses a stable 1-degree FOV, never legacy a50/b50.
+ * a26_arcmin is the adopted Holmberg MAJOR DIAMETER, not a semimajor axis.
+ * For every supported diameter the square field side is exactly a26 / 60 deg.
+ * Missing/invalid or exceptionally extreme values receive an explicit fallback.
  */
-export function objectFovDegrees(
+export function objectFovDecision(
   object: Pick<CatalogObjectDetail, "a26_arcmin">,
-): number {
+): ObjectFovDecision {
   const diameter = object.a26_arcmin;
   if (
     typeof diameter !== "number" ||
     !Number.isFinite(diameter) ||
     diameter <= 0
   ) {
-    return DEFAULT_FOV_DEGREES;
+    return {
+      degrees: DEFAULT_FOV_DEGREES,
+      exactA26: false,
+      note: "Adopted a26 is unavailable; requesting a default 1° sky field.",
+    };
   }
-  const requested =
-    (diameter * ANGULAR_DIAMETER_MARGIN) / ARCMINUTES_PER_DEGREE;
-  return Math.min(MAX_FOV_DEGREES, Math.max(MIN_FOV_DEGREES, requested));
+  const requested = diameter / ARCMINUTES_PER_DEGREE;
+  if (requested < MIN_DISPLAY_FOV_DEGREES) {
+    return {
+      degrees: MIN_DISPLAY_FOV_DEGREES,
+      exactA26: false,
+      note: "Adopted a26 is below the application display guard; the FoV is limited to 0.0001°.",
+    };
+  }
+  if (requested > MAX_DISPLAY_FOV_DEGREES) {
+    return {
+      degrees: MAX_DISPLAY_FOV_DEGREES,
+      exactA26: false,
+      note: "Adopted a26 exceeds the application display guard; the FoV is limited to 60°.",
+    };
+  }
+  return { degrees: requested, exactA26: true, note: null };
 }
-// Compare the requested initial horizontal field to the field actually shown by Aladin.
-// A small tolerance avoids unnecessary zoom updates due to floating-point geometry.
+
+export function objectFovDegrees(
+  object: Pick<CatalogObjectDetail, "a26_arcmin">,
+): number {
+  return objectFovDecision(object).degrees;
+}
+
+// Compare the requested angular width to the value actually reported by Aladin.
 export function needsInitialFovCorrection(
   actualDegrees: number,
   requestedDegrees: number,

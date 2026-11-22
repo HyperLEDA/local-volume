@@ -1,0 +1,193 @@
+.galaxy-survey-controls {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: 14px;
+  row-gap: 8px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  font-size: 0.85rem;
+}
+
+.galaxy-survey-label {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.galaxy-survey-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.galaxy-survey-choices button {
+  min-height: 40px;
+  min-width: 72px;
+  padding: 7px 12px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.galaxy-survey-choices button:hover {
+  border-color: var(--accent);
+  background: var(--hover-tint);
+}
+
+.galaxy-survey-choices button[aria-pressed="true"] {
+  background: var(--hover-tint);
+  border-color: var(--accent);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.galaxy-survey-choices button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.galaxy-survey-meta,
+.galaxy-survey-controls [role="alert"] {
+  grid-column: 1 / -1;
+}
+
+.galaxy-survey-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.galaxy-survey-controls [role="alert"] {
+  margin: 0;
+  color: var(--danger);
+}
+
+@media (max-width: 580px) {
+  .galaxy-survey-controls {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .galaxy-survey-choices button { transition: none; }
+}
+
+/* Optional second sky survey. Keep the primary survey buttons visible at all times. */
+.galaxy-comparison {
+  grid-column: 1 / -1;
+  border-top: 1px solid var(--line);
+  padding-top: 9px;
+  min-width: 0;
+}
+.galaxy-comparison-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.galaxy-comparison-toggle input {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--accent);
+}
+.galaxy-comparison-panel {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 9px;
+  padding-top: 8px;
+}
+.galaxy-comparison-heading {
+  font-weight: 500;
+}
+.galaxy-comparison-panel label[for="galaxy-comparison-opacity"] {
+  font-weight: 500;
+}
+.galaxy-comparison-panel input[type="range"] {
+  min-width: 0;
+  width: 100%;
+  accent-color: var(--accent);
+}
+.galaxy-comparison-panel output {
+  font-variant-numeric: tabular-nums;
+  min-width: 3.4em;
+  text-align: right;
+}
+.galaxy-comparison-meta {
+  grid-column: 1 / -1;
+}
+.galaxy-comparison [role="alert"] {
+  margin: 8px 0 0;
+  color: var(--danger);
+}
+.galaxy-comparison :is(input, button):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+@media (max-width: 600px) {
+  .galaxy-comparison-panel { grid-template-columns: minmax(0, 1fr) auto; }
+  .galaxy-comparison-heading, .galaxy-comparison-panel > .galaxy-survey-choices {
+    grid-column: 1 / -1;
+  }
+}
+
+/* #66: a quiet scale reference inside the actual Aladin image.
+   The map and its WebGL instance remain unchanged; the overlay never
+   intercepts panning, marker selection, or native image controls. */
+.catalog--object .galaxy-sky-view {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  min-width: 0;
+}
+.catalog--object .galaxy-angular-scale {
+  position: absolute;
+  z-index: 5;
+  bottom: 34px; /* Above Aladin's own bottom-edge FoV readout. */
+  left: 14px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  box-sizing: border-box;
+  max-width: calc(100% - 28px);
+  padding: 8px 10px;
+  border: 1px solid rgb(255 255 255 / 20%);
+  border-radius: 5px;
+  background: rgb(8 17 24 / 76%);
+  box-shadow: 0 2px 12px rgb(0 0 0 / 26%);
+  color: #f5f8fa;
+  font-size: 0.78rem;
+  font-weight: 500;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums lining-nums;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.catalog--object .galaxy-angular-scale-ruler {
+  box-sizing: border-box;
+  display: block;
+  flex: none;
+  height: 9px;
+  max-width: 100%;
+  border-bottom: 2px solid currentColor;
+  border-left: 1px solid currentColor;
+  border-right: 1px solid currentColor;
+}
+.catalog--object .galaxy-angular-scale-label {
+  display: block;
+}

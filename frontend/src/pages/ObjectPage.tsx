@@ -11,11 +11,26 @@ import {
 } from "../api/objects.ts";
 import { AladinMap, type SkyFocus } from "../components/AladinMap.tsx";
 import { ObjectCoordinates } from "../components/ObjectCoordinates.tsx";
+import { ObjectMeasurementExports } from "../components/ObjectMeasurementExports.tsx";
 import { ExternalCatalogLinks } from "../components/ExternalCatalogLinks.tsx";
 import { ObservedParameterCards } from "../components/ObservedParameterCards.tsx";
 import { PhysicalParametersTable } from "../components/PhysicalParametersTable.tsx";
-import { objectFovDegrees } from "../lib/objectFov.ts";
+import { objectFovDecision } from "../lib/objectFov.ts";
+import { projectedScaleLabel, type GalaxyAngularScale } from "../lib/galaxyAngularScale.ts";
 import { otherSkyObjects } from "../lib/skyContext.ts";
+import {
+  GALAXY_SURVEYS,
+  galaxySurvey,
+  type GalaxySurveyKey,
+} from "../lib/galaxySurveys.ts";
+import "../components/galaxySurveyControls.css";
+
+const SURVEY_BUTTON_LABELS: Record<GalaxySurveyKey, string> = {
+  dss2: "DSS2",
+  galex: "GALEX",
+  "2mass": "2MASS",
+  allwise: "AllWISE",
+};
 
 export function ObjectPage() {
   const { pgc: pgcParam } = useParams<{ pgc: string }>();
@@ -25,6 +40,16 @@ export function ObjectPage() {
   const [error, setError] = useState<string | null>(null);
   const [skyCatalog, setSkyCatalog] = useState<CatalogObject[]>([]);
   const [skyCatalogError, setSkyCatalogError] = useState(false);
+  const [surveyKey, setSurveyKey] = useState<GalaxySurveyKey>("dss2");
+  const [surveyError, setSurveyError] = useState<string | null>(null);
+  const survey = galaxySurvey(surveyKey);
+  const [comparisonEnabled, setComparisonEnabled] = useState(false);
+  const [comparisonSurveyKey, setComparisonSurveyKey] = useState<GalaxySurveyKey>("galex");
+  const [comparisonOpacityPercent, setComparisonOpacityPercent] = useState(50);
+  const [comparisonError, setComparisonError] = useState<string | null>(null);
+  const [angularScale, setAngularScale] = useState<GalaxyAngularScale | null>(null);
+  useEffect(() => setAngularScale(null), [pgc]);
+  const comparisonSurvey = galaxySurvey(comparisonSurveyKey);
 
   useEffect(() => {
     if (!Number.isFinite(pgc)) {
@@ -145,6 +170,15 @@ export function ObjectPage() {
     return { ra: data.ra, dec: data.dec, requestId: data.pgc };
   }, [data]);
 
+  const initialFov = data === null ? null : objectFovDecision(data);
+  // The detail API does not expose the adopted distance; use the matching
+  // canonical PGC from the actual catalogue list. Never invent a distance.
+  const scaleDistance = data === null
+    ? null : (skyCatalog.find((row) => row.pgc === data.pgc) ?? null);
+  const projectedScale = angularScale === null
+    ? null : projectedScaleLabel(angularScale.arcmin, scaleDistance?.dist ?? null);
+  const compactProjectedScale = projectedScale?.replace(/ projected$/, "") ?? null;
+
   return (
     <main className="catalog catalog--object">
       {error !== null ? (
@@ -165,12 +199,138 @@ export function ObjectPage() {
           >
             {focus !== null ? (
               <section className="catalog-sky" aria-label="Sky">
-                <AladinMap
-                  objects={mapObjects}
-                  contextObjects={contextObjects}
-                  focus={focus}
-                  fov={objectFovDegrees(data)}
-                />
+                <div className="galaxy-sky-view">
+                  <AladinMap
+                    objects={mapObjects}
+                    contextObjects={contextObjects}
+                    focus={focus}
+                    fov={initialFov?.degrees}
+                    onDetailScaleChange={setAngularScale}
+                    detailSurveyId={survey.hips}
+                    onDetailSurveyError={setSurveyError}
+                    detailOverlaySurveyId={comparisonEnabled ? comparisonSurvey.hips : null}
+                    detailOverlayOpacity={comparisonOpacityPercent / 100}
+                    onDetailOverlayError={setComparisonError}
+                  />
+                  {angularScale !== null && (
+                    <div
+                      className="galaxy-angular-scale"
+                      role="img"
+                      aria-label={
+                        `Angular scale ${angularScale.angleLabel}` +
+                        (projectedScale !== null && scaleDistance !== null
+                          ? `, approximately ${projectedScale} at adopted distance ${scaleDistance.dist} Mpc` +
+                            (scaleDistance.distance_method ? ` (${scaleDistance.distance_method})` : "")
+                          : "")
+                      }
+                    >
+                      <span
+                        className="galaxy-angular-scale-ruler"
+                        style={{ width: angularScale.pixels }}
+                        aria-hidden="true"
+                      />
+                      <span className="galaxy-angular-scale-label" aria-hidden="true">
+                        {angularScale.angleLabel}
+                        {compactProjectedScale !== null ? ` ≈ ${compactProjectedScale}` : ""}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div className="galaxy-survey-controls">
+                  <span className="galaxy-survey-label" id="galaxy-survey-label">
+                    Sky survey
+                  </span>
+                  <div
+                    className="galaxy-survey-choices"
+                    role="group"
+                    aria-labelledby="galaxy-survey-label"
+                  >
+                    {GALAXY_SURVEYS.map((item) => (
+                      <button
+                        key={item.key}
+                        type="button"
+                        aria-label={item.label}
+                        aria-pressed={surveyKey === item.key}
+                        onClick={() => {
+                          setSurveyError(null);
+                          setSurveyKey(item.key);
+                          // Keep the comparison meaningful when the base is changed.
+                          if (comparisonSurveyKey === item.key) {
+                            setComparisonSurveyKey(item.key === "dss2" ? "galex" : "dss2");
+                          }
+                        }}
+                      >
+                        {SURVEY_BUTTON_LABELS[item.key]}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="galaxy-survey-meta">
+                    <span>{survey.bands}</span>
+                    <span>{survey.source}</span>
+                  </div>
+                  {surveyError ? <p role="alert">{surveyError}</p> : null}
+                  <div className="galaxy-comparison">
+                    <label className="galaxy-comparison-toggle">
+                      <input
+                        type="checkbox"
+                        checked={comparisonEnabled}
+                        onChange={(event) => {
+                          setComparisonError(null);
+                          setComparisonEnabled(event.currentTarget.checked);
+                        }}
+                      />
+                      Compare surveys
+                    </label>
+                    {comparisonEnabled ? (
+                      <div className="galaxy-comparison-panel">
+                        <span className="galaxy-comparison-heading" id="galaxy-comparison-heading">
+                          Overlay survey
+                        </span>
+                        <div
+                          className="galaxy-survey-choices"
+                          role="group"
+                          aria-labelledby="galaxy-comparison-heading"
+                        >
+                          {GALAXY_SURVEYS.filter((item) => item.key !== surveyKey).map((item) => (
+                            <button
+                              type="button"
+                              key={item.key}
+                              aria-label={`Overlay: ${item.label}`}
+                              aria-pressed={comparisonSurveyKey === item.key}
+                              onClick={() => {
+                                setComparisonError(null);
+                                setComparisonSurveyKey(item.key);
+                              }}
+                            >
+                              {SURVEY_BUTTON_LABELS[item.key]}
+                            </button>
+                          ))}
+                        </div>
+                        <label htmlFor="galaxy-comparison-opacity">Overlay opacity</label>
+                        <input
+                          id="galaxy-comparison-opacity"
+                          type="range"
+                          min={0}
+                          max={100}
+                          step={5}
+                          value={comparisonOpacityPercent}
+                          onChange={(event) => setComparisonOpacityPercent(Number(event.currentTarget.value))}
+                        />
+                        <output htmlFor="galaxy-comparison-opacity">{comparisonOpacityPercent}%</output>
+                        <div className="galaxy-survey-meta galaxy-comparison-meta">
+                          <span>{comparisonSurvey.bands}</span>
+                          <span>{comparisonSurvey.source}</span>
+                        </div>
+                      </div>
+                    ) : null}
+                    {comparisonError ? <p role="alert">{comparisonError}</p> : null}
+                  </div>
+                </div>
+                {initialFov?.note ? (
+                  <p className="catalog-status" role="status">
+                    {initialFov.note}
+                  </p>
+                ) : null}
                 <ExternalCatalogLinks pgc={data.pgc} />
                 {skyCatalogError ? (
                   <p className="catalog-status" role="status">
@@ -181,10 +341,23 @@ export function ObjectPage() {
             ) : null}
             <div className="object-details">
               <section className="object-identity" aria-label="Object">
-                <div className="object-title-row">
+                <div className="object-title-row" style={{ alignItems: "center" }}>
                   <h2 className="object-title">{data.name}</h2>
                   {data.type_name?.trim() ? (
-                    <span className="object-nature" title="Object type">
+                    <span
+                      className="object-nature"
+                      title="Object type"
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        alignSelf: "center",
+                        minHeight: 23,
+                        lineHeight: 1.05,
+                        position: "relative",
+                        top: -1,
+                      }}
+                    >
                       {data.type_name}
                     </span>
                   ) : null}
@@ -204,6 +377,7 @@ export function ObjectPage() {
               {focus === null ? <ExternalCatalogLinks pgc={data.pgc} /> : null}
               <ObservedParameterCards rows={rows} pgc={pgc} />
               <PhysicalParametersTable pgc={pgc} />
+              <ObjectMeasurementExports galaxy={data} observed={rows} />
             </div>
           </div>
         </>

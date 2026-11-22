@@ -5,6 +5,7 @@ import {
   type CatalogObject,
 } from "../api/objects.ts";
 import { AladinMap, type SkyFocus } from "../components/AladinMap.tsx";
+import { useAtlasFullscreen } from "../lib/useAtlasFullscreen.ts";
 import { AtlasActiveCriteria } from "../components/AtlasActiveCriteria.tsx";
 import { AtlasLegend } from "../components/AtlasLegend.tsx";
 import { AtlasRegionControls } from "../components/AtlasRegionControls.tsx";
@@ -29,8 +30,10 @@ import { atlasQueryParam, readAtlasState } from "../lib/atlasUrlState.ts";
 import { sortObjectsByRa } from "../lib/atlasRaSort.ts";
 import { findAtlasNamedTarget } from "../lib/atlasNamedSearch.ts";
 import "../components/atlasControls.css";
+import "../components/atlasFullscreen.css";
 
 export function ObjectsPage() {
+  const { active: atlasMaximized, skyRef, enter, leave, onCameraReady } = useAtlasFullscreen();
   const initialState = useMemo(
     () => readAtlasState(window.location.search),
     [],
@@ -175,8 +178,13 @@ export function ObjectsPage() {
       ) : null}
       {objects !== null ? (
         <>
-          <section className="catalog-sky" aria-label="Sky">
+          <section
+            ref={skyRef}
+            className={`catalog-sky${atlasMaximized ? " atlas-sky--maximized" : ""}`}
+            aria-label="Sky"
+          >
             <AladinMap
+              onAtlasCamera={onCameraReady}
               objects={filtered}
               referenceObjects={objects}
               onObjectNavigate={(pgc) => {
@@ -195,6 +203,18 @@ export function ObjectsPage() {
               }}
               onCancelDraw={() => setDrawingMode(null)}
             />
+            <button
+              type="button"
+              className={`atlas-fullscreen-toggle${atlasMaximized ? " atlas-fullscreen-toggle--exit" : ""}`}
+              aria-label={atlasMaximized ? "Exit maximized sky map" : "Maximize sky map"}
+              aria-pressed={atlasMaximized}
+              onClick={() => atlasMaximized ? leave() : enter()}
+            >
+              {atlasMaximized ? "Exit fullscreen" : "Fullscreen"}
+            </button>
+            {atlasMaximized ? (
+              <p className="atlas-fullscreen-hint">Rotate your phone for a wider view</p>
+            ) : null}
             <AtlasLegend tidalRange={tidalRange} />
           </section>
           <section
