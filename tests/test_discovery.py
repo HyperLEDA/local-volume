@@ -194,6 +194,40 @@ def test_robots_fail_closed():
     assert "Sitemap: https://example.org/sitemap.xml" in public
 
 
+def test_robots_allows_rendering_resources_not_internal_api():
+    public = discovery.robots_text("https://example.org")
+    rules = []
+    for line in public.splitlines():
+        if line.startswith(("Allow: ", "Disallow: ")):
+            directive, path = line.split(": ", 1)
+            rules.append((directive, path))
+
+    def allowed(path: str) -> bool:
+        # RFC 9309/Google: the longest matching path wins; Allow wins ties.
+        matches = [(len(rule), directive == "Allow") for directive, rule in rules if path.startswith(rule)]
+        return max(matches, default=(0, True))[1]
+
+    for path in (
+        "/api/v1/object/2557",
+        "/api/v1/object/2557/physical",
+        "/api/v1/objects",
+        "/api/v1/group/2557?definition=physical",
+        "/api/v1/groups?definition=suite",
+    ):
+        assert allowed(path), path
+
+    for path in (
+        "/api/v1/physical/refresh-status",
+        "/api/v1/group-preview-cache",
+        "/api/v1/group-preview/2557",
+        "/api/other-internal-route",
+        "/groups/preview-builder",
+    ):
+        assert not allowed(path), path
+
+    assert discovery.robots_text(None) == "User-agent: *\nDisallow: /\n"
+
+
 def test_direct_request_page_builder_404_and_staging(tmp_path, monkeypatch):
     (tmp_path / "index.html").write_text(HTML, encoding="utf-8")
     monkeypatch.setattr(web_app, "_DIST_DIR", tmp_path)

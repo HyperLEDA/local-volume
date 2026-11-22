@@ -169,7 +169,17 @@ def robots_text(origin: str | None) -> str:
     if origin is None:
         return "User-agent: *\nDisallow: /\n"
     return (
-        f"User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /groups/preview-builder\nSitemap: {origin}/sitemap.xml\n"
+        "User-agent: *\n"
+        "Allow: /\n"
+        # Longest-match Allow wins over Disallow: /api/ for public read-only
+        # scientific data required by client-rendered object and group pages.
+        "Allow: /api/v1/object/\n"
+        "Allow: /api/v1/objects\n"
+        "Allow: /api/v1/group/\n"
+        "Allow: /api/v1/groups\n"
+        "Disallow: /api/\n"
+        "Disallow: /groups/preview-builder\n"
+        f"Sitemap: {origin}/sitemap.xml\n"
     )
 
 
