@@ -19,7 +19,7 @@ from lv_backend.data import physical_refresh as data_physical_refresh
 from lv_backend.data import storage as data_storage
 from lv_backend.domain import groups as domain_groups
 from lv_backend.domain import objects
-from lv_backend.presentation import schemas
+from lv_backend.presentation import discovery, schemas
 
 _DIST_DIR = pathlib.Path(__file__).resolve().parents[2] / "frontend" / "dist"
 
@@ -268,14 +268,110 @@ def get_group_preview_cache(request: fastapi.Request, definition: str = "physica
 app.include_router(api)
 
 
-def _frontend_page(full_path: str) -> fastapi.responses.FileResponse:
+# ISSUE72_HTTP_FIRST: accurate HTML metadata, HTTP statuses and opted-in crawlability.
+def _catalogue_sitemap_paths(storage: data_storage.Storage) -> list[str]:
+    pgcs = objects.list_objects(storage).data.pgc
+    groups: dict[str, list[int]] = {}
+    for definition in ("physical", "suite"):
+        groups[definition] = [int(row["root_pgc"]) for row in domain_groups.list_groups(storage, definition)]
+    return discovery.sitemap_paths(pgcs, groups)
+
+
+@app.api_route("/robots.txt", methods=["GET", "HEAD"], include_in_schema=False)
+def get_robots(request: fastapi.Request) -> fastapi.Response:
+    origin = discovery.public_origin_for_host(request.headers.get("host"))
+    return fastapi.Response(
+        content=discovery.robots_text(origin),
+        media_type="text/plain",
+        headers={"Cache-Control": "no-cache"},
+    )
+
+
+@app.api_route("/sitemap.xml", methods=["GET", "HEAD"], include_in_schema=False)
+def get_sitemap(request: fastapi.Request) -> fastapi.Response:
+    origin = discovery.public_origin_for_host(request.headers.get("host"))
+    if origin is None:
+        raise fastapi.HTTPException(status_code=404)
+    paths = _catalogue_sitemap_paths(request.app.state.storage)
+    parts = discovery.sitemap_chunks(paths)
+    xml = (
+        discovery.sitemap_xml(origin, parts[0]) if len(parts) == 1 else discovery.sitemap_index_xml(origin, len(parts))
+    )
+    return fastapi.Response(
+        content=xml,
+        media_type="application/xml",
+        headers={"Cache-Control": "no-cache"},
+    )
+
+
+@app.api_route("/sitemap-part/{number}.xml", methods=["GET", "HEAD"], include_in_schema=False)
+def get_sitemap_part(number: int, request: fastapi.Request) -> fastapi.Response:
+    origin = discovery.public_origin_for_host(request.headers.get("host"))
+    if origin is None:
+        raise fastapi.HTTPException(status_code=404)
+    parts = discovery.sitemap_chunks(_catalogue_sitemap_paths(request.app.state.storage))
+    if len(parts) < 2 or not (1 <= number <= len(parts)):
+        raise fastapi.HTTPException(status_code=404)
+    return fastapi.Response(
+        content=discovery.sitemap_xml(origin, parts[number - 1]),
+        media_type="application/xml",
+        headers={"Cache-Control": "no-cache"},
+    )
+
+
+def _frontend_page(full_path: str, request: fastapi.Request) -> fastapi.Response:
     if full_path == "api" or full_path.startswith("api/"):
         raise fastapi.HTTPException(status_code=404)
     dist_dir = _DIST_DIR.resolve()
     candidate = (dist_dir / full_path).resolve()
     if full_path and candidate.is_relative_to(dist_dir) and candidate.is_file():
+        # /index.html must not create a second generic indexable application URL.
+        if candidate.suffix.lower() == ".html":
+            raise fastapi.HTTPException(status_code=404)
         return fastapi.responses.FileResponse(candidate)
-    return fastapi.responses.FileResponse(dist_dir / "index.html")
+
+    object_match = re.fullmatch(r"object/([1-9][0-9]*)/?", full_path)
+    group_match = re.fullmatch(r"groups/([1-9][0-9]*)/?", full_path)
+    page: discovery.PageInfo | None = None
+    if object_match:
+        pgc = int(object_match.group(1))
+        if pgc > 9223372036854775807:
+            raise fastapi.HTTPException(status_code=404)
+        entity = objects.get_object(request.app.state.storage, pgc)
+        if entity is None:
+            raise fastapi.HTTPException(status_code=404)
+        page = discovery.object_page(entity.data, pgc)
+    elif group_match:
+        root_pgc = int(group_match.group(1))
+        if root_pgc > 9223372036854775807:
+            raise fastapi.HTTPException(status_code=404)
+        definition = request.query_params.get("definition", "physical")
+        # The current GroupPage only renders physical groups and MD suites.
+        if definition not in ("physical", "suite"):
+            raise fastapi.HTTPException(status_code=404)
+        try:
+            group = domain_groups.get_group(request.app.state.storage, root_pgc, definition)
+        except ValueError as exc:
+            raise fastapi.HTTPException(status_code=409, detail=str(exc)) from exc
+        if group is None:
+            raise fastapi.HTTPException(status_code=404)
+        page = discovery.group_page(group, root_pgc, definition)
+    else:
+        definition = request.query_params.get("definition", "physical")
+        page = discovery.static_page(full_path.strip("/"), definition=definition)
+    if page is None:
+        raise fastapi.HTTPException(status_code=404)
+
+    template = (dist_dir / "index.html").read_text(encoding="utf-8")
+    origin = discovery.public_origin_for_host(request.headers.get("host"))
+    indexable = bool(origin and page.indexable and page.canonical_path)
+    headers = {"Cache-Control": "no-cache"}
+    if not indexable:
+        headers["X-Robots-Tag"] = "noindex, nofollow"
+    return fastapi.responses.HTMLResponse(
+        content=discovery.html_document(template, page, origin),
+        headers=headers,
+    )
 
 
 # Vite includes content fingerprints in generated /assets filenames.
@@ -303,7 +399,7 @@ def _mount_frontend(application: fastapi.FastAPI, dist_dir: pathlib.Path) -> Non
     application.add_api_route(
         "/{full_path:path}",
         _frontend_page,
-        methods=["GET"],
+        methods=["GET", "HEAD"],
         include_in_schema=False,
     )
 
