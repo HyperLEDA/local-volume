@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type MouseEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import type { GroupDetail } from "../api/groups.ts";
 import type { GroupFigure, PlotPoint } from "../lib/groupFigureData.ts";
 import { figureImageHits, FIGURE_NATIVE_SIZE } from "../lib/groupFigureJpeg.ts";
@@ -107,9 +107,11 @@ function TooltipMeasurements({
   );
 }
 
-/** Plot-position model is shared with the native JPEG renderer; no guessed pixels.
- * Scatter measurements have one-to-one PGC identities. Binned histograms and
- * aggregate step curves are intentionally not presented as individual galaxies. */
+/**
+ * Overlay hit testing reuses the exact position model of the JPEG renderer.
+ * Binned/aggregate curves have no individual PGC, so remain non-clickable.
+ * Pinning changes only the popup state; it never changes a scientific value.
+ */
 export function GroupFigureInspector({
   figure,
   group,
@@ -119,13 +121,47 @@ export function GroupFigureInspector({
   group: GroupDetail;
   imageUrl: string;
 }) {
+  const inspectorRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const hits = useMemo(() => figureImageHits(figure), [figure]);
   const [hover, setHover] = useState<HoveredGalaxy | null>(null);
+  const [pinned, setPinned] = useState<HoveredGalaxy | null>(null);
 
-  function track(event: MouseEvent<HTMLImageElement>): void {
+  // Opening another figure must not retain a popup from the previous one.
+  useEffect(() => {
+    setHover(null);
+    setPinned(null);
+  }, [figure.key, group.root_pgc, group.definition]);
+
+  useEffect(() => {
+    if (pinned === null) return;
+    function dismissOutside(event: PointerEvent) {
+      if (
+        event.target instanceof Node &&
+        !inspectorRef.current?.contains(event.target)
+      )
+        setPinned(null);
+    }
+    function dismissEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        // An Escape to unpin must not close the parent modal.
+        event.preventDefault();
+        event.stopPropagation();
+        setPinned(null);
+        setHover(null);
+      }
+    }
+    document.addEventListener("pointerdown", dismissOutside, true);
+    window.addEventListener("keydown", dismissEscape, true);
+    return () => {
+      document.removeEventListener("pointerdown", dismissOutside, true);
+      window.removeEventListener("keydown", dismissEscape, true);
+    };
+  }, [pinned]);
+
+  function hitAt(event: MouseEvent<HTMLImageElement>): HoveredGalaxy | null {
     const bounds = imageRef.current?.getBoundingClientRect();
-    if (!bounds || bounds.width <= 0 || bounds.height <= 0) return;
+    if (!bounds || bounds.width <= 0 || bounds.height <= 0) return null;
     const nativeX =
       ((event.clientX - bounds.left) * FIGURE_NATIVE_SIZE.width) / bounds.width;
     const nativeY =
@@ -138,6 +174,12 @@ export function GroupFigureInspector({
     let closest: (typeof hits)[number] | null = null;
     let nearest = threshold * threshold;
     for (const hit of hits) {
+      if (
+        typeof hit.point.pgc !== "number" ||
+        !Number.isSafeInteger(hit.point.pgc) ||
+        hit.point.pgc <= 0
+      )
+        continue;
       const distanceSquared =
         (nativeX - hit.pixelX) ** 2 + (nativeY - hit.pixelY) ** 2;
       if (distanceSquared < nearest) {
@@ -145,45 +187,65 @@ export function GroupFigureInspector({
         closest = hit;
       }
     }
-    if (!closest) {
-      setHover(null);
-      return;
-    }
+    if (!closest) return null;
     const x = (closest.pixelX / FIGURE_NATIVE_SIZE.width) * bounds.width;
     const y = (closest.pixelY / FIGURE_NATIVE_SIZE.height) * bounds.height;
-    setHover({
+    return {
       point: closest.point,
-      left: Math.max(5, Math.min(x + 15, bounds.width - 238)),
+      left: Math.max(5, Math.min(x + 15, bounds.width - 225)),
       top: Math.max(5, Math.min(y + 12, bounds.height - 132)),
-    });
+    };
   }
 
+  const shown = pinned ?? hover;
   return (
-    <div className="group-figure-inspector" onMouseLeave={() => setHover(null)}>
+    <div
+      ref={inspectorRef}
+      className="group-figure-inspector"
+      onMouseLeave={() => setHover(null)}
+    >
       <img
         ref={imageRef}
         src={imageUrl}
-        alt={figure.title}
-        onMouseMove={track}
-        onMouseLeave={() => {
-          /* Keep tooltip visible as pointer moves onto its link. */
+        alt={`${figure.title}. Hover over a galaxy for measurements; click a plotted galaxy to pin its details.`}
+        onMouseMove={(event) => {
+          if (pinned === null) setHover(hitAt(event));
+        }}
+        onClick={(event) => {
+          setPinned(hitAt(event));
+          setHover(null);
         }}
       />
-      {hover && hover.point.pgc ? (
+      {shown && shown.point.pgc ? (
         <div
-          className="group-figure-tooltip"
-          role="status"
-          style={{ left: hover.left, top: hover.top }}
+          className={`group-figure-tooltip${pinned ? " group-figure-tooltip--pinned" : ""}`}
+          role={pinned ? "group" : "status"}
+          aria-label={pinned ? "Pinned galaxy measurements" : undefined}
+          style={{ left: shown.left, top: shown.top }}
           onMouseMove={(event) => event.stopPropagation()}
+          onPointerDown={(event) => event.stopPropagation()}
         >
-          <a href={`/object/${hover.point.pgc}`}>
-            {hover.point.name?.trim() || `PGC ${hover.point.pgc}`}
+          <a href={`/object/${shown.point.pgc}`}>
+            {shown.point.name?.trim() || `PGC ${shown.point.pgc}`}
           </a>
           <TooltipMeasurements
             figure={figure}
-            point={hover.point}
+            point={shown.point}
             group={group}
           />
+          {pinned && (
+            <button
+              type="button"
+              className="group-figure-tooltip-close"
+              aria-label="Unpin galaxy measurements"
+              onClick={() => {
+                setPinned(null);
+                setHover(null);
+              }}
+            >
+              ×
+            </button>
+          )}
         </div>
       ) : null}
     </div>

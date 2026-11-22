@@ -44,7 +44,7 @@ Cite the online resource as _LV LEDA: Galaxies of the Nearby Universe_, with its
   title        = {{LV LEDA: Galaxies of the Nearby Universe}},
   year         = {2026},
   howpublished = {Online galaxy catalogue and sky atlas},
-  url          = {https://leda.sao.ru/},
+  url          = {https://lv.leda.sao.ru/},
   note         = {Accessed 2026-11-20 (UTC)}
 }
 ```

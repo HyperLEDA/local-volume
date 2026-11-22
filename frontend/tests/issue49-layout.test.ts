@@ -16,7 +16,7 @@ describe("issue #49: object layout contracts", () => {
   });
 });
 
-// Regression: the secondary stylesheet must not override laptop grid sizing.
+// Regression: the secondary stylesheet must not force an early laptop stack.
 test("issue #49: no 1590px forced mobile layout", () => {
   const physicalCss = readFileSync(
     new URL("../src/components/physicalParameters.css", import.meta.url),
@@ -24,5 +24,7 @@ test("issue #49: no 1590px forced mobile layout", () => {
   );
   expect(physicalCss).not.toContain("@media (max-width: 1590px)");
   expect(physicalCss).not.toContain("714px max-content");
-  expect(physicalCss).toContain("@container galaxy-page (max-width: 1050px)");
+  // #70 uses a tighter, container-based breakpoint to preserve table width.
+  expect(physicalCss).toContain("@container galaxy-page (max-width: 880px)");
+  expect(physicalCss).not.toContain("@container galaxy-page (max-width: 1050px)");
 });

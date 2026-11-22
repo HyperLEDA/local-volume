@@ -735,3 +735,39 @@
     transition: none;
   }
 }
+
+/* #70: use the unused desktop top gutter as expanded header space.
+ * 28px shell padding + 68px old header = 96px expanded header;
+ * therefore initial Atlas/map position is unchanged. All routes share this.
+ */
+@media (min-width: 701px) {
+  .app-shell {
+    padding-top: 0;
+  }
+
+  .catalog-header--unified {
+    min-height: 96px;
+    padding-block: 18px;
+    transition:
+      min-height 210ms cubic-bezier(0.22, 1, 0.36, 1),
+      padding 210ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .catalog-header--unified.catalog-header--compact {
+    min-height: 68px;
+    padding-block: 8px;
+  }
+}
+
+/* Do not enlarge the header on phones; the bottom nav uses this space. */
+@media (max-width: 700px) {
+  .catalog-header--unified {
+    min-height: 68px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .catalog-header--unified {
+    transition: none;
+  }
+}

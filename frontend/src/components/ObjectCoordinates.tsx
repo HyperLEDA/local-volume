@@ -27,19 +27,14 @@ function renderRaHmsWithSuperscripts(text: string): ReactNode {
 function CoordinateValue({
   label,
   value,
-  secondary,
 }: {
   label: string;
   value: ReactNode;
-  secondary?: string;
 }) {
   return (
     <div className="coordinate-value">
       <span className="coordinate-label">{label}</span>
       <span className="coordinate-number">{value}</span>
-      {secondary ? (
-        <span className="coordinate-secondary">{secondary}</span>
-      ) : null}
     </div>
   );
 }
@@ -63,18 +58,27 @@ export function ObjectCoordinates({ object }: ObjectCoordinatesProps) {
           <h4>
             Equatorial <span>ICRS</span>
           </h4>
-          <div className="coordinate-grid">
-            <CoordinateValue
-              label="α"
-              value={renderRaHmsWithSuperscripts(formatRaHms(ra))}
-              secondary={formatDegrees(ra)}
-            />
-            <CoordinateValue
-              label="δ"
-              value={formatDecDms(dec)}
-              secondary={formatDegrees(dec, 6, true)}
-            />
-          </div>
+          <table className="coordinate-equatorial-table">
+            <thead>
+              <tr>
+                <th scope="col" aria-label="Coordinate axis" />
+                <th scope="col">Sexagesimal</th>
+                <th scope="col">Degrees</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">α</th>
+                <td>{renderRaHmsWithSuperscripts(formatRaHms(ra))}</td>
+                <td>{formatDegrees(ra)}</td>
+              </tr>
+              <tr>
+                <th scope="row">δ</th>
+                <td>{formatDecDms(dec)}</td>
+                <td>{formatDegrees(dec, 6, true)}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
         <div className="coordinate-system">
           <h4>Galactic</h4>

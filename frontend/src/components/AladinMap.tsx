@@ -21,6 +21,7 @@ import {
 } from "../lib/skyRegion.ts";
 import { useNavigate } from "react-router-dom";
 import type { CatalogObject } from "../api/objects.ts";
+import type { AtlasCamera } from "../lib/atlasCamera.ts";
 import {
   greatCircleVertices,
   hasSkyPosition,
@@ -49,6 +50,16 @@ import {
   OVERVIEW_MARKER_MAX_DIAMETER,
 } from "../lib/overviewMarkers.ts";
 import { formatJ2000Coordinate } from "../lib/popupCoordinates.ts";
+import { installDetailInitialFovCalibration } from "../lib/detailFovCalibration.ts";
+import {
+  getGalaxyAngularScale,
+  type GalaxyAngularScale,
+} from "../lib/galaxyAngularScale.ts";
+import { createGalaxySurveySwitcher } from "../lib/galaxySurveySwitcher.ts";
+import {
+  createGalaxyOverlayController,
+  type ComparisonAladinView,
+} from "../lib/galaxySurveyOverlay.ts";
 
 // Aladin Lite v3 exposes these methods at runtime, but the npm typings used
 // by this project omit them. Keep the compatibility boundary local to the map.
@@ -87,6 +98,13 @@ type AladinMapProps = {
   referenceObjects?: CatalogObject[];
   focus: SkyFocus | null;
   fov?: number;
+  /** Applies to individual galaxy views only; the Atlas keeps DSS2. */
+  detailSurveyId?: string;
+  onDetailSurveyError?: (message: string | null) => void;
+  /** Optional comparison HiPS, independent of the base survey. */
+  detailOverlaySurveyId?: string | null;
+  detailOverlayOpacity?: number;
+  onDetailOverlayError?: (message: string | null) => void;
   enableReticlePopups?: boolean;
   region?: SkyRegion | null;
   drawingMode?: "circle" | "rectangle" | null;
@@ -94,6 +112,8 @@ type AladinMapProps = {
   onRegionDraw?: (region: SkyRegion) => void;
   onCancelDraw?: () => void;
   onObjectNavigate?: (pgc: number) => string | null;
+  onAtlasCamera?: (view: AtlasCamera | null) => void;
+  onDetailScaleChange?: (scale: GalaxyAngularScale | null) => void;
 };
 
 function escapeHtml(value: string): string {
@@ -293,6 +313,11 @@ export function AladinMap({
   referenceObjects,
   focus,
   fov = 180,
+  detailSurveyId,
+  onDetailSurveyError,
+  detailOverlaySurveyId = null,
+  detailOverlayOpacity = 0.5,
+  onDetailOverlayError,
   enableReticlePopups = false,
   tidalRange = null,
   region = null,
@@ -300,21 +325,51 @@ export function AladinMap({
   onRegionDraw,
   onCancelDraw,
   onObjectNavigate,
+  onAtlasCamera,
+  onDetailScaleChange,
 }: AladinMapProps) {
   const isOverview = fov >= 180;
   const mapFov = isOverview ? 360 : fov;
+  const mapSurvey = isOverview
+    ? DEFAULT_HIPS_SURVEY
+    : (detailSurveyId ?? DEFAULT_HIPS_SURVEY);
   const containerRef = useRef<HTMLDivElement>(null);
   const catalogRef = useRef<AladinCatalog | null>(null);
   const contextCatalogRef = useRef<AladinCatalog | null>(null);
   const viewRef = useRef<AladinView | null>(null);
-  // Initial FoV is passed to A.aladin; subsequent changes must be explicit.
+  const scaleCallbackRef = useRef(onDetailScaleChange);
+  scaleCallbackRef.current = onDetailScaleChange;
+  // A changing React callback must not reinitialize the Aladin/WebGL instance.
+  const atlasCameraCallbackRef = useRef(onAtlasCamera);
+  useEffect(() => {
+    atlasCameraCallbackRef.current = onAtlasCamera;
+  }, [onAtlasCamera]);
+  // Initial FoV and survey are read after the asynchronous Aladin initialization.
   const latestFovRef = useRef(mapFov);
+  const latestSurveyRef = useRef(mapSurvey);
+  const surveyErrorRef = useRef(onDetailSurveyError);
+  const overlayErrorRef = useRef(onDetailOverlayError);
+  const overlayControllerRef = useRef<ReturnType<
+    typeof createGalaxyOverlayController
+  > | null>(null);
+  const surveySwitcherRef = useRef<ReturnType<
+    typeof createGalaxySurveySwitcher
+  > | null>(null);
   const latestFocusRef = useRef(focus);
   const mountedFocusRef = useRef<SkyFocus | null>(null);
   const mountedFovRef = useRef<number | null>(null);
   useEffect(() => {
     latestFovRef.current = mapFov;
   }, [mapFov]);
+  useEffect(() => {
+    latestSurveyRef.current = mapSurvey;
+  }, [mapSurvey]);
+  useEffect(() => {
+    surveyErrorRef.current = onDetailSurveyError;
+  }, [onDetailSurveyError]);
+  useEffect(() => {
+    overlayErrorRef.current = onDetailOverlayError;
+  }, [onDetailOverlayError]);
   useEffect(() => {
     latestFocusRef.current = focus;
   }, [focus]);
@@ -380,6 +435,10 @@ export function AladinMap({
           popupTitle(md),
           popupDescription(md, referenceObjectsRef.current),
         );
+        overlayControllerRef.current = createGalaxyOverlayController(
+          view as unknown as ComparisonAladinView,
+          (message) => overlayErrorRef.current?.(message),
+        );
       }
       return;
     }
@@ -419,6 +478,7 @@ export function AladinMap({
     const listeners = { detach: null as (() => void) | null };
     const atlasFitCleanup = { detach: null as (() => void) | null };
     const firstFrameCleanup = { detach: null as (() => void) | null };
+    const detailFitCleanup = { detach: null as (() => void) | null };
 
     async function mount(element: HTMLDivElement): Promise<void> {
       await A.init;
@@ -436,6 +496,7 @@ export function AladinMap({
         Number.isFinite(requestedFocusFov) &&
         requestedFocusFov > 0;
       const initialFov = hasFocusFov ? requestedFocusFov : latestFovRef.current;
+      const initialSurvey = latestSurveyRef.current;
       // ISSUE49_PHASE_G_FIRST_FRAME_20261118
       // Reserve the final-size Atlas box, but do not display its default
       // 300x150 WebGL backing canvas or partially loaded survey.
@@ -449,7 +510,7 @@ export function AladinMap({
         fov: initialFov,
         projection: isOverview ? "AIT" : "SIN",
         cooFrame: "equatorial",
-        survey: DEFAULT_HIPS_SURVEY,
+        survey: initialSurvey,
         target: initialAladinTarget(initialFocus),
         showReticle: true,
         showSimbadPointerControl: false,
@@ -505,28 +566,17 @@ export function AladinMap({
           ),
       });
       mountedFovRef.current = initialFov;
-      // Detail pages retain the existing Phase D initial FoV calibration.
-      // Atlas is handled below, after Aladin has resized its WebGL viewport.
+      // Calibrate only once the actual square WASM/WebGL viewport has settled.
+      // A late asynchronous resize must not undo a user's own pan or zoom.
       if (!isOverview) {
-        const measuredWidth = view.getFov()[0];
-        const zoomView = view as AladinView & {
-          getZoomFactor?: () => number;
-        };
-        const currentZoom = zoomView.getZoomFactor?.();
-        if (
-          Number.isFinite(measuredWidth) &&
-          measuredWidth > 0 &&
-          Number.isFinite(initialFov) &&
-          initialFov > 0 &&
-          typeof currentZoom === "number" &&
-          Number.isFinite(currentZoom) &&
-          currentZoom > 0
-        ) {
-          const ratio = initialFov / measuredWidth;
-          if (ratio >= 0.2 && ratio <= 5 && Math.abs(ratio - 1) > 0.01) {
-            view.setZoomFactor(currentZoom * ratio);
-          }
-        }
+        detailFitCleanup.detach = installDetailInitialFovCalibration(
+          view,
+          element,
+          initialFov,
+          () => latestFocusRef.current?.requestId ?? null,
+          initialFocus?.requestId ?? null,
+          isCancelled,
+        );
       }
 
       if (isOverview && !hasFocusFov) {
@@ -726,7 +776,25 @@ export function AladinMap({
       };
 
       viewRef.current = view;
+      // Aladin Lite v3 implements getRaDec() at runtime, but its bundled
+      // TypeScript AladinView declaration omits that method.
+      atlasCameraCallbackRef.current?.(
+        typeof (view as AladinView & { getRaDec?: unknown }).getRaDec ===
+          "function"
+          ? (view as AladinView & AtlasCamera)
+          : null,
+      );
       catalogRef.current = catalog;
+      if (!isOverview) {
+        const surveyView = view as AladinView & {
+          setImageSurvey: (id: string) => void | Promise<unknown>;
+        };
+        surveySwitcherRef.current = createGalaxySurveySwitcher(
+          initialSurvey,
+          (id) => surveyView.setImageSurvey(id),
+          (message) => surveyErrorRef.current?.(message),
+        );
+      }
       setMapError(null);
       setReady(true);
     }
@@ -743,12 +811,18 @@ export function AladinMap({
       cancelled = true;
       firstFrameCleanup.detach?.();
       atlasFitCleanup.detach?.();
+      detailFitCleanup.detach?.();
+      surveySwitcherRef.current?.dispose();
+      surveySwitcherRef.current = null;
+      overlayControllerRef.current?.dispose();
+      overlayControllerRef.current = null;
       listeners.detach?.();
       clearReticlePopupRef.current = null;
       refreshReticlePopupRef.current = null;
       catalogRef.current = null;
       contextCatalogRef.current = null;
       viewRef.current = null;
+      atlasCameraCallbackRef.current?.(null);
       mountedFocusRef.current = null;
       mountedFovRef.current = null;
       regionOverlayRef.current = null;
@@ -759,6 +833,59 @@ export function AladinMap({
       container.replaceChildren();
     };
   }, [isOverview, enableReticlePopups]);
+
+  // Live angular ruler: compute from the actual sky transform at the map centre.
+  // Do not derive a pixel scale from the requested initial FoV; Aladin can resize
+  // or the visitor can pan/zoom after initialization. This is galaxy-only.
+  useEffect(() => {
+    const view = viewRef.current;
+    const element = containerRef.current;
+    if (!ready || isOverview || !view || !element) return;
+    let raf: number | null = null;
+    function update(): void {
+      raf = null;
+      const compatible = view as AladinView & {
+        pix2world: (x: number, y: number) => number[] | null;
+      };
+      scaleCallbackRef.current?.(getGalaxyAngularScale(compatible));
+    }
+    function schedule(): void {
+      if (raf !== null) cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(update);
+    }
+    view.on("zoomChanged", schedule);
+    element.addEventListener("pointerup", schedule);
+    element.addEventListener("wheel", schedule, { passive: true });
+    const resizeObserver =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(schedule)
+        : null;
+    resizeObserver?.observe(element);
+    schedule();
+    return () => {
+      if (raf !== null) cancelAnimationFrame(raf);
+      resizeObserver?.disconnect();
+      element.removeEventListener("pointerup", schedule);
+      element.removeEventListener("wheel", schedule);
+      if (typeof view.off === "function") view.off("zoomChanged");
+      scaleCallbackRef.current?.(null);
+    };
+  }, [ready, isOverview]);
+
+  // Comparison modifies only a named IMAGE layer; geometry and catalogues persist.
+  useEffect(() => {
+    if (ready && !isOverview) {
+      overlayControllerRef.current?.request(
+        detailOverlaySurveyId,
+        detailOverlayOpacity,
+      );
+    }
+  }, [ready, isOverview, detailOverlaySurveyId, detailOverlayOpacity]);
+
+  // Switching HiPS never remounts Aladin or recalibrates the adopted a26 FoV.
+  useEffect(() => {
+    if (ready && !isOverview) surveySwitcherRef.current?.request(mapSurvey);
+  }, [ready, isOverview, mapSurvey]);
 
   useEffect(() => {
     referenceObjectsRef.current = referenceObjects ?? objects;
@@ -819,17 +946,19 @@ export function AladinMap({
       previous.fov === focus.fov
     )
       return;
-    // A requested new focus is handled independently of initialization.
+    // New object => restore its adopted a26 field, even when both objects
+    // have the same angular diameter and the previous map was user-zoomed.
     mountedFocusRef.current = focus;
-    if (
-      focus.fov !== undefined &&
-      Number.isFinite(focus.fov) &&
-      focus.fov > 0
-    ) {
-      view.setFoV(focus.fov);
+    const requested =
+      focus.fov !== undefined && Number.isFinite(focus.fov) && focus.fov > 0
+        ? focus.fov
+        : mapFov;
+    if (!isOverview && Number.isFinite(requested) && requested > 0) {
+      view.setFoV(requested);
+      mountedFovRef.current = requested;
     }
     view.gotoRaDec(focus.ra, focus.dec);
-  }, [focus, ready]);
+  }, [focus, ready, isOverview, mapFov]);
 
   /** Same ICRS geometry for live preview and committed selection. */
   function paintCelestialRegion(

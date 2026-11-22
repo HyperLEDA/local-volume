@@ -1,3 +1,4 @@
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   collectionNeighbors,
@@ -5,6 +6,7 @@ import {
   markCollectionReturn,
 } from "../lib/collectionNavigation.ts";
 import { groupBrowseNeighbors, loadGroupBrowse } from "../lib/groupBrowsing.ts";
+import { headerCompactAtScroll } from "../lib/headerScroll.ts";
 import saoLogo from "../images/sao.png";
 import ledaLogo from "../images/leda.png";
 import ledaDarkLogo from "../images/leda-dark.png";
@@ -139,20 +141,95 @@ function NeighborLink({
   );
 }
 
+// The bottom navigation is shown at exactly this CSS viewport breakpoint.
+// Render the upper navigation conditionally so a conflicting stylesheet cannot
+// display two copies or create horizontal overflow at browser zoom > 100%.
+const BOTTOM_NAV_QUERY = "(max-width: 700px)";
+const LARGE_HEADER_QUERY = "(min-width: 1350px)";
+
+function subscribeHeaderMedia(onChange: () => void): () => void {
+  const bottom = window.matchMedia(BOTTOM_NAV_QUERY);
+  const wide = window.matchMedia(LARGE_HEADER_QUERY);
+  bottom.addEventListener("change", onChange);
+  wide.addEventListener("change", onChange);
+  return () => {
+    bottom.removeEventListener("change", onChange);
+    wide.removeEventListener("change", onChange);
+  };
+}
+function bottomNavVisible(): boolean {
+  return (
+    typeof window !== "undefined" && window.matchMedia(BOTTOM_NAV_QUERY).matches
+  );
+}
+function headerViewportWide(): boolean {
+  return (
+    typeof window !== "undefined" &&
+    window.matchMedia(LARGE_HEADER_QUERY).matches
+  );
+}
+
 export function CatalogHeader() {
   const { pathname, search } = useLocation();
+  const mobileHeader = useSyncExternalStore(
+    subscribeHeaderMedia,
+    bottomNavVisible,
+    () => false,
+  );
+  const wideHeader = useSyncExternalStore(
+    subscribeHeaderMedia,
+    headerViewportWide,
+    () => false,
+  );
   const atlasActive = pathname === "/" || pathname.startsWith("/object/");
   const groupsActive =
     pathname === "/groups" || pathname.startsWith("/groups/");
   const documentsActive = pathname === "/documents";
   const acknowledgementsActive = pathname === "/acknowledgements";
   const context = resolveHeaderContext(pathname, search);
+  const [compact, setCompact] = useState(() =>
+    typeof window !== "undefined"
+      ? headerCompactAtScroll(window.scrollY, false)
+      : false,
+  );
+
+  useEffect(() => {
+    function syncScroll(): void {
+      setCompact((previous) => headerCompactAtScroll(window.scrollY, previous));
+    }
+    window.addEventListener("scroll", syncScroll, { passive: true });
+    syncScroll(); // Restore state after browser history scroll restoration.
+    return () => window.removeEventListener("scroll", syncScroll);
+  }, []);
+
+  // The Atlas/listing header must not exist when the bottom nav is shown.
+  // Object/group routes retain only contextual Back and Previous/Next controls.
+  const expandedHeader = !compact && wideHeader && !mobileHeader;
+  if (mobileHeader && context === null) return null;
 
   return (
     <header
-      className={`catalog-header catalog-header--unified${context ? " catalog-header--contextual" : ""}`}
+      className={`catalog-header catalog-header--unified${context ? " catalog-header--contextual" : ""}${compact ? " catalog-header--compact" : ""}`}
+      style={
+        mobileHeader
+          ? {
+              minHeight: 52,
+              padding: "6px 8px",
+              gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
+            }
+          : expandedHeader
+            ? { minHeight: 96, padding: "10px 12px" }
+            : undefined
+      }
     >
-      <div className="catalog-header-edge catalog-header-edge--left">
+      <div
+        className="catalog-header-edge catalog-header-edge--left"
+        style={
+          mobileHeader
+            ? { gridColumn: 1, gridRow: 1, justifyContent: "flex-start" }
+            : undefined
+        }
+      >
         {context && (
           <Link
             to={context.backHref}
@@ -170,68 +247,125 @@ export function CatalogHeader() {
             </span>
           </Link>
         )}
-        <nav
-          className="catalog-header-quicknav catalog-header-quicknav--left"
-          aria-label="Main sections"
-        >
-          <Link to="/" aria-current={atlasActive ? "page" : undefined}>
-            Atlas
-          </Link>
-          <Link to="/groups" aria-current={groupsActive ? "page" : undefined}>
-            Groups
-          </Link>
-        </nav>
-      </div>
-      <div className="catalog-header-identity">
-        <a
-          className="catalog-logo catalog-logo--sao"
-          href="https://www.sao.ru"
-          aria-label="SAO website"
-        >
-          <img src={saoLogo} alt="SAO" />
-        </a>
-        <h1 className="catalog-header-title--atlas">
-          <Link to="/">
-            <span className="catalog-title-main">LV LEDA</span>
-            <span className="catalog-title-subtitle">
-              Galaxies of the Nearby Universe
-            </span>
-          </Link>
-        </h1>
-        <a
-          className="catalog-logo catalog-logo--leda"
-          href="https://leda.sao.ru/"
-          aria-label="LEDA website"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img className="leda-logo-light" src={ledaLogo} alt="LEDA" />
-          <img
-            className="leda-logo-dark"
-            src={ledaDarkLogo}
-            alt=""
-            aria-hidden="true"
-          />
-        </a>
-      </div>
-      <div className="catalog-header-edge catalog-header-edge--right">
-        <nav
-          className="catalog-header-quicknav catalog-header-quicknav--right"
-          aria-label="Reference sections"
-        >
-          <Link
-            to="/documents"
-            aria-current={documentsActive ? "page" : undefined}
+        {!mobileHeader && (
+          <nav
+            className="catalog-header-quicknav catalog-header-quicknav--left"
+            aria-label="Main sections"
           >
-            Documents
-          </Link>
-          <Link
-            to="/acknowledgements"
-            aria-current={acknowledgementsActive ? "page" : undefined}
+            <Link
+              style={
+                expandedHeader
+                  ? { fontSize: "0.95rem", minHeight: 46, padding: "10px 12px" }
+                  : undefined
+              }
+              to="/"
+              aria-current={atlasActive ? "page" : undefined}
+            >
+              Atlas
+            </Link>
+            <Link
+              style={
+                expandedHeader
+                  ? { fontSize: "0.95rem", minHeight: 46, padding: "10px 12px" }
+                  : undefined
+              }
+              to="/groups"
+              aria-current={groupsActive ? "page" : undefined}
+            >
+              Groups
+            </Link>
+          </nav>
+        )}
+      </div>
+      {!mobileHeader && (
+        <div className="catalog-header-identity">
+          <a
+            className="catalog-logo catalog-logo--sao"
+            style={expandedHeader ? { width: 62, height: 62 } : undefined}
+            href="https://www.sao.ru"
+            aria-label="SAO website"
           >
-            Acknowledgements
-          </Link>
-        </nav>
+            <img src={saoLogo} alt="SAO" />
+          </a>
+          <h1 className="catalog-header-title--atlas">
+            <Link to="/">
+              <span
+                className="catalog-title-main"
+                style={
+                  expandedHeader
+                    ? { fontSize: "2rem", lineHeight: 1.08 }
+                    : undefined
+                }
+              >
+                LV LEDA
+              </span>
+              <span
+                className="catalog-title-subtitle"
+                style={
+                  expandedHeader
+                    ? { fontSize: "1rem", lineHeight: 1.15 }
+                    : undefined
+                }
+              >
+                Galaxies of the Nearby Universe
+              </span>
+            </Link>
+          </h1>
+          <a
+            className="catalog-logo catalog-logo--leda"
+            style={expandedHeader ? { width: 62, height: 62 } : undefined}
+            href="https://leda.sao.ru/"
+            aria-label="LEDA website"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img className="leda-logo-light" src={ledaLogo} alt="LEDA" />
+            <img
+              className="leda-logo-dark"
+              src={ledaDarkLogo}
+              alt=""
+              aria-hidden="true"
+            />
+          </a>
+        </div>
+      )}
+      <div
+        className="catalog-header-edge catalog-header-edge--right"
+        style={
+          mobileHeader
+            ? { gridColumn: 2, gridRow: 1, justifyContent: "flex-end" }
+            : undefined
+        }
+      >
+        {!mobileHeader && (
+          <nav
+            className="catalog-header-quicknav catalog-header-quicknav--right"
+            aria-label="Reference sections"
+          >
+            <Link
+              style={
+                expandedHeader
+                  ? { fontSize: "0.95rem", minHeight: 46, padding: "10px 12px" }
+                  : undefined
+              }
+              to="/documents"
+              aria-current={documentsActive ? "page" : undefined}
+            >
+              Documents
+            </Link>
+            <Link
+              style={
+                expandedHeader
+                  ? { fontSize: "0.95rem", minHeight: 46, padding: "10px 12px" }
+                  : undefined
+              }
+              to="/acknowledgements"
+              aria-current={acknowledgementsActive ? "page" : undefined}
+            >
+              Acknowledgements
+            </Link>
+          </nav>
+        )}
         {context && context.index !== null && context.total !== null && (
           <nav
             className="catalog-header-context-steps"

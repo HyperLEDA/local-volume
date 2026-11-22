@@ -1,25 +1,44 @@
-/* Localhost preview: widen all usable object-page content by another 5%. */
+/* #70 owner review: widen the GALAXY workspace without enlarging its
+   670px sky map. Atlas and Groups keep their existing page widths. */
 body:has(.catalog--object) .app-workspace {
-  max-width: 1900px;
+  --galaxy-workspace-max-width: 1740px;
+  max-width: var(--galaxy-workspace-max-width);
   width: 100%;
 }
 
 .catalog.catalog--object {
-  max-width: 1586px; /* 1510px * 1.05 */
+  max-width: var(--galaxy-workspace-max-width, 1740px);
   width: 100%;
   margin-inline: auto;
 }
 
-/* Keep the sky and measurements balanced across notebook/desktop sizes. */
+/* #70 owner review: the map should remain visually dominant without forcing
+   the physical and observed tables to stack at wide desktop widths. Preserve
+   the 56% preference until the 670px cap, then give the rest to measurements.
+   Only the displayed image dimensions change; astronomical FoV is untouched. */
 .catalog--object .object-layout {
-  grid-template-columns: minmax(0, min(45%, 700px)) minmax(0, 1fr);
+  grid-template-columns: minmax(0, min(56%, 670px)) minmax(0, 1fr);
   justify-content: stretch;
-  gap: clamp(10px, 1.1vw, 18px);
+  gap: var(--layout-column-gap, 24px);
 }
 
 .catalog--object .catalog-sky,
 .catalog--object .object-details {
   min-width: 0;
+}
+
+.catalog--object .object-layout > .catalog-sky {
+  width: 100%;
+  max-width: 670px;
+  justify-self: start;
+}
+
+.catalog--object .object-title {
+  font-family: var(--font-display, Georgia, serif);
+  font-size: clamp(1.625rem, 2.4vw, var(--font-size-object, 30px));
+  font-weight: 600;
+  line-height: 1.18;
+  overflow-wrap: anywhere;
 }
 
 .catalog--object .object-layout--no-map {
@@ -30,18 +49,21 @@ body:has(.catalog--object) .app-workspace {
   justify-self: center;
 }
 
-/* Preserve the content-sized Observed / Physical tables without leaving
-   the entire pair pinned to the left of an oversized grid track. */
+/* Two scientific tables share a row only if BOTH can be at least 352px
+   wide (plus the 12px gutter). auto-fit also responds to browser zoom and
+   the actual details column, avoiding page-level 1050px guesses. */
 .catalog--object .object-details {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* The actual right-hand column determines the two-table breakpoint. */
+  container: galaxy-details / inline-size;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 352px), 1fr));
   justify-content: stretch;
   width: 100%;
   min-width: 0;
   align-items: start;
   align-content: start;
-  column-gap: 12px;
-  row-gap: 16px;
+  column-gap: var(--space-3, 12px);
+  row-gap: var(--space-4, 16px);
 }
 
 .catalog--object .object-details > .object-identity,
@@ -49,64 +71,187 @@ body:has(.catalog--object) .app-workspace {
   grid-column: 1 / -1;
 }
 
-/* Compact coordinates: equatorial positions wrap into two lines, not a wide card. */
+/* #70: legible three-system coordinate panel, including a dedicated
+   decimal-degree column beside ICRS sexagesimal alpha / delta.
+   This is display-only: all source precision remains intact. */
 .catalog--object .object-details > .object-coordinates {
-  justify-self: start;
-  width: 404px;
+  justify-self: stretch;
+  width: 100%;
   max-width: 100%;
   box-sizing: border-box;
+  padding: 12px 14px;
+}
+
+.catalog--object .object-details > .object-coordinates .object-section-heading {
+  font-size: 1rem;
+  margin-bottom: 12px;
+}
+
+.catalog--object .object-details > .object-coordinates .coordinate-systems {
+  display: grid;
+  grid-template-columns: minmax(360px, 2.3fr) minmax(100px, 0.65fr) minmax(
+      128px,
+      0.85fr
+    );
+  gap: 12px;
+  align-items: start;
 }
 
 .catalog--object .object-details > .object-coordinates .coordinate-system {
-  grid-template-columns: 112px minmax(0, 1fr);
-  column-gap: 6px;
+  display: block;
+  min-width: 0;
+  padding: 0 0 0 12px;
+  border-top: 0;
+  border-left: 1px solid var(--line);
+}
+
+/* On desktop place the ICRS sexagesimal/degree columns immediately to
+   the RIGHT of the system name, rather than underneath it. */
+.catalog--object
+  .object-details
+  > .object-coordinates
+  .coordinate-system:first-child {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  column-gap: 12px;
+  align-items: start;
+  padding-left: 0;
+  border-left: 0;
+}
+
+.catalog--object
+  .object-details
+  > .object-coordinates
+  .coordinate-system:first-child
+  > h4 {
+  margin: 2px 0 0;
+  white-space: nowrap;
+}
+
+.catalog--object
+  .object-details
+  > .object-coordinates
+  .coordinate-system:first-child
+  > .coordinate-equatorial-table {
+  justify-self: start;
+  min-width: 0;
+}
+
+.catalog--object .object-details > .object-coordinates .coordinate-system h4 {
+  margin: 0 0 11px;
+  font-size: 0.94rem;
+  font-weight: 600;
+  line-height: 1.3;
 }
 
 .catalog--object .object-details > .object-coordinates .coordinate-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  column-gap: 8px;
-}
-
-/* Right ascension and declination keep full precision, each on its own line. */
-.catalog--object
-  .object-details
-  > .object-coordinates
-  .coordinate-system:first-child
-  .coordinate-grid {
-  grid-template-columns: minmax(0, 1fr);
-  row-gap: 5px;
-}
-
-.catalog--object
-  .object-details
-  > .object-coordinates
-  .coordinate-system:first-child
-  .coordinate-value {
   display: grid;
-  grid-template-columns: 16px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: 9px;
+}
+
+.catalog--object .object-details > .object-coordinates .coordinate-value {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
   align-items: baseline;
-  column-gap: 5px;
-  row-gap: 1px;
+  column-gap: 7px;
+  row-gap: 2px;
+  min-width: 0;
+}
+
+.catalog--object .object-details > .object-coordinates .coordinate-label {
+  grid-column: 1;
+  font-size: 0.94rem;
+}
+
+.catalog--object .object-details > .object-coordinates .coordinate-number {
+  grid-column: 2;
+  min-width: 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums lining-nums;
+  overflow-wrap: anywhere;
+}
+
+/* ICRS uses a real two-column scientific table: sexagesimal coordinates
+   and decimal degrees have independent, LEFT-aligned columns. The divider
+   immediately follows the sexagesimal values, not the card's right edge. */
+.catalog--object
+  .object-details
+  > .object-coordinates
+  .coordinate-equatorial-table {
+  width: auto;
+  max-width: 100%;
+  margin: 0;
+  border-collapse: collapse;
+  table-layout: auto;
+  color: var(--ink);
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums lining-nums;
 }
 
 .catalog--object
   .object-details
   > .object-coordinates
-  .coordinate-system:first-child
-  .coordinate-secondary {
-  grid-column: 2;
-  margin-left: 0;
-  flex-basis: auto;
+  .coordinate-equatorial-table
+  :is(th, td) {
+  width: auto;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  vertical-align: baseline;
+  white-space: nowrap;
 }
 
-.catalog--object .object-details > [aria-label="Observed Properties"] {
-  grid-column: 1;
-  justify-self: start;
+.catalog--object
+  .object-details
+  > .object-coordinates
+  .coordinate-equatorial-table
+  thead
+  th {
+  padding-bottom: 7px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 500;
 }
 
-.catalog--object .object-details > [aria-label="Physical Properties"] {
-  grid-column: 2;
-  justify-self: start;
+.catalog--object
+  .object-details
+  > .object-coordinates
+  .coordinate-equatorial-table
+  tbody
+  th {
+  padding-right: 8px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.catalog--object
+  .object-details
+  > .object-coordinates
+  .coordinate-equatorial-table
+  tbody
+  tr
+  + tr
+  :is(th, td) {
+  padding-top: 9px;
+}
+
+.catalog--object
+  .object-details
+  > .object-coordinates
+  .coordinate-equatorial-table
+  :is(th, td):nth-child(2) {
+  padding-right: 12px;
+}
+
+.catalog--object
+  .object-details
+  > .object-coordinates
+  .coordinate-equatorial-table
+  :is(th, td):nth-child(3) {
+  border-left: 1px solid var(--line);
+  padding-left: 12px;
 }
 
 .catalog--object .object-details > [aria-label="Observed Properties"],
@@ -115,7 +260,9 @@ body:has(.catalog--object) .app-workspace {
   max-width: 100%;
   width: 100%;
   justify-self: stretch;
-  /* Allow full-height property cards; avoid independent desktop scrollbars. */
+  /* Do not generate implicit columns when auto-fit chooses one track. */
+  grid-column: auto;
+  /* Preserve full-height scientific tables; no independent desktop scroller. */
   overflow: visible;
 }
 
@@ -131,8 +278,22 @@ body:has(.catalog--object) .app-workspace {
   padding-inline: clamp(4px, 0.45vw, 9px);
 }
 
+/* Full scientific values, units and uncertainty strings remain available.
+   Wrapping is preferable to clipping or shrinking the whole table's text. */
+.catalog--object .object-details .parameter-block-reading,
+.catalog--object .object-details .parameter-block-value,
+.catalog--object .object-details .parameter-block-error,
+.catalog--object .object-details .parameter-block-unit {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
 .catalog--object .parameter-matrix .parameter-matrix-caption {
   text-align: center;
+  font-family: var(--font-display, Georgia, serif);
+  font-size: var(--font-size-panel, 17px);
+  font-weight: 600;
 }
 
 .catalog--object .physical-parameter-matrix {
@@ -150,65 +311,83 @@ body:has(.catalog--object) .app-workspace {
   text-decoration: underline;
 }
 
-/* Adapt to the actual object panel, regardless of monitor or browser zoom. */
-@container galaxy-page (max-width: 1320px) {
+/* Preserve a usable ~377px details track alongside the 56% sky view.
+   A 1024px laptop viewport can still show both panels side by side. */
+@container galaxy-page (max-width: 880px) {
   .catalog--object .object-layout {
-    gap: 12px;
-  }
-
-  .catalog--object .object-details {
-    column-gap: 8px;
-    row-gap: 12px;
-  }
-}
-
-/* On small laptops keep Aladin LEFT and stack the two property cards RIGHT. */
-@container galaxy-page (max-width: 1050px) {
-  .catalog--object .object-details {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .catalog--object .object-details > [aria-label="Observed Properties"],
-  .catalog--object .object-details > [aria-label="Physical Properties"] {
-    grid-column: 1;
+  .catalog--object .object-layout > .catalog-sky {
+    max-width: 670px;
   }
 }
 
-/* Only genuinely narrow content boxes get the mobile image-first layout. */
-@container galaxy-page (max-width: 680px) {
+/* On very narrow screens, allow a locally scrolling TABLE only when a
+   full measurement cannot wrap. Keep precision rather than ellipsizing. */
+@container galaxy-page (max-width: 480px) {
   .catalog--object .object-details > .object-params {
     overflow-x: auto;
   }
-
-  .catalog--object .object-layout {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .catalog--object .catalog-sky {
-    width: 100%;
-    max-width: 500px;
-    justify-self: start;
-  }
-
-  .catalog--object .object-details {
-    width: 100%;
-    justify-self: stretch;
-  }
 }
 
-@media (max-width: 580px) {
-  .catalog--object .object-details > .object-coordinates .coordinate-system {
-    grid-template-columns: minmax(0, 1fr);
+/* Coordinate layout depends on DETAILS width, which can differ greatly
+   from the viewport and the whole galaxy-page container. */
+@container galaxy-details (max-width: 700px) {
+  .catalog--object .object-details > .object-coordinates .coordinate-systems {
+    grid-template-columns: minmax(360px, 1.9fr) minmax(100px, 1fr);
   }
 
-  .catalog--object .object-details > .object-coordinates .coordinate-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
   .catalog--object
     .object-details
     > .object-coordinates
-    .coordinate-system:first-child
-    .coordinate-grid {
+    .coordinate-system:nth-child(3) {
+    grid-column: 1 / -1;
+    padding: 10px 0 0;
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+}
+
+@container galaxy-details (max-width: 520px) {
+  .catalog--object .object-details > .object-coordinates .coordinate-systems {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* There is no room for a side-by-side system name on narrow panels. */
+  .catalog--object
+    .object-details
+    > .object-coordinates
+    .coordinate-system:first-child {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 8px;
+  }
+
+  .catalog--object .object-details > .object-coordinates .coordinate-system,
+  .catalog--object
+    .object-details
+    > .object-coordinates
+    .coordinate-system:first-child {
+    grid-column: 1;
+    padding: 10px 0 0;
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .catalog--object
+    .object-details
+    > .object-coordinates
+    .coordinate-system:first-child {
+    padding-top: 0;
+    border-top: 0;
+  }
+}
+
+@container galaxy-details (max-width: 340px) {
+  .catalog--object
+    .object-details
+    > .object-coordinates
+    .coordinate-system:first-child {
+    overflow-x: auto;
   }
 }

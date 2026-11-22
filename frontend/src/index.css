@@ -1,47 +1,119 @@
+/* LV LEDA Design System v2.0 — Observatory Graphite.
+ * Keep UI palette separate from the fixed scientific morphology palette.
+ * Existing component styles continue to use the compatibility aliases below;
+ * migrate them to --ui-* tokens as their own page PRs are reviewed.
+ */
 :root {
-  --bg: #e4ecef;
-  --ink: #14202b;
-  --muted: #4c6270;
-  --card: #f6fafb;
-  --line: #c3d2da;
-  --accent: #0c5f68;
-  --danger: #8d2f2f;
-  --font-body: system-ui, sans-serif;
-  --grid-dots: rgb(20 32 43 / 8%);
-  --table-header: rgb(12 95 104 / 8%);
-  --table-stripe: rgb(20 32 43 / 3%);
-  --hover-tint: rgb(12 95 104 / 10%);
-  color-scheme: light;
+  color-scheme: dark;
+
+  --font-ui: "Source Sans 3 Variable", "Segoe UI", Arial, sans-serif;
+  --font-display: "Source Serif 4 Variable", Georgia, serif;
+  --font-code: "Source Code Pro", Consolas, monospace;
+  --font-math: "STIX Two Math", "Cambria Math", serif;
+  --font-body: var(--font-ui);
+  --font-size-object: 30px;
+  --font-size-panel: 17px;
+  --font-size-value: 16px;
+  --font-size-label: 13px;
+
+  --ui-canvas: #101820;
+  --ui-sidebar: #0b1116;
+  --ui-surface: #192630;
+  --ui-surface-raised: #21313d;
+  --ui-border: #354652;
+  --ui-border-control: #627888;
+  --ui-text: #e9f0f3;
+  --ui-text-secondary: #aebfc9;
+  --ui-text-muted: #8ba0ae;
+  --ui-accent: #82c4cb;
+  --ui-accent-subtle: #23414a;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --layout-sidebar-width: 52px;
+  --layout-sidebar-open-width: 280px;
+  --layout-header-height: 68px;
+  --layout-page-gutter: 28px;
+  --layout-column-gap: 24px;
+  --layout-section-gap: 32px;
+  --layout-max-width: 1480px;
+  --galaxy-map-max-size: 620px;
+  --group-map-max-size: 800px;
+  --atlas-aspect-ratio: 2 / 1;
+  --galaxy-map-aspect-ratio: 1 / 1;
+  --group-map-aspect-ratio: 1 / 1;
+  --group-preview-aspect-ratio: 1 / 1;
+  --radius-control: 5px;
+  --radius-panel: 7px;
+  --control-height: 38px;
+  --touch-target-min: 44px;
+  --sidebar-motion-duration: 180ms;
+
+  /* Retain the current LV LEDA semantic mapping during the staged rollout. */
+  --bg: var(--ui-canvas);
+  --ink: var(--ui-text);
+  --muted: var(--ui-text-secondary);
+  --card: var(--ui-surface);
+  --line: var(--ui-border);
+  --accent: var(--ui-accent);
+  --danger: #ffadad;
+  --table-header: rgb(130 196 203 / 11%);
+  --table-stripe: rgb(255 255 255 / 3%);
+  --hover-tint: rgb(130 196 203 / 12%);
+
   color: var(--ink);
   background-color: var(--bg);
-  background-image: radial-gradient(
-    circle at 1px 1px,
-    var(--grid-dots) 1px,
-    transparent 0
-  );
-  background-size: 18px 18px;
-  font-family: var(--font-body);
+  background-image: none;
+  font-family: var(--font-ui);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
 
-:root:not([data-theme="light"]) {
-  --bg: #111920;
-  --ink: #e8f0f4;
-  --muted: #aebfca;
-  --card: #1d2a33;
-  --line: #41545f;
-  --accent: #75d1dc;
-  --danger: #ffadad;
-  --grid-dots: rgb(226 242 250 / 5%);
-  --table-header: rgb(117 209 220 / 11%);
-  --table-stripe: rgb(255 255 255 / 3%);
-  --hover-tint: rgb(117 209 220 / 12%);
-  color-scheme: dark;
+:root[data-theme="light"] {
+  color-scheme: light;
+  --ui-canvas: #f2f5f5;
+  --ui-sidebar: #0b1116;
+  --ui-surface: #ffffff;
+  --ui-surface-raised: #e9eff1;
+  --ui-border: #ccd6db;
+  --ui-border-control: #82939f;
+  --ui-text: #192a34;
+  --ui-text-secondary: #4d6470;
+  --ui-text-muted: #586e7b;
+  --ui-accent: #1b6572;
+  --ui-accent-subtle: #ddecee;
+  --danger: #8d2f2f;
+  --table-header: rgb(27 101 114 / 8%);
+  --table-stripe: rgb(25 42 52 / 3%);
+  --hover-tint: rgb(27 101 114 / 10%);
+}
+
+.scientific-number {
+  font-family: var(--font-ui);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --sidebar-motion-duration: 0ms;
+  }
 }
 
 body {
   margin: 0;
+  font-family: var(--font-ui);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
 }
 
 h1 {
@@ -189,9 +261,10 @@ h1 {
 }
 
 .catalog-header-title--atlas .catalog-title-main {
-  font-size: clamp(1rem, 1.55vw, 1.25rem);
-  font-weight: 700;
-  letter-spacing: 0.025em;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0;
 }
 
 .catalog-header-title--atlas .catalog-title-subtitle {
@@ -965,4 +1038,11 @@ h1 {
     min-width: 100%;
     max-width: none;
   }
+}
+
+/* #70: Group and Galaxy details have the same desktop workspace width.
+   The ordinary Atlas and Groups listing keep their independent limits. */
+body:has(.group-details) .app-workspace {
+  width: 100%;
+  max-width: 1740px;
 }

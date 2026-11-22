@@ -27,7 +27,8 @@ test('JPEG and hover share image coordinate transform, without imaginary PGC for
   expect(renderer).toContain('const { xMin, xMax, yMin, yMax, px, py } = plotCoordinates(plot);');
   expect(renderer).toContain('if (plot.kind !== "scatter" || plot.unavailable) return [];');
   expect(hover).toContain('figureImageHits(figure)');
-  expect(hover).toContain('href={`/object/${hover.point.pgc}`}');
+  expect(hover).toContain('const shown = pinned ?? hover;');
+  expect(hover).toContain('href={`/object/${shown.point.pgc}`}');
   expect(hover).toContain('D<sub>sat</sub> − D<sub>MD</sub>');
 });
 
