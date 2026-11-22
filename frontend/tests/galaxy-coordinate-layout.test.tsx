@@ -13,11 +13,13 @@ describe("#70: coordinate triptych uses existing scientific formatters", () => {
   const html = renderToStaticMarkup(<ObjectCoordinates object={galaxy} />);
 
   test("preserves three coordinate systems in the requested order", () => {
-    const headings = [...html.matchAll(/<h4>(.*?)<\/h4>/g)].map((m) =>
-      m[1].replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim(),
+    // Compare the actual heading markup directly. Stripping tags with a
+    // regex is neither necessary for this test nor a safe HTML sanitizer.
+    const headings = [...html.matchAll(/<h4>(.*?)<\/h4>/g)].map(
+      (match) => match[1].trim(),
     );
     expect(headings).toEqual([
-      "Equatorial ICRS",
+      "Equatorial <span>ICRS</span>",
       "Galactic",
       "Supergalactic",
     ]);
