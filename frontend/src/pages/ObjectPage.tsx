@@ -16,7 +16,10 @@ import { ExternalCatalogLinks } from "../components/ExternalCatalogLinks.tsx";
 import { ObservedParameterCards } from "../components/ObservedParameterCards.tsx";
 import { PhysicalParametersTable } from "../components/PhysicalParametersTable.tsx";
 import { objectFovDecision } from "../lib/objectFov.ts";
-import { projectedScaleLabel, type GalaxyAngularScale } from "../lib/galaxyAngularScale.ts";
+import {
+  projectedScaleLabel,
+  type GalaxyAngularScale,
+} from "../lib/galaxyAngularScale.ts";
 import { otherSkyObjects } from "../lib/skyContext.ts";
 import {
   GALAXY_SURVEYS,
@@ -44,10 +47,13 @@ export function ObjectPage() {
   const [surveyError, setSurveyError] = useState<string | null>(null);
   const survey = galaxySurvey(surveyKey);
   const [comparisonEnabled, setComparisonEnabled] = useState(false);
-  const [comparisonSurveyKey, setComparisonSurveyKey] = useState<GalaxySurveyKey>("galex");
+  const [comparisonSurveyKey, setComparisonSurveyKey] =
+    useState<GalaxySurveyKey>("galex");
   const [comparisonOpacityPercent, setComparisonOpacityPercent] = useState(50);
   const [comparisonError, setComparisonError] = useState<string | null>(null);
-  const [angularScale, setAngularScale] = useState<GalaxyAngularScale | null>(null);
+  const [angularScale, setAngularScale] = useState<GalaxyAngularScale | null>(
+    null,
+  );
   useEffect(() => setAngularScale(null), [pgc]);
   const comparisonSurvey = galaxySurvey(comparisonSurveyKey);
 
@@ -173,11 +179,16 @@ export function ObjectPage() {
   const initialFov = data === null ? null : objectFovDecision(data);
   // The detail API does not expose the adopted distance; use the matching
   // canonical PGC from the actual catalogue list. Never invent a distance.
-  const scaleDistance = data === null
-    ? null : (skyCatalog.find((row) => row.pgc === data.pgc) ?? null);
-  const projectedScale = angularScale === null
-    ? null : projectedScaleLabel(angularScale.arcmin, scaleDistance?.dist ?? null);
-  const compactProjectedScale = projectedScale?.replace(/ projected$/, "") ?? null;
+  const scaleDistance =
+    data === null
+      ? null
+      : (skyCatalog.find((row) => row.pgc === data.pgc) ?? null);
+  const projectedScale =
+    angularScale === null
+      ? null
+      : projectedScaleLabel(angularScale.arcmin, scaleDistance?.dist ?? null);
+  const compactProjectedScale =
+    projectedScale?.replace(/ projected$/, "") ?? null;
 
   return (
     <main className="catalog catalog--object">
@@ -208,7 +219,9 @@ export function ObjectPage() {
                     onDetailScaleChange={setAngularScale}
                     detailSurveyId={survey.hips}
                     onDetailSurveyError={setSurveyError}
-                    detailOverlaySurveyId={comparisonEnabled ? comparisonSurvey.hips : null}
+                    detailOverlaySurveyId={
+                      comparisonEnabled ? comparisonSurvey.hips : null
+                    }
                     detailOverlayOpacity={comparisonOpacityPercent / 100}
                     onDetailOverlayError={setComparisonError}
                   />
@@ -220,7 +233,9 @@ export function ObjectPage() {
                         `Angular scale ${angularScale.angleLabel}` +
                         (projectedScale !== null && scaleDistance !== null
                           ? `, approximately ${projectedScale} at adopted distance ${scaleDistance.dist} Mpc` +
-                            (scaleDistance.distance_method ? ` (${scaleDistance.distance_method})` : "")
+                            (scaleDistance.distance_method
+                              ? ` (${scaleDistance.distance_method})`
+                              : "")
                           : "")
                       }
                     >
@@ -229,15 +244,23 @@ export function ObjectPage() {
                         style={{ width: angularScale.pixels }}
                         aria-hidden="true"
                       />
-                      <span className="galaxy-angular-scale-label" aria-hidden="true">
+                      <span
+                        className="galaxy-angular-scale-label"
+                        aria-hidden="true"
+                      >
                         {angularScale.angleLabel}
-                        {compactProjectedScale !== null ? ` ≈ ${compactProjectedScale}` : ""}
+                        {compactProjectedScale !== null
+                          ? ` ≈ ${compactProjectedScale}`
+                          : ""}
                       </span>
                     </div>
                   )}
                 </div>
                 <div className="galaxy-survey-controls">
-                  <span className="galaxy-survey-label" id="galaxy-survey-label">
+                  <span
+                    className="galaxy-survey-label"
+                    id="galaxy-survey-label"
+                  >
                     Sky survey
                   </span>
                   <div
@@ -256,7 +279,9 @@ export function ObjectPage() {
                           setSurveyKey(item.key);
                           // Keep the comparison meaningful when the base is changed.
                           if (comparisonSurveyKey === item.key) {
-                            setComparisonSurveyKey(item.key === "dss2" ? "galex" : "dss2");
+                            setComparisonSurveyKey(
+                              item.key === "dss2" ? "galex" : "dss2",
+                            );
                           }
                         }}
                       >
@@ -283,7 +308,10 @@ export function ObjectPage() {
                     </label>
                     {comparisonEnabled ? (
                       <div className="galaxy-comparison-panel">
-                        <span className="galaxy-comparison-heading" id="galaxy-comparison-heading">
+                        <span
+                          className="galaxy-comparison-heading"
+                          id="galaxy-comparison-heading"
+                        >
                           Overlay survey
                         </span>
                         <div
@@ -291,7 +319,9 @@ export function ObjectPage() {
                           role="group"
                           aria-labelledby="galaxy-comparison-heading"
                         >
-                          {GALAXY_SURVEYS.filter((item) => item.key !== surveyKey).map((item) => (
+                          {GALAXY_SURVEYS.filter(
+                            (item) => item.key !== surveyKey,
+                          ).map((item) => (
                             <button
                               type="button"
                               key={item.key}
@@ -306,7 +336,9 @@ export function ObjectPage() {
                             </button>
                           ))}
                         </div>
-                        <label htmlFor="galaxy-comparison-opacity">Overlay opacity</label>
+                        <label htmlFor="galaxy-comparison-opacity">
+                          Overlay opacity
+                        </label>
                         <input
                           id="galaxy-comparison-opacity"
                           type="range"
@@ -314,16 +346,24 @@ export function ObjectPage() {
                           max={100}
                           step={5}
                           value={comparisonOpacityPercent}
-                          onChange={(event) => setComparisonOpacityPercent(Number(event.currentTarget.value))}
+                          onChange={(event) =>
+                            setComparisonOpacityPercent(
+                              Number(event.currentTarget.value),
+                            )
+                          }
                         />
-                        <output htmlFor="galaxy-comparison-opacity">{comparisonOpacityPercent}%</output>
+                        <output htmlFor="galaxy-comparison-opacity">
+                          {comparisonOpacityPercent}%
+                        </output>
                         <div className="galaxy-survey-meta galaxy-comparison-meta">
                           <span>{comparisonSurvey.bands}</span>
                           <span>{comparisonSurvey.source}</span>
                         </div>
                       </div>
                     ) : null}
-                    {comparisonError ? <p role="alert">{comparisonError}</p> : null}
+                    {comparisonError ? (
+                      <p role="alert">{comparisonError}</p>
+                    ) : null}
                   </div>
                 </div>
                 {initialFov?.note ? (
@@ -341,7 +381,10 @@ export function ObjectPage() {
             ) : null}
             <div className="object-details">
               <section className="object-identity" aria-label="Object">
-                <div className="object-title-row" style={{ alignItems: "center" }}>
+                <div
+                  className="object-title-row"
+                  style={{ alignItems: "center" }}
+                >
                   <h2 className="object-title">{data.name}</h2>
                   {data.type_name?.trim() ? (
                     <span

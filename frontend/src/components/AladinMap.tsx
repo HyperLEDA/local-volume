@@ -51,9 +51,15 @@ import {
 } from "../lib/overviewMarkers.ts";
 import { formatJ2000Coordinate } from "../lib/popupCoordinates.ts";
 import { installDetailInitialFovCalibration } from "../lib/detailFovCalibration.ts";
-import { getGalaxyAngularScale, type GalaxyAngularScale } from "../lib/galaxyAngularScale.ts";
+import {
+  getGalaxyAngularScale,
+  type GalaxyAngularScale,
+} from "../lib/galaxyAngularScale.ts";
 import { createGalaxySurveySwitcher } from "../lib/galaxySurveySwitcher.ts";
-import { createGalaxyOverlayController, type ComparisonAladinView } from "../lib/galaxySurveyOverlay.ts";
+import {
+  createGalaxyOverlayController,
+  type ComparisonAladinView,
+} from "../lib/galaxySurveyOverlay.ts";
 
 // Aladin Lite v3 exposes these methods at runtime, but the npm typings used
 // by this project omit them. Keep the compatibility boundary local to the map.
@@ -343,8 +349,12 @@ export function AladinMap({
   const latestSurveyRef = useRef(mapSurvey);
   const surveyErrorRef = useRef(onDetailSurveyError);
   const overlayErrorRef = useRef(onDetailOverlayError);
-  const overlayControllerRef = useRef<ReturnType<typeof createGalaxyOverlayController> | null>(null);
-  const surveySwitcherRef = useRef<ReturnType<typeof createGalaxySurveySwitcher> | null>(null);
+  const overlayControllerRef = useRef<ReturnType<
+    typeof createGalaxyOverlayController
+  > | null>(null);
+  const surveySwitcherRef = useRef<ReturnType<
+    typeof createGalaxySurveySwitcher
+  > | null>(null);
   const latestFocusRef = useRef(focus);
   const mountedFocusRef = useRef<SkyFocus | null>(null);
   const mountedFovRef = useRef<number | null>(null);
@@ -769,7 +779,8 @@ export function AladinMap({
       // Aladin Lite v3 implements getRaDec() at runtime, but its bundled
       // TypeScript AladinView declaration omits that method.
       atlasCameraCallbackRef.current?.(
-        typeof (view as AladinView & { getRaDec?: unknown }).getRaDec === "function"
+        typeof (view as AladinView & { getRaDec?: unknown }).getRaDec ===
+          "function"
           ? (view as AladinView & AtlasCamera)
           : null,
       );
@@ -845,8 +856,10 @@ export function AladinMap({
     view.on("zoomChanged", schedule);
     element.addEventListener("pointerup", schedule);
     element.addEventListener("wheel", schedule, { passive: true });
-    const resizeObserver = typeof ResizeObserver !== "undefined"
-      ? new ResizeObserver(schedule) : null;
+    const resizeObserver =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(schedule)
+        : null;
     resizeObserver?.observe(element);
     schedule();
     return () => {
@@ -862,7 +875,10 @@ export function AladinMap({
   // Comparison modifies only a named IMAGE layer; geometry and catalogues persist.
   useEffect(() => {
     if (ready && !isOverview) {
-      overlayControllerRef.current?.request(detailOverlaySurveyId, detailOverlayOpacity);
+      overlayControllerRef.current?.request(
+        detailOverlaySurveyId,
+        detailOverlayOpacity,
+      );
     }
   }, [ready, isOverview, detailOverlaySurveyId, detailOverlayOpacity]);
 

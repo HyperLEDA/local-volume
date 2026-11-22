@@ -61,7 +61,9 @@ describe("#70: Galaxy Page geometry: balanced map and legible scientific data", 
     )?.[1];
     expect(icrs).toContain("display: grid;");
     expect(icrs).toContain("grid-template-columns: max-content minmax(0, 1fr);");
-    expect(css).toContain(".coordinate-system:first-child > .coordinate-equatorial-table");
+    expect(css).toMatch(
+      /\.coordinate-system:first-child\s*>\s*\.coordinate-equatorial-table\s*\{/,
+    );
     expect(css).toContain("@container galaxy-details (max-width: 520px)");
     expect(css).toContain("grid-template-columns: minmax(0, 1fr);");
   });

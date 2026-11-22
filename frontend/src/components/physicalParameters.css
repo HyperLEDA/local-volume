@@ -89,7 +89,10 @@ body:has(.catalog--object) .app-workspace {
 
 .catalog--object .object-details > .object-coordinates .coordinate-systems {
   display: grid;
-  grid-template-columns: minmax(360px, 2.3fr) minmax(100px, 0.65fr) minmax(128px, 0.85fr);
+  grid-template-columns: minmax(360px, 2.3fr) minmax(100px, 0.65fr) minmax(
+      128px,
+      0.85fr
+    );
   gap: 12px;
   align-items: start;
 }
@@ -104,7 +107,10 @@ body:has(.catalog--object) .app-workspace {
 
 /* On desktop place the ICRS sexagesimal/degree columns immediately to
    the RIGHT of the system name, rather than underneath it. */
-.catalog--object .object-details > .object-coordinates .coordinate-system:first-child {
+.catalog--object
+  .object-details
+  > .object-coordinates
+  .coordinate-system:first-child {
   display: grid;
   grid-template-columns: max-content minmax(0, 1fr);
   column-gap: 12px;
@@ -113,12 +119,20 @@ body:has(.catalog--object) .app-workspace {
   border-left: 0;
 }
 
-.catalog--object .object-details > .object-coordinates .coordinate-system:first-child > h4 {
+.catalog--object
+  .object-details
+  > .object-coordinates
+  .coordinate-system:first-child
+  > h4 {
   margin: 2px 0 0;
   white-space: nowrap;
 }
 
-.catalog--object .object-details > .object-coordinates .coordinate-system:first-child > .coordinate-equatorial-table {
+.catalog--object
+  .object-details
+  > .object-coordinates
+  .coordinate-system:first-child
+  > .coordinate-equatorial-table {
   justify-self: start;
   min-width: 0;
 }
@@ -162,7 +176,10 @@ body:has(.catalog--object) .app-workspace {
 /* ICRS uses a real two-column scientific table: sexagesimal coordinates
    and decimal degrees have independent, LEFT-aligned columns. The divider
    immediately follows the sexagesimal values, not the card's right edge. */
-.catalog--object .object-details > .object-coordinates .coordinate-equatorial-table {
+.catalog--object
+  .object-details
+  > .object-coordinates
+  .coordinate-equatorial-table {
   width: auto;
   max-width: 100%;
   margin: 0;
@@ -173,7 +190,11 @@ body:has(.catalog--object) .app-workspace {
   font-variant-numeric: tabular-nums lining-nums;
 }
 
-.catalog--object .object-details > .object-coordinates .coordinate-equatorial-table :is(th, td) {
+.catalog--object
+  .object-details
+  > .object-coordinates
+  .coordinate-equatorial-table
+  :is(th, td) {
   width: auto;
   border: 0;
   padding: 0;
@@ -182,28 +203,53 @@ body:has(.catalog--object) .app-workspace {
   white-space: nowrap;
 }
 
-.catalog--object .object-details > .object-coordinates .coordinate-equatorial-table thead th {
+.catalog--object
+  .object-details
+  > .object-coordinates
+  .coordinate-equatorial-table
+  thead
+  th {
   padding-bottom: 7px;
   color: var(--muted);
   font-size: 0.78rem;
   font-weight: 500;
 }
 
-.catalog--object .object-details > .object-coordinates .coordinate-equatorial-table tbody th {
+.catalog--object
+  .object-details
+  > .object-coordinates
+  .coordinate-equatorial-table
+  tbody
+  th {
   padding-right: 8px;
   color: var(--muted);
   font-weight: 500;
 }
 
-.catalog--object .object-details > .object-coordinates .coordinate-equatorial-table tbody tr + tr :is(th, td) {
+.catalog--object
+  .object-details
+  > .object-coordinates
+  .coordinate-equatorial-table
+  tbody
+  tr
+  + tr
+  :is(th, td) {
   padding-top: 9px;
 }
 
-.catalog--object .object-details > .object-coordinates .coordinate-equatorial-table :is(th, td):nth-child(2) {
+.catalog--object
+  .object-details
+  > .object-coordinates
+  .coordinate-equatorial-table
+  :is(th, td):nth-child(2) {
   padding-right: 12px;
 }
 
-.catalog--object .object-details > .object-coordinates .coordinate-equatorial-table :is(th, td):nth-child(3) {
+.catalog--object
+  .object-details
+  > .object-coordinates
+  .coordinate-equatorial-table
+  :is(th, td):nth-child(3) {
   border-left: 1px solid var(--line);
   padding-left: 12px;
 }
@@ -292,7 +338,10 @@ body:has(.catalog--object) .app-workspace {
     grid-template-columns: minmax(360px, 1.9fr) minmax(100px, 1fr);
   }
 
-  .catalog--object .object-details > .object-coordinates .coordinate-system:nth-child(3) {
+  .catalog--object
+    .object-details
+    > .object-coordinates
+    .coordinate-system:nth-child(3) {
     grid-column: 1 / -1;
     padding: 10px 0 0;
     border-left: 0;
@@ -306,27 +355,39 @@ body:has(.catalog--object) .app-workspace {
   }
 
   /* There is no room for a side-by-side system name on narrow panels. */
-  .catalog--object .object-details > .object-coordinates .coordinate-system:first-child {
+  .catalog--object
+    .object-details
+    > .object-coordinates
+    .coordinate-system:first-child {
     grid-template-columns: minmax(0, 1fr);
     row-gap: 8px;
   }
 
   .catalog--object .object-details > .object-coordinates .coordinate-system,
-  .catalog--object .object-details > .object-coordinates .coordinate-system:first-child {
+  .catalog--object
+    .object-details
+    > .object-coordinates
+    .coordinate-system:first-child {
     grid-column: 1;
     padding: 10px 0 0;
     border-left: 0;
     border-top: 1px solid var(--line);
   }
 
-  .catalog--object .object-details > .object-coordinates .coordinate-system:first-child {
+  .catalog--object
+    .object-details
+    > .object-coordinates
+    .coordinate-system:first-child {
     padding-top: 0;
     border-top: 0;
   }
 }
 
 @container galaxy-details (max-width: 340px) {
-  .catalog--object .object-details > .object-coordinates .coordinate-system:first-child {
+  .catalog--object
+    .object-details
+    > .object-coordinates
+    .coordinate-system:first-child {
     overflow-x: auto;
   }
 }

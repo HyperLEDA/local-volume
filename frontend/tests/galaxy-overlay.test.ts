@@ -101,6 +101,8 @@ describe("galaxy comparison layer", () => {
     expect(source).not.toContain("gotoRaDec(");
     expect(source).not.toContain("removeOverlays(");
     expect(page).toContain('type="range"');
-    expect(page).toContain("detailOverlaySurveyId={comparisonEnabled ? comparisonSurvey.hips : null}");
+    expect(page).toMatch(
+      /detailOverlaySurveyId=\{\s*comparisonEnabled\s*\?\s*comparisonSurvey\.hips\s*:\s*null\s*\}/,
+    );
   });
 });

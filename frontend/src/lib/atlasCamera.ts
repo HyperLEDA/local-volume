@@ -20,7 +20,10 @@ export function captureAtlasCamera(
   const [ra, dec] = view.getRaDec();
   const [fov] = view.getFov();
   return [ra, dec, fov].every((n) => Number.isFinite(n)) &&
-    dec >= -90 && dec <= 90 && fov > 0 && fov <= 360
+    dec >= -90 &&
+    dec <= 90 &&
+    fov > 0 &&
+    fov <= 360
     ? { ra, dec, fov }
     : null;
 }
@@ -37,7 +40,9 @@ export function restoreAtlasCamera(
   if (deltaRa > 1e-5 || Math.abs(current.dec - snapshot.dec) > 1e-5) {
     view.gotoRaDec(snapshot.ra, snapshot.dec);
   }
-  if (Math.abs(current.fov - snapshot.fov) > Math.max(1e-4, snapshot.fov * 1e-4)) {
+  if (
+    Math.abs(current.fov - snapshot.fov) > Math.max(1e-4, snapshot.fov * 1e-4)
+  ) {
     view.setFoV(snapshot.fov);
   }
   return true;

@@ -1,7 +1,4 @@
-import type {
-  CatalogObjectDetail,
-  ParameterRow,
-} from "../api/objects.ts";
+import type { CatalogObjectDetail, ParameterRow } from "../api/objects.ts";
 import { observedUncertainty } from "./observedUncertainty.ts";
 import type { AdoptedPhysicalErrorSource } from "./observedUncertainty.ts";
 
@@ -49,11 +46,37 @@ const PHYSICAL_FIELDS: readonly Field[] = [
   { key: "abs_b_mag", label: "M_B", unit: "mag", decimals: 2 },
   { key: "abs_ks_mag", label: "M_K", unit: "mag", decimals: 2 },
   { key: "log_lks_lsun", label: "log(L_K/L_Ksun)", unit: null, decimals: 2 },
-  { key: "mean_sb_b_mag_arcsec2", label: "<mu_B>", unit: "mag/arcsec2", decimals: 2 },
+  {
+    key: "mean_sb_b_mag_arcsec2",
+    label: "<mu_B>",
+    unit: "mag/arcsec2",
+    decimals: 2,
+  },
   { key: "log_m26_msun", label: "log(M_dyn/Msun)", unit: null, decimals: 2 },
-  { key: "log_mhi_msun", label: "log(M_HI/Msun)", unit: null, decimals: 2, limitFlag: "log_mhi_limit_flag", limitValue: "<" },
-  { key: "log_sfr_halpha_msun_yr", label: "log(SFR_Halpha/Msun/yr)", unit: null, decimals: 2, limitFlag: "log_sfr_halpha_upper_limit", limitValue: true },
-  { key: "log_sfr_fuv_msun_yr", label: "log(SFR_FUV/Msun/yr)", unit: null, decimals: 2, limitFlag: "log_sfr_fuv_upper_limit", limitValue: true },
+  {
+    key: "log_mhi_msun",
+    label: "log(M_HI/Msun)",
+    unit: null,
+    decimals: 2,
+    limitFlag: "log_mhi_limit_flag",
+    limitValue: "<",
+  },
+  {
+    key: "log_sfr_halpha_msun_yr",
+    label: "log(SFR_Halpha/Msun/yr)",
+    unit: null,
+    decimals: 2,
+    limitFlag: "log_sfr_halpha_upper_limit",
+    limitValue: true,
+  },
+  {
+    key: "log_sfr_fuv_msun_yr",
+    label: "log(SFR_FUV/Msun/yr)",
+    unit: null,
+    decimals: 2,
+    limitFlag: "log_sfr_fuv_upper_limit",
+    limitValue: true,
+  },
   { key: "md_name", label: "MD", unit: null },
   { key: "theta1", label: "Theta_1", unit: null, decimals: 2 },
   { key: "theta5", label: "Theta_5", unit: null, decimals: 2 },
@@ -74,10 +97,18 @@ function rawValue(value: unknown): number | string | boolean | null {
       : null;
 }
 
-function physicalDisplay(value: number | string | boolean | null, decimals?: number): string | null {
+function physicalDisplay(
+  value: number | string | boolean | null,
+  decimals?: number,
+): string | null {
   if (value === null) return null;
   if (decimals === undefined) return String(value);
-  const numeric = typeof value === "number" ? value : typeof value === "string" && value.trim() !== "" ? Number(value) : NaN;
+  const numeric =
+    typeof value === "number"
+      ? value
+      : typeof value === "string" && value.trim() !== ""
+        ? Number(value)
+        : NaN;
   if (!Number.isFinite(numeric)) return String(value);
   const rounded = Number(numeric.toFixed(decimals));
   return String(Object.is(rounded, -0) ? 0 : rounded);
@@ -102,13 +133,22 @@ export function buildGalaxyExport(
   physical: PhysicalData | null,
 ): GalaxyExportDocument {
   const record = galaxy as unknown as Record<string, unknown>;
-  const estimatedKs = record.ks_estimated === true || record.ks_estimated === "true";
-  const physicalErrors = physical as unknown as AdoptedPhysicalErrorSource | null;
+  const estimatedKs =
+    record.ks_estimated === true || record.ks_estimated === "true";
+  const physicalErrors =
+    physical as unknown as AdoptedPhysicalErrorSource | null;
   const measurements: ExportedMeasurement[] = observed
-    .filter((row) => row.name !== "ks_estimated" && row.name !== "fuv_limit" && row.name !== "ha_limit" && row.name !== "hi21_limit")
+    .filter(
+      (row) =>
+        row.name !== "ks_estimated" &&
+        row.name !== "fuv_limit" &&
+        row.name !== "ha_limit" &&
+        row.name !== "hi21_limit",
+    )
     .map((row) => {
       const value = rawValue(record[row.name]);
-      const errKey = row.name === "lvg_v_hel_kms" ? "lvg_e_v_hel_kms" : `e_${row.name}`;
+      const errKey =
+        row.name === "lvg_v_hel_kms" ? "lvg_e_v_hel_kms" : `e_${row.name}`;
       const err = rawValue(record[errKey]);
       const qualifierName = OBSERVED_LIMIT_FLAG[row.name];
       const flag = qualifierName ? rawValue(record[qualifierName]) : null;
@@ -117,18 +157,32 @@ export function buildGalaxyExport(
       // physical refresh. Reuse its strict value-matching guard; never attach
       // an error from a different measurement or a pending generation.
       const adoptedError = observedUncertainty(row, physicalErrors);
-      const physicallyMatched = adoptedError !== null && physical?.physical_status === "ready";
-      const plus = physicallyMatched && row.name === "dist" ? rawValue(physical.e_distance_plus_mpc) : null;
-      const minus = physicallyMatched && row.name === "dist" ? rawValue(physical.e_distance_minus_mpc) : null;
-      const physicalSymmetric = physicallyMatched && row.name === "lvg_v_lg_kms"
-        ? rawValue(physical.e_v_lg_kms) : null;
-      const extraUncertainty = adoptedError === null ? null : adoptedError.kind === "symmetric"
-        ? `± ${adoptedError.sigma}` : `+${adoptedError.plus} / −${adoptedError.minus}`;
-      const uncertaintyBasis = physicallyMatched && row.name === "dist"
-        ? rawValue(physical.distance_error_basis)
-        : physicallyMatched && row.name === "lvg_v_lg_kms"
-          ? rawValue(physical.velocity_error_basis)
+      const physicallyMatched =
+        adoptedError !== null && physical?.physical_status === "ready";
+      const plus =
+        physicallyMatched && row.name === "dist"
+          ? rawValue(physical.e_distance_plus_mpc)
           : null;
+      const minus =
+        physicallyMatched && row.name === "dist"
+          ? rawValue(physical.e_distance_minus_mpc)
+          : null;
+      const physicalSymmetric =
+        physicallyMatched && row.name === "lvg_v_lg_kms"
+          ? rawValue(physical.e_v_lg_kms)
+          : null;
+      const extraUncertainty =
+        adoptedError === null
+          ? null
+          : adoptedError.kind === "symmetric"
+            ? `± ${adoptedError.sigma}`
+            : `+${adoptedError.plus} / −${adoptedError.minus}`;
+      const uncertaintyBasis =
+        physicallyMatched && row.name === "dist"
+          ? rawValue(physical.distance_error_basis)
+          : physicallyMatched && row.name === "lvg_v_lg_kms"
+            ? rawValue(physical.velocity_error_basis)
+            : null;
       return {
         pgc: galaxy.pgc,
         object_name: galaxy.name,
@@ -138,15 +192,27 @@ export function buildGalaxyExport(
         raw_value: value,
         display_value: row.value.trim() || null,
         unit: row.unit,
-        raw_uncertainty: estimated ? null : (typeof err === "boolean" ? null : (err ?? (typeof physicalSymmetric === "number" ? physicalSymmetric : null))),
+        raw_uncertainty: estimated
+          ? null
+          : typeof err === "boolean"
+            ? null
+            : (err ??
+              (typeof physicalSymmetric === "number"
+                ? physicalSymmetric
+                : null)),
         raw_uncertainty_minus: typeof minus === "number" ? minus : null,
         raw_uncertainty_plus: typeof plus === "number" ? plus : null,
-        display_uncertainty: estimated ? null : (extraUncertainty ?? row.error ?? null),
-        uncertainty_basis: typeof uncertaintyBasis === "string" ? uncertaintyBasis : null,
+        display_uncertainty: estimated
+          ? null
+          : (extraUncertainty ?? row.error ?? null),
+        uncertainty_basis:
+          typeof uncertaintyBasis === "string" ? uncertaintyBasis : null,
         uncertainty_unit: row.errorUnit ?? row.unit,
         qualifier: flag === null ? null : String(flag),
         raw_missing: !hasValue(value),
-        status: estimated ? "estimated" as const : "adopted_observed" as const,
+        status: estimated
+          ? ("estimated" as const)
+          : ("adopted_observed" as const),
         measurement_source: null,
       };
     });
@@ -163,7 +229,12 @@ export function buildGalaxyExport(
       field: field.key,
       label: field.label,
       raw_value: value,
-      display_value: value === null ? null : (qualifier ? `${qualifier} ${physicalDisplay(value, field.decimals)}` : physicalDisplay(value, field.decimals)),
+      display_value:
+        value === null
+          ? null
+          : qualifier
+            ? `${qualifier} ${physicalDisplay(value, field.decimals)}`
+            : physicalDisplay(value, field.decimals),
       unit: field.unit,
       raw_uncertainty: null,
       raw_uncertainty_minus: null,
@@ -182,15 +253,31 @@ export function buildGalaxyExport(
     pgc: galaxy.pgc,
     object_name: galaxy.name,
     physical_status: String(physical?.physical_status ?? "unavailable"),
-    measurement_provenance_note: "Measurement-level source references are not exposed by this API; null means unavailable, not that a value is source-free.",
+    measurement_provenance_note:
+      "Measurement-level source references are not exposed by this API; null means unavailable, not that a value is source-free.",
     measurements,
   };
 }
 
 const CSV_COLUMNS: readonly (keyof ExportedMeasurement)[] = [
-  "pgc", "object_name", "section", "field", "label", "raw_value",
-  "display_value", "unit", "raw_uncertainty", "raw_uncertainty_minus", "raw_uncertainty_plus",
-  "display_uncertainty", "uncertainty_basis", "uncertainty_unit", "qualifier", "raw_missing", "status", "measurement_source",
+  "pgc",
+  "object_name",
+  "section",
+  "field",
+  "label",
+  "raw_value",
+  "display_value",
+  "unit",
+  "raw_uncertainty",
+  "raw_uncertainty_minus",
+  "raw_uncertainty_plus",
+  "display_uncertainty",
+  "uncertainty_basis",
+  "uncertainty_unit",
+  "qualifier",
+  "raw_missing",
+  "status",
+  "measurement_source",
 ];
 
 function csvCell(value: unknown): string {

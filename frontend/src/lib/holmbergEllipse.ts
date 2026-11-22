@@ -59,17 +59,21 @@ function tangentToSky(
   const northShare = northRad / distance;
   const eastShare = eastRad / distance;
   const destinationDec = Math.asin(
-    Math.max(-1, Math.min(1,
-      Math.sin(dec) * Math.cos(distance) +
-      Math.cos(dec) * sinDistance * northShare,
-    )),
+    Math.max(
+      -1,
+      Math.min(
+        1,
+        Math.sin(dec) * Math.cos(distance) +
+          Math.cos(dec) * sinDistance * northShare,
+      ),
+    ),
   );
   const deltaRa = Math.atan2(
     sinDistance * eastShare,
     Math.cos(dec) * Math.cos(distance) -
       Math.sin(dec) * sinDistance * northShare,
   );
-  const ra = ((raDeg * DEG + deltaRa) % TWO_PI + TWO_PI) % TWO_PI;
+  const ra = (((raDeg * DEG + deltaRa) % TWO_PI) + TWO_PI) % TWO_PI;
   return [ra / DEG, destinationDec / DEG];
 }
 
@@ -89,19 +93,28 @@ export function holmbergEllipse(
   // their compile-time contract uses literal scientific metadata.
   const paRecord = positionAngle as Record<string, unknown> | null | undefined;
   if (
-    typeof raDeg !== "number" || !Number.isFinite(raDeg) ||
-    raDeg < 0 || raDeg >= 360 ||
-    typeof decDeg !== "number" || !Number.isFinite(decDeg) ||
-    decDeg < -90 || decDeg > 90 ||
-    typeof a26Arcmin !== "number" || !Number.isFinite(a26Arcmin) ||
-    a26Arcmin <= 0 || a26Arcmin >= 10800 ||
-    typeof axisRatio !== "number" || !Number.isFinite(axisRatio) ||
-    axisRatio <= 0 || axisRatio > 1 ||
+    typeof raDeg !== "number" ||
+    !Number.isFinite(raDeg) ||
+    raDeg < 0 ||
+    raDeg >= 360 ||
+    typeof decDeg !== "number" ||
+    !Number.isFinite(decDeg) ||
+    decDeg < -90 ||
+    decDeg > 90 ||
+    typeof a26Arcmin !== "number" ||
+    !Number.isFinite(a26Arcmin) ||
+    a26Arcmin <= 0 ||
+    a26Arcmin >= 10800 ||
+    typeof axisRatio !== "number" ||
+    !Number.isFinite(axisRatio) ||
+    axisRatio <= 0 ||
+    axisRatio > 1 ||
     input.axisRatioIsophote !== "B26.5" ||
     !paRecord ||
     typeof paRecord.angleDeg !== "number" ||
     !Number.isFinite(paRecord.angleDeg) ||
-    paRecord.angleDeg < 0 || paRecord.angleDeg >= 360 ||
+    paRecord.angleDeg < 0 ||
+    paRecord.angleDeg >= 360 ||
     paRecord.convention !== "north-through-east" ||
     paRecord.band !== "B" ||
     paRecord.isophoteMagArcsec2 !== 26.5 ||

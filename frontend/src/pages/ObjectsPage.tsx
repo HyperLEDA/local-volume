@@ -33,7 +33,13 @@ import "../components/atlasControls.css";
 import "../components/atlasFullscreen.css";
 
 export function ObjectsPage() {
-  const { active: atlasMaximized, skyRef, enter, leave, onCameraReady } = useAtlasFullscreen();
+  const {
+    active: atlasMaximized,
+    skyRef,
+    enter,
+    leave,
+    onCameraReady,
+  } = useAtlasFullscreen();
   const initialState = useMemo(
     () => readAtlasState(window.location.search),
     [],
@@ -206,14 +212,18 @@ export function ObjectsPage() {
             <button
               type="button"
               className={`atlas-fullscreen-toggle${atlasMaximized ? " atlas-fullscreen-toggle--exit" : ""}`}
-              aria-label={atlasMaximized ? "Exit maximized sky map" : "Maximize sky map"}
+              aria-label={
+                atlasMaximized ? "Exit maximized sky map" : "Maximize sky map"
+              }
               aria-pressed={atlasMaximized}
-              onClick={() => atlasMaximized ? leave() : enter()}
+              onClick={() => (atlasMaximized ? leave() : enter())}
             >
               {atlasMaximized ? "Exit fullscreen" : "Fullscreen"}
             </button>
             {atlasMaximized ? (
-              <p className="atlas-fullscreen-hint">Rotate your phone for a wider view</p>
+              <p className="atlas-fullscreen-hint">
+                Rotate your phone for a wider view
+              </p>
             ) : null}
             <AtlasLegend tidalRange={tidalRange} />
           </section>

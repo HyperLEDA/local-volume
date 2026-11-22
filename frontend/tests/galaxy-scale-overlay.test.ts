@@ -24,7 +24,9 @@ describe("#66, #70: quiet angular scale and matched detail workspaces", () => {
   });
 
   test("compact visual label leaves source qualifications in accessible text", () => {
-    expect(page).toMatch(/compactProjectedScale !== null \? ` ≈ \$\{compactProjectedScale\}` : ""/);
+    expect(page).toMatch(
+      /compactProjectedScale\s*!==\s*null\s*\?\s*` ≈ \$\{compactProjectedScale\}`\s*:\s*""/,
+    );
     expect(page).toMatch(/at adopted distance \$\{scaleDistance\.dist\} Mpc/);
     expect(page).toContain("scaleDistance.distance_method");
     expect(page).not.toContain("galaxy-angular-scale-projected");

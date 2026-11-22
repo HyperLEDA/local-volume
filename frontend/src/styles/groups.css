@@ -1159,5 +1159,8 @@
   outline-offset: 1px;
 }
 @media (max-width: 500px) {
-  .group-figure-tooltip { min-width: 0; max-width: min(220px, calc(100% - 10px)); }
+  .group-figure-tooltip {
+    min-width: 0;
+    max-width: min(220px, calc(100% - 10px));
+  }
 }

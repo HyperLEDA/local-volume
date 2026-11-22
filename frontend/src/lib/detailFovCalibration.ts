@@ -25,12 +25,14 @@ export function detailFovNeedsCorrection(
 ): boolean {
   if (!Number.isFinite(requestedDegrees) || requestedDegrees <= 0) return false;
   if (measured.length < 2) return false;
-  return measured.slice(0, 2).some(
-    (extent) =>
-      Number.isFinite(extent) &&
-      extent > 0 &&
-      Math.abs(extent - requestedDegrees) / requestedDegrees > 0.015,
-  );
+  return measured
+    .slice(0, 2)
+    .some(
+      (extent) =>
+        Number.isFinite(extent) &&
+        extent > 0 &&
+        Math.abs(extent - requestedDegrees) / requestedDegrees > 0.015,
+    );
 }
 
 /**
@@ -95,7 +97,9 @@ export function installDetailInitialFovCalibration(
     const measured: readonly number[] = view.getFov();
     if (
       measured.length < 2 ||
-      measured.slice(0, 2).some((extent) => !Number.isFinite(extent) || extent <= 0)
+      measured
+        .slice(0, 2)
+        .some((extent) => !Number.isFinite(extent) || extent <= 0)
     ) {
       if (++unsettledFrames < 120) frame = requestAnimationFrame(fit);
       return;

@@ -12,7 +12,9 @@ export function createGalaxySurveySwitcher(
   let attempted = initialSurvey;
   let busy = false;
   let disposed = false;
-  function isDisposed(): boolean { return disposed; }
+  function isDisposed(): boolean {
+    return disposed;
+  }
 
   async function flush(): Promise<void> {
     if (busy || isDisposed()) return;

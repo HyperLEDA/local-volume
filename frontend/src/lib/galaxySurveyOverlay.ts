@@ -27,7 +27,9 @@ export function createGalaxyOverlayController(
   let registered: string | null = null;
   let running = false;
   let disposed = false;
-  function isDisposed(): boolean { return disposed; }
+  function isDisposed(): boolean {
+    return disposed;
+  }
 
   function removeOnlyComparisonLayer(): void {
     if (registered === null) return;
@@ -53,11 +55,14 @@ export function createGalaxyOverlayController(
         if (registered === surveyId) {
           try {
             const layer = view.getOverlayImageLayer(GALAXY_COMPARISON_LAYER);
-            if (!layer) throw new Error("Comparison image layer is unavailable");
+            if (!layer)
+              throw new Error("Comparison image layer is unavailable");
             layer.setOpacity(wanted.opacity);
             reportError(null);
           } catch (error) {
-            reportError(`Could not update comparison opacity: ${String(error)}`);
+            reportError(
+              `Could not update comparison opacity: ${String(error)}`,
+            );
           }
           return;
         }
@@ -67,7 +72,11 @@ export function createGalaxyOverlayController(
           // oxlint-disable-next-line no-await-in-loop -- only one image layer may be replaced at a time.
           await view.setOverlayImageLayer(requested, GALAXY_COMPARISON_LAYER);
           if (isDisposed()) {
-            try { view.removeImageLayer(GALAXY_COMPARISON_LAYER); } catch { /* unmounted */ }
+            try {
+              view.removeImageLayer(GALAXY_COMPARISON_LAYER);
+            } catch {
+              /* unmounted */
+            }
             return;
           }
           registered = requested;
@@ -77,7 +86,11 @@ export function createGalaxyOverlayController(
           layer.setOpacity(wanted.surveyId === requested ? wanted.opacity : 0);
           if (wanted.surveyId === requested) reportError(null);
         } catch (error) {
-          try { view.removeImageLayer(GALAXY_COMPARISON_LAYER); } catch { /* best effort */ }
+          try {
+            view.removeImageLayer(GALAXY_COMPARISON_LAYER);
+          } catch {
+            /* best effort */
+          }
           registered = null;
           if (wanted.surveyId === requested) {
             reportError(`Could not load comparison HiPS: ${String(error)}`);
@@ -94,13 +107,20 @@ export function createGalaxyOverlayController(
   return {
     request(surveyId: string | null, opacity: number): void {
       if (disposed) return;
-      wanted = { surveyId: surveyId?.trim() || null, opacity: normaliseOpacity(opacity) };
+      wanted = {
+        surveyId: surveyId?.trim() || null,
+        opacity: normaliseOpacity(opacity),
+      };
       if (!running) void flush();
     },
     dispose(): void {
       disposed = true;
       // The parent Aladin mount will also be destroyed. Remove only this layer.
-      try { removeOnlyComparisonLayer(); } catch { /* unmounted view */ }
+      try {
+        removeOnlyComparisonLayer();
+      } catch {
+        /* unmounted view */
+      }
     },
   };
 }

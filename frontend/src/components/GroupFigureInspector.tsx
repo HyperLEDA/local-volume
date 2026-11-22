@@ -31,50 +31,80 @@ function TooltipMeasurements({
   if (figure.key === "group-depth") {
     return (
       <>
-        <div>R<sub>p</sub> = {formatted(point.x, 1)} kpc</div>
+        <div>
+          R<sub>p</sub> = {formatted(point.x, 1)} kpc
+        </div>
         <div>
           D<sub>sat</sub> ={" "}
           {typeof sat?.dist_mpc === "number" ? formatted(sat.dist_mpc, 3) : "—"}{" "}
           Mpc
         </div>
-        <div>D<sub>sat</sub> − D<sub>MD</sub> = {formatted(point.y, 3)} Mpc</div>
+        <div>
+          D<sub>sat</sub> − D<sub>MD</sub> = {formatted(point.y, 3)} Mpc
+        </div>
         {typeof md?.dist_mpc === "number" && (
-          <div>D<sub>MD</sub> = {formatted(md.dist_mpc, 3)} Mpc</div>
+          <div>
+            D<sub>MD</sub> = {formatted(md.dist_mpc, 3)} Mpc
+          </div>
         )}
       </>
     );
   }
   if (figure.key === "projected-phase-space") {
-    return <>
-      <div>R<sub>p</sub> = {formatted(point.x, 1)} kpc</div>
-      <div>ΔV<sub>LG</sub> = {formatted(point.y, 1)} km/s</div>
-    </>;
+    return (
+      <>
+        <div>
+          R<sub>p</sub> = {formatted(point.x, 1)} kpc
+        </div>
+        <div>
+          ΔV<sub>LG</sub> = {formatted(point.y, 1)} km/s
+        </div>
+      </>
+    );
   }
   if (figure.key === "velocity-distance") {
-    return <>
-      <div>D = {formatted(point.x, 3)} Mpc</div>
-      <div>V<sub>LG</sub> = {formatted(point.y, 1)} km/s</div>
-    </>;
+    return (
+      <>
+        <div>D = {formatted(point.x, 3)} Mpc</div>
+        <div>
+          V<sub>LG</sub> = {formatted(point.y, 1)} km/s
+        </div>
+      </>
+    );
   }
   if (figure.key === "morphological-segregation") {
-    return <>
-      <div>R<sub>p</sub> = {formatted(point.x, 1)} kpc</div>
-      <div>T = {formatted(point.y, 0)}</div>
-    </>;
+    return (
+      <>
+        <div>
+          R<sub>p</sub> = {formatted(point.x, 1)} kpc
+        </div>
+        <div>T = {formatted(point.y, 0)}</div>
+      </>
+    );
   }
   if (figure.key === "gas-content") {
-    return <>
-      <div>R<sub>p</sub> = {formatted(point.x, 1)} kpc</div>
-      <div>
-        log₁₀(M<sub>HI</sub>/M<sub>26</sub>) {point.upperLimit ? "<" : "="}{" "}
-        {formatted(point.y, 3)}
-      </div>
-    </>;
+    return (
+      <>
+        <div>
+          R<sub>p</sub> = {formatted(point.x, 1)} kpc
+        </div>
+        <div>
+          log₁₀(M<sub>HI</sub>/M<sub>26</sub>) {point.upperLimit ? "<" : "="}{" "}
+          {formatted(point.y, 3)}
+        </div>
+      </>
+    );
   }
-  return <>
-    <div>{figure.xLabel} = {formatted(point.x, 3)}</div>
-    <div>{figure.yLabel} = {formatted(point.y, 3)}</div>
-  </>;
+  return (
+    <>
+      <div>
+        {figure.xLabel} = {formatted(point.x, 3)}
+      </div>
+      <div>
+        {figure.yLabel} = {formatted(point.y, 3)}
+      </div>
+    </>
+  );
 }
 
 /**
@@ -109,7 +139,8 @@ export function GroupFigureInspector({
       if (
         event.target instanceof Node &&
         !inspectorRef.current?.contains(event.target)
-      ) setPinned(null);
+      )
+        setPinned(null);
     }
     function dismissEscape(event: KeyboardEvent) {
       if (event.key === "Escape") {
@@ -134,7 +165,8 @@ export function GroupFigureInspector({
     const nativeX =
       ((event.clientX - bounds.left) * FIGURE_NATIVE_SIZE.width) / bounds.width;
     const nativeY =
-      ((event.clientY - bounds.top) * FIGURE_NATIVE_SIZE.height) / bounds.height;
+      ((event.clientY - bounds.top) * FIGURE_NATIVE_SIZE.height) /
+      bounds.height;
     const threshold = Math.max(
       14,
       (12 * FIGURE_NATIVE_SIZE.width) / bounds.width,
@@ -142,7 +174,12 @@ export function GroupFigureInspector({
     let closest: (typeof hits)[number] | null = null;
     let nearest = threshold * threshold;
     for (const hit of hits) {
-      if (typeof hit.point.pgc !== "number" || !Number.isSafeInteger(hit.point.pgc) || hit.point.pgc <= 0) continue;
+      if (
+        typeof hit.point.pgc !== "number" ||
+        !Number.isSafeInteger(hit.point.pgc) ||
+        hit.point.pgc <= 0
+      )
+        continue;
       const distanceSquared =
         (nativeX - hit.pixelX) ** 2 + (nativeY - hit.pixelY) ** 2;
       if (distanceSquared < nearest) {
@@ -191,7 +228,11 @@ export function GroupFigureInspector({
           <a href={`/object/${shown.point.pgc}`}>
             {shown.point.name?.trim() || `PGC ${shown.point.pgc}`}
           </a>
-          <TooltipMeasurements figure={figure} point={shown.point} group={group} />
+          <TooltipMeasurements
+            figure={figure}
+            point={shown.point}
+            group={group}
+          />
           {pinned && (
             <button
               type="button"

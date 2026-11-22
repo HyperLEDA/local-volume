@@ -35,7 +35,9 @@
   font: inherit;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 150ms ease, border-color 150ms ease;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease;
 }
 
 .galaxy-survey-choices button:hover {
@@ -80,7 +82,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .galaxy-survey-choices button { transition: none; }
+  .galaxy-survey-choices button {
+    transition: none;
+  }
 }
 
 /* Optional second sky survey. Keep the primary survey buttons visible at all times. */
@@ -139,8 +143,11 @@
   outline-offset: 2px;
 }
 @media (max-width: 600px) {
-  .galaxy-comparison-panel { grid-template-columns: minmax(0, 1fr) auto; }
-  .galaxy-comparison-heading, .galaxy-comparison-panel > .galaxy-survey-choices {
+  .galaxy-comparison-panel {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .galaxy-comparison-heading,
+  .galaxy-comparison-panel > .galaxy-survey-choices {
     grid-column: 1 / -1;
   }
 }

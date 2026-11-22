@@ -15,13 +15,20 @@
   font: inherit;
   cursor: pointer;
 }
-.object-measurement-exports button:hover { border-color: var(--accent); }
+.object-measurement-exports button:hover {
+  border-color: var(--accent);
+}
 .object-measurement-exports button:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
-.object-measurement-exports button:disabled { opacity: 0.65; cursor: wait; }
-.object-measurement-exports [role="alert"] { color: var(--danger); }
+.object-measurement-exports button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+.object-measurement-exports [role="alert"] {
+  color: var(--danger);
+}
 
 /* #66: full-width export row below both measurement tables. */
 .catalog--object .object-details > .object-measurement-exports {

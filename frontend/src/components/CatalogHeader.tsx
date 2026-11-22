@@ -158,16 +158,29 @@ function subscribeHeaderMedia(onChange: () => void): () => void {
   };
 }
 function bottomNavVisible(): boolean {
-  return typeof window !== "undefined" && window.matchMedia(BOTTOM_NAV_QUERY).matches;
+  return (
+    typeof window !== "undefined" && window.matchMedia(BOTTOM_NAV_QUERY).matches
+  );
 }
 function headerViewportWide(): boolean {
-  return typeof window !== "undefined" && window.matchMedia(LARGE_HEADER_QUERY).matches;
+  return (
+    typeof window !== "undefined" &&
+    window.matchMedia(LARGE_HEADER_QUERY).matches
+  );
 }
 
 export function CatalogHeader() {
   const { pathname, search } = useLocation();
-  const mobileHeader = useSyncExternalStore(subscribeHeaderMedia, bottomNavVisible, () => false);
-  const wideHeader = useSyncExternalStore(subscribeHeaderMedia, headerViewportWide, () => false);
+  const mobileHeader = useSyncExternalStore(
+    subscribeHeaderMedia,
+    bottomNavVisible,
+    () => false,
+  );
+  const wideHeader = useSyncExternalStore(
+    subscribeHeaderMedia,
+    headerViewportWide,
+    () => false,
+  );
   const atlasActive = pathname === "/" || pathname.startsWith("/object/");
   const groupsActive =
     pathname === "/groups" || pathname.startsWith("/groups/");
@@ -197,15 +210,25 @@ export function CatalogHeader() {
   return (
     <header
       className={`catalog-header catalog-header--unified${context ? " catalog-header--contextual" : ""}${compact ? " catalog-header--compact" : ""}`}
-      style={mobileHeader
-        ? { minHeight: 52, padding: "6px 8px", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)" }
-        : expandedHeader
-          ? { minHeight: 96, padding: "10px 12px" }
-          : undefined}
+      style={
+        mobileHeader
+          ? {
+              minHeight: 52,
+              padding: "6px 8px",
+              gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
+            }
+          : expandedHeader
+            ? { minHeight: 96, padding: "10px 12px" }
+            : undefined
+      }
     >
       <div
         className="catalog-header-edge catalog-header-edge--left"
-        style={mobileHeader ? { gridColumn: 1, gridRow: 1, justifyContent: "flex-start" } : undefined}
+        style={
+          mobileHeader
+            ? { gridColumn: 1, gridRow: 1, justifyContent: "flex-start" }
+            : undefined
+        }
       >
         {context && (
           <Link
@@ -225,81 +248,123 @@ export function CatalogHeader() {
           </Link>
         )}
         {!mobileHeader && (
-        <nav
-          className="catalog-header-quicknav catalog-header-quicknav--left"
-          aria-label="Main sections"
-        >
-          <Link
-            style={expandedHeader ? { fontSize: "0.95rem", minHeight: 46, padding: "10px 12px" } : undefined} to="/" aria-current={atlasActive ? "page" : undefined}>
-            Atlas
-          </Link>
-          <Link
-            style={expandedHeader ? { fontSize: "0.95rem", minHeight: 46, padding: "10px 12px" } : undefined} to="/groups" aria-current={groupsActive ? "page" : undefined}>
-            Groups
-          </Link>
-        </nav>
+          <nav
+            className="catalog-header-quicknav catalog-header-quicknav--left"
+            aria-label="Main sections"
+          >
+            <Link
+              style={
+                expandedHeader
+                  ? { fontSize: "0.95rem", minHeight: 46, padding: "10px 12px" }
+                  : undefined
+              }
+              to="/"
+              aria-current={atlasActive ? "page" : undefined}
+            >
+              Atlas
+            </Link>
+            <Link
+              style={
+                expandedHeader
+                  ? { fontSize: "0.95rem", minHeight: 46, padding: "10px 12px" }
+                  : undefined
+              }
+              to="/groups"
+              aria-current={groupsActive ? "page" : undefined}
+            >
+              Groups
+            </Link>
+          </nav>
         )}
       </div>
       {!mobileHeader && (
-      <div className="catalog-header-identity">
-        <a
-          className="catalog-logo catalog-logo--sao"
-          style={expandedHeader ? { width: 62, height: 62 } : undefined}
-          href="https://www.sao.ru"
-          aria-label="SAO website"
-        >
-          <img src={saoLogo} alt="SAO" />
-        </a>
-        <h1 className="catalog-header-title--atlas">
-          <Link to="/">
-            <span className="catalog-title-main" style={expandedHeader ? { fontSize: "2rem", lineHeight: 1.08 } : undefined}>LV LEDA</span>
-            <span className="catalog-title-subtitle" style={expandedHeader ? { fontSize: "1rem", lineHeight: 1.15 } : undefined}>
-              Galaxies of the Nearby Universe
-            </span>
-          </Link>
-        </h1>
-        <a
-          className="catalog-logo catalog-logo--leda"
-          style={expandedHeader ? { width: 62, height: 62 } : undefined}
-          href="https://leda.sao.ru/"
-          aria-label="LEDA website"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img className="leda-logo-light" src={ledaLogo} alt="LEDA" />
-          <img
-            className="leda-logo-dark"
-            src={ledaDarkLogo}
-            alt=""
-            aria-hidden="true"
-          />
-        </a>
-      </div>
+        <div className="catalog-header-identity">
+          <a
+            className="catalog-logo catalog-logo--sao"
+            style={expandedHeader ? { width: 62, height: 62 } : undefined}
+            href="https://www.sao.ru"
+            aria-label="SAO website"
+          >
+            <img src={saoLogo} alt="SAO" />
+          </a>
+          <h1 className="catalog-header-title--atlas">
+            <Link to="/">
+              <span
+                className="catalog-title-main"
+                style={
+                  expandedHeader
+                    ? { fontSize: "2rem", lineHeight: 1.08 }
+                    : undefined
+                }
+              >
+                LV LEDA
+              </span>
+              <span
+                className="catalog-title-subtitle"
+                style={
+                  expandedHeader
+                    ? { fontSize: "1rem", lineHeight: 1.15 }
+                    : undefined
+                }
+              >
+                Galaxies of the Nearby Universe
+              </span>
+            </Link>
+          </h1>
+          <a
+            className="catalog-logo catalog-logo--leda"
+            style={expandedHeader ? { width: 62, height: 62 } : undefined}
+            href="https://leda.sao.ru/"
+            aria-label="LEDA website"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img className="leda-logo-light" src={ledaLogo} alt="LEDA" />
+            <img
+              className="leda-logo-dark"
+              src={ledaDarkLogo}
+              alt=""
+              aria-hidden="true"
+            />
+          </a>
+        </div>
       )}
       <div
         className="catalog-header-edge catalog-header-edge--right"
-        style={mobileHeader ? { gridColumn: 2, gridRow: 1, justifyContent: "flex-end" } : undefined}
+        style={
+          mobileHeader
+            ? { gridColumn: 2, gridRow: 1, justifyContent: "flex-end" }
+            : undefined
+        }
       >
         {!mobileHeader && (
-        <nav
-          className="catalog-header-quicknav catalog-header-quicknav--right"
-          aria-label="Reference sections"
-        >
-          <Link
-            style={expandedHeader ? { fontSize: "0.95rem", minHeight: 46, padding: "10px 12px" } : undefined}
-            to="/documents"
-            aria-current={documentsActive ? "page" : undefined}
+          <nav
+            className="catalog-header-quicknav catalog-header-quicknav--right"
+            aria-label="Reference sections"
           >
-            Documents
-          </Link>
-          <Link
-            style={expandedHeader ? { fontSize: "0.95rem", minHeight: 46, padding: "10px 12px" } : undefined}
-            to="/acknowledgements"
-            aria-current={acknowledgementsActive ? "page" : undefined}
-          >
-            Acknowledgements
-          </Link>
-        </nav>
+            <Link
+              style={
+                expandedHeader
+                  ? { fontSize: "0.95rem", minHeight: 46, padding: "10px 12px" }
+                  : undefined
+              }
+              to="/documents"
+              aria-current={documentsActive ? "page" : undefined}
+            >
+              Documents
+            </Link>
+            <Link
+              style={
+                expandedHeader
+                  ? { fontSize: "0.95rem", minHeight: 46, padding: "10px 12px" }
+                  : undefined
+              }
+              to="/acknowledgements"
+              aria-current={acknowledgementsActive ? "page" : undefined}
+            >
+              Acknowledgements
+            </Link>
+          </nav>
         )}
         {context && context.index !== null && context.total !== null && (
           <nav

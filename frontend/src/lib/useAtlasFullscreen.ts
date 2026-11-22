@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   captureAtlasCamera,
   restoreAtlasCamera,
@@ -55,8 +61,11 @@ export function useAtlasFullscreen() {
     restoreScrollRef.current = true;
     setActive(false);
     document.documentElement.classList.remove("atlas-maximized-active");
-    if (!fromHistory && historyEntryRef.current &&
-      window.history.state?.lvAtlasMaximized === true) {
+    if (
+      !fromHistory &&
+      historyEntryRef.current &&
+      window.history.state?.lvAtlasMaximized === true
+    ) {
       window.history.back();
     }
     historyEntryRef.current = false;
@@ -79,29 +88,38 @@ export function useAtlasFullscreen() {
     setActive(true);
     // A same-URL history entry makes browser Back exit the maximized view.
     const previous = window.history.state;
-    const state = previous && typeof previous === "object" ? { ...previous } : {};
+    const state =
+      previous && typeof previous === "object" ? { ...previous } : {};
     // Preserve React Router's history index when one is present.
     if (typeof state.idx === "number") state.idx += 1;
-    window.history.pushState({ ...state, lvAtlasMaximized: true }, "", window.location.href);
+    window.history.pushState(
+      { ...state, lvAtlasMaximized: true },
+      "",
+      window.location.href,
+    );
     historyEntryRef.current = true;
     document.documentElement.classList.add("atlas-maximized-active");
     // Invoke on the click gesture; unsupported/rejected API is a CSS fallback.
     if (typeof target.requestFullscreen === "function") {
       try {
-        void target.requestFullscreen({ navigationUI: "hide" }).then(async () => {
-          if (!activeRef.current) {
-            if (document.fullscreenElement === target) await document.exitFullscreen();
-            return;
-          }
-          nativeFullscreenRef.current = true;
-          try {
-            await orientationFeature()?.lock?.("landscape");
-          } catch {
-            // iOS, orientation-locked devices and unsupported Android browsers.
-          }
-        }).catch(() => {
-          nativeFullscreenRef.current = false;
-        });
+        void target
+          .requestFullscreen({ navigationUI: "hide" })
+          .then(async () => {
+            if (!activeRef.current) {
+              if (document.fullscreenElement === target)
+                await document.exitFullscreen();
+              return;
+            }
+            nativeFullscreenRef.current = true;
+            try {
+              await orientationFeature()?.lock?.("landscape");
+            } catch {
+              // iOS, orientation-locked devices and unsupported Android browsers.
+            }
+          })
+          .catch(() => {
+            nativeFullscreenRef.current = false;
+          });
       } catch {
         // No native fullscreen support: leave the CSS maximized mode active.
       }
@@ -123,7 +141,10 @@ export function useAtlasFullscreen() {
       const camera = cameraRef.current;
       const size = camera?.getSize();
       const rect = map!.getBoundingClientRect();
-      const ready = size && rect.width > 1 && rect.height > 1 &&
+      const ready =
+        size &&
+        rect.width > 1 &&
+        rect.height > 1 &&
         Math.abs(size[0] - rect.width) < 3 &&
         Math.abs(size[1] - rect.height) < 3;
       if (ready && camera && attempts >= 2) {

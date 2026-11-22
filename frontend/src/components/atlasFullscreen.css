@@ -22,11 +22,15 @@
   outline: 2px solid #d1eff9;
   outline-offset: 3px;
 }
-.atlas-fullscreen-hint { display: none; }
+.atlas-fullscreen-hint {
+  display: none;
+}
 
 /* The bottom mobile rail is present up to 700 CSS px. Touch landscape may be wider. */
 @media (min-width: 961px) and (pointer: fine) {
-  .atlas-fullscreen-toggle:not(.atlas-fullscreen-toggle--exit) { display: none; }
+  .atlas-fullscreen-toggle:not(.atlas-fullscreen-toggle--exit) {
+    display: none;
+  }
 }
 
 html.atlas-maximized-active,
@@ -60,7 +64,9 @@ html.atlas-maximized-active .atlas-active-criteria {
   z-index: 6000;
   overflow: hidden;
 }
-.catalog--overview .catalog-sky.atlas-sky--maximized .aladin-frame.aladin-frame--overview {
+.catalog--overview
+  .catalog-sky.atlas-sky--maximized
+  .aladin-frame.aladin-frame--overview {
   position: absolute !important;
   inset: 0 !important;
   box-sizing: border-box;
@@ -105,5 +111,7 @@ html.atlas-maximized-active .atlas-active-criteria {
 }
 @media (prefers-reduced-motion: reduce) {
   .catalog--overview .catalog-sky.atlas-sky--maximized,
-  .atlas-fullscreen-toggle { transition: none !important; }
+  .atlas-fullscreen-toggle {
+    transition: none !important;
+  }
 }
