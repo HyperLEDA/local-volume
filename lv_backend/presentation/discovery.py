@@ -1,7 +1,7 @@
 """HTTP-first scientific discovery helpers for LV LEDA.
 
-The public canonical origin is deliberately opt-in. No hostname is inferred
-from Host, X-Forwarded-Host or an unreviewed request URL.
+The production origin defaults to an explicitly known LV LEDA hostname.
+No request or forwarding headers may determine a new canonical origin.
 """
 
 from __future__ import annotations
@@ -14,6 +14,8 @@ from dataclasses import dataclass
 from urllib.parse import urlsplit
 from xml.sax.saxutils import escape as xml_escape
 
+_PRODUCTION_ORIGIN = "https://lv.leda.sao.ru"
+
 
 @dataclass(frozen=True)
 class PageInfo:
@@ -24,7 +26,7 @@ class PageInfo:
 
 
 def public_origin() -> str | None:
-    """Explicitly approved HTTPS origin, otherwise local/staging noindex."""
+    """Validate the optional, explicitly configured HTTPS origin override."""
     raw = os.environ.get("LV_PUBLIC_ORIGIN", "").strip()
     if not raw:
         return None
@@ -49,8 +51,10 @@ def public_origin() -> str | None:
 
 
 def public_origin_for_host(request_host: str | None) -> str | None:
-    """Fail closed when a preview/staging host inherits production settings."""
-    origin = public_origin()
+    """Enable the official production host; keep preview and local hosts noindex."""
+    # An explicit setting overrides the built-in production domain, including
+    # an empty/invalid setting that deliberately disables public indexing.
+    origin = public_origin() if "LV_PUBLIC_ORIGIN" in os.environ else _PRODUCTION_ORIGIN
     if origin is None or not request_host:
         return None
     expected_host = urlsplit(origin).hostname

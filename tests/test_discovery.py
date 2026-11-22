@@ -75,6 +75,66 @@ def test_public_origin_host_gating(monkeypatch):
     assert discovery.public_origin_for_host("lv.example.org:9999") is None
 
 
+def test_production_host_is_indexable_without_deployment_variable(monkeypatch):
+    monkeypatch.delenv("LV_PUBLIC_ORIGIN", raising=False)
+    assert discovery.public_origin() is None  # Explicit override is still absent.
+    for host in ("lv.leda.sao.ru", "LV.LEDA.SAO.RU", "lv.leda.sao.ru:443"):
+        assert discovery.public_origin_for_host(host) == "https://lv.leda.sao.ru"
+    for host in (
+        "lv.leda.kraysent.dev",
+        "localhost:8000",
+        "127.0.0.1:8000",
+        "lv.leda.sao.ru.example.org",
+        "lv.leda.sao.ru:8000",
+        None,
+    ):
+        assert discovery.public_origin_for_host(host) is None
+    # A deliberately empty override is a fail-closed emergency switch.
+    monkeypatch.setenv("LV_PUBLIC_ORIGIN", "")
+    assert discovery.public_origin_for_host("lv.leda.sao.ru") is None
+
+
+def test_production_and_test_http_indexing_without_deployment_change(tmp_path, monkeypatch):
+    monkeypatch.delenv("LV_PUBLIC_ORIGIN", raising=False)
+    (tmp_path / "index.html").write_text(HTML, encoding="utf-8")
+    monkeypatch.setattr(web_app, "_DIST_DIR", tmp_path)
+
+    def get_object(_storage, pgc):
+        if pgc != 2557:
+            return None
+        return SimpleNamespace(data=SimpleNamespace(name="M 31", dist=0.77))
+
+    monkeypatch.setattr(web_app.objects, "get_object", get_object)
+    monkeypatch.setattr(web_app, "_catalogue_sitemap_paths", lambda _storage: ["/object/2557"])
+    app = fastapi.FastAPI()
+    app.state.storage = object()
+    for path in ("/robots.txt", "/sitemap.xml"):
+        handler = next(route for route in web_app.app.routes if isinstance(route, APIRoute) and route.path == path)
+        app.router.routes.append(handler)
+    web_app._mount_frontend(app, tmp_path)  # noqa: SLF001
+
+    with TestClient(app, base_url="https://lv.leda.sao.ru") as production:
+        page = production.get("/object/2557")
+        assert page.status_code == 200
+        assert 'href="https://lv.leda.sao.ru/object/2557"' in page.text
+        assert "x-robots-tag" not in page.headers
+        assert production.get("/object/123456789").status_code == 404
+        robots = production.get("/robots.txt")
+        assert robots.status_code == 200
+        assert "Sitemap: https://lv.leda.sao.ru/sitemap.xml" in robots.text
+        xml = production.get("/sitemap.xml")
+        assert xml.status_code == 200
+        assert "https://lv.leda.sao.ru/object/2557" in xml.text
+
+    with TestClient(app, base_url="https://lv.leda.kraysent.dev") as staging:
+        page = staging.get("/object/2557")
+        assert page.status_code == 200
+        assert page.headers["x-robots-tag"] == "noindex, nofollow"
+        assert 'rel="canonical"' not in page.text
+        assert staging.get("/robots.txt").text == "User-agent: *\nDisallow: /\n"
+        assert staging.get("/sitemap.xml").status_code == 404
+
+
 def test_group_definitions_are_scientifically_distinct():
     group = {"name": "M 31", "member_count": 62}
     physical = discovery.group_page(group, 2557, "physical")
