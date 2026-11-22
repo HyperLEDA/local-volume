@@ -31,18 +31,17 @@ test("unavailable or invalid numeric T is not invented", () => {
   }
 });
 
-test("a26 is a DIAMETER in arcmin; FOV permits 50% radius margin", () => {
-  // diameter=6.8 arcmin; wanted full square FOV=1.5*6.8 arcmin
-  assert.ok(Math.abs(objectFovDegrees({ a26_arcmin: 6.8 }) - 0.17) < 1e-12);
-  assert.equal(objectFovDegrees({ a26_arcmin: 40 }), 1);
-  assert.equal(objectFovDegrees({ a26_arcmin: 600 }), 15);
+test("a26 is a DIAMETER in arcmin; square FoV equals its angular size", () => {
+  assert.ok(Math.abs(objectFovDegrees({ a26_arcmin: 6.8 }) - 6.8 / 60) < 1e-12);
+  assert.equal(objectFovDegrees({ a26_arcmin: 40 }), 40 / 60);
+  assert.equal(objectFovDegrees({ a26_arcmin: 600 }), 10);
 });
 
 test("invalid or absent Holmberg diameter uses stable fallback", () => {
   assert.equal(objectFovDegrees({ a26_arcmin: null }), 1);
   assert.equal(objectFovDegrees({ a26_arcmin: -5 }), 1);
   assert.equal(objectFovDegrees({ a26_arcmin: Number.NaN }), 1);
-  assert.equal(objectFovDegrees({ a26_arcmin: 0.1 }), 0.025);
+  assert.equal(objectFovDegrees({ a26_arcmin: 0.1 }), 0.1 / 60);
   assert.equal(objectFovDegrees({ a26_arcmin: 10000 }), 60);
 });
 

@@ -4,8 +4,8 @@ const read = (s) => readFileSync(s, 'utf8');
 describe('Groups v16 UI and preview cache', () => {
   test('point tooltip contains only the primary name, no repeated PGC', () => {
     const s = read('frontend/src/components/GroupFigureInspector.tsx');
-    expect(s).toContain('{hover.point.name?.trim() || `PGC ${hover.point.pgc}`}');
-    expect(s).not.toContain(' · PGC {hover.point.pgc}');
+    expect(s).toContain('{shown.point.name?.trim() || `PGC ${shown.point.pgc}`}');
+    expect(s).not.toContain(' · PGC {shown.point.pgc}');
   });
   test('tighter SIN fitting still checks every marker on interactive and exported maps', () => {
     const s = read('frontend/src/components/GroupSkyMap.tsx');
