@@ -1,8 +1,10 @@
 import math
 from collections import defaultdict
+from typing import cast
 
 from lv_backend.data import groups as data_groups
 from lv_backend.data.storage import Storage
+from lv_backend.domain import group_geometry
 from lv_backend.domain.physical_calculations import FORMULA_VERSION
 
 
@@ -186,6 +188,12 @@ def _live_components(rows: list[dict[str, object]], definition: str) -> dict[int
                     "b_mag": row["b_mag"],
                     "lvg_v_lg_kms": row["lvg_v_lg_kms"],
                     "distance_method": row.get("distance_method"),
+                    "distance_reference": row.get("distance_reference"),
+                    "distance_source_catalog": row.get("distance_source_catalog"),
+                    "distance_source_name": row.get("distance_source_name"),
+                    "observed_distance_mpc": row.get("observed_distance_mpc"),
+                    "derived_distance_mpc": row.get("derived_distance_mpc"),
+                    "derived_distance_method": row.get("derived_distance_method"),
                     "abs_b_mag": row.get("abs_b_mag"),
                     "log_mhi_msun": row.get("log_mhi_msun"),
                     "log_m26_msun": row.get("log_m26_msun"),
@@ -234,11 +242,18 @@ def derive_live_groups(
     return sorted(groups, key=lambda item: (-int(item["member_count"]), str(item["name"]), int(item["root_pgc"])))
 
 
-def _published_group(storage: Storage, root_pgc: int) -> dict[str, object] | None:
-    matches = [r for r in data_groups.select_published_groups(storage) if r["root_pgc"] == root_pgc]
-    if len(matches) != 1:
-        return None
-    row = matches[0]
+def _published_group(storage: Storage, root_pgc: int, group_id: int | None = None) -> dict[str, object] | None:
+    if group_id is None:
+        matches = [r for r in data_groups.select_published_groups(storage) if r["root_pgc"] == root_pgc]
+        if len(matches) > 1:
+            raise ValueError("Ambiguous published group root; specify group_id")
+        if not matches:
+            return None
+        row = matches[0]
+    else:
+        row = data_groups.select_published_group_by_id(storage, group_id, root_pgc)
+        if row is None:
+            return None
     members = data_groups.select_published_members(storage, int(row["group_id"]))
     tidal_range = data_groups.select_tidal_range(storage)
     return {**_summary(row, members, tidal_range), "source_description": row["source_description"], "members": members}
@@ -271,9 +286,13 @@ def list_groups(storage: Storage, definition: str = "physical") -> list[dict[str
     ]
 
 
-def get_group(storage: Storage, root_pgc: int, definition: str = "physical") -> dict[str, object] | None:
+def get_group(
+    storage: Storage, root_pgc: int, definition: str = "physical", group_id: int | None = None
+) -> dict[str, object] | None:
     if definition == "published":
-        return _published_group(storage, root_pgc)
+        return _published_group(storage, root_pgc, group_id)
+    if group_id is not None:
+        raise ValueError("group_id selector is only valid for published groups")
     if definition not in ("physical", "suite"):
         raise ValueError("Unsupported group definition")
     tidal_range = data_groups.select_tidal_range(storage)
@@ -285,3 +304,115 @@ def get_group(storage: Storage, root_pgc: int, definition: str = "physical") -> 
         ),
         None,
     )
+
+
+def _membership_choice(group: dict[str, object], member: dict[str, object]) -> dict[str, object]:
+    return {
+        "group_id": group["group_id"],
+        "root_pgc": group["root_pgc"],
+        "name": group["name"],
+        "definition": group["definition"],
+        "data_status": group["data_status"],
+        "source_catalog": group["source_catalog"],
+        "source_version": group["source_version"],
+        "source_sha256": group.get("source_sha256"),
+        "source_description": group.get("source_description"),
+        "member_pgc": member["pgc"],
+        "parent_md_pgc": member.get("parent_md_pgc"),
+        "membership_status": member["membership_status"],
+        "source_status": member["source_status"],
+        "hierarchy_depth": member["hierarchy_depth"],
+    }
+
+
+def find_member_groups(storage: Storage, member_pgc: int) -> list[dict[str, object]]:
+    """Return source-distinct, explicit memberships, never positional guesses."""
+    if member_pgc <= 0:
+        return []
+    results: list[dict[str, object]] = []
+    for row in data_groups.select_published_memberships(storage, member_pgc):
+        group = {
+            "group_id": row["group_id"],
+            "root_pgc": row["root_pgc"],
+            "name": row["name"],
+            "definition": row["definition"],
+            "data_status": row["data_status"],
+            "source_catalog": row["source_catalog"],
+            "source_version": row["source_version"],
+            "source_sha256": row.get("source_sha256"),
+            "source_description": row.get("source_description"),
+        }
+        member = {
+            "pgc": row["member_pgc"],
+            "parent_md_pgc": row["parent_md_pgc"],
+            "membership_status": row["membership_status"],
+            "source_status": row["source_status"],
+            "hierarchy_depth": row["hierarchy_depth"],
+        }
+        results.append(_membership_choice(group, member))
+
+    # Only one current, revision-checked physical snapshot per request.
+    rows = data_groups.select_live_objects(storage)
+    for definition in ("physical", "suite"):
+        for group in derive_live_groups(rows, definition):
+            group_members = cast(list[dict[str, object]], group["members"])
+            member = next((m for m in group_members if int(m["pgc"]) == member_pgc), None)
+            if member is not None:
+                results.append(_membership_choice(group, member))
+    return sorted(
+        results,
+        key=lambda row: (
+            {"physical": 0, "suite": 1, "published": 2}[str(row["definition"])],
+            int(row["root_pgc"]),
+            str(row["source_catalog"]),
+            str(row["source_version"]),
+            int(row["group_id"]),
+        ),
+    )
+
+
+def detail_with_distance_lineage(group: dict[str, object]) -> dict[str, object]:
+    """Add data-origin evidence without upgrading method hints to verified distances."""
+    members = []
+    for item in cast(list[dict[str, object]], group["members"]):
+        member = dict(item)
+        distance = _number(member.get("dist_mpc"))
+        derived_distance = _number(member.get("derived_distance_mpc"))
+        observed_distance = _number(member.get("observed_distance_mpc"))
+        value_source = (
+            "lv.physical" if derived_distance is not None else "lv.observed" if observed_distance is not None else None
+        )
+        method = (
+            member.get("derived_distance_method") or member.get("distance_method")
+            if value_source == "lv.physical"
+            else member.get("distance_method")
+        )
+        method_text = method if isinstance(method, str) else None
+        member["distance_origin"] = group_geometry.distance_origin(distance, method_text)
+        member["distance_value_source"] = value_source
+        member["distance_method_for_value"] = method_text
+        # This flag stays false pending source-level scientific validation.
+        member["distance_provenance_verified"] = False
+        member["distance_3d_eligible"] = False
+        members.append(member)
+
+    root = next((m for m in members if int(m["pgc"]) == int(group["root_pgc"])), None)
+    center = None
+    if root is not None and _position(root):
+        center = {
+            "center_type": "root_md",
+            "center_pgc": root["pgc"],
+            "ra": root["ra"],
+            "dec": root["dec"],
+            "distance_mpc": root.get("dist_mpc"),
+            "distance_origin": root["distance_origin"],
+            "distance_provenance_verified": False,
+            "physical_3d_eligible": False,
+        }
+    return {
+        **group,
+        "members": members,
+        "scene_center": center,
+        "distance_contract": "method_classification_unverified_v1",
+        "radius_measurements": [],
+    }

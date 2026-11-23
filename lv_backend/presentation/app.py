@@ -103,16 +103,31 @@ def list_groups(request: fastapi.Request, definition: str = "physical") -> dict[
 
 
 @api.get("/group/{root_pgc}")
-def get_group(request: fastapi.Request, root_pgc: int, definition: str = "physical") -> dict[str, object]:
+def get_group(
+    request: fastapi.Request, root_pgc: int, definition: str = "physical", group_id: int | None = None
+) -> dict[str, object]:
     if definition not in ("physical", "suite", "published"):
         raise fastapi.HTTPException(status_code=422, detail="Unsupported group definition")
+    if group_id is not None and (group_id <= 0 or definition != "published"):
+        raise fastapi.HTTPException(status_code=422, detail="Invalid group_id selector")
     try:
-        group = domain_groups.get_group(request.app.state.storage, root_pgc, definition)
+        group = domain_groups.get_group(request.app.state.storage, root_pgc, definition, group_id)
     except ValueError as exc:
         raise fastapi.HTTPException(status_code=409, detail=str(exc)) from exc
     if group is None:
         raise fastapi.HTTPException(status_code=404)
-    return {"data": group}
+    return {"data": domain_groups.detail_with_distance_lineage(group)}
+
+
+@api.get("/group-memberships/{member_pgc}")
+def get_group_memberships(request: fastapi.Request, member_pgc: int) -> dict[str, object]:
+    if member_pgc <= 0:
+        raise fastapi.HTTPException(status_code=422, detail="Invalid member PGC")
+    try:
+        matches = domain_groups.find_member_groups(request.app.state.storage, member_pgc)
+    except (RuntimeError, ValueError) as exc:
+        raise fastapi.HTTPException(status_code=409, detail=str(exc)) from exc
+    return {"data": matches}
 
 
 def _preview_definition(definition: str) -> str:

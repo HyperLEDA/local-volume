@@ -24,7 +24,18 @@ export function GroupPage() {
   const [searchParams] = useSearchParams();
   const browseToken = searchParams.get("browse");
   const definition: GroupDefinition =
-    searchParams.get("definition") === "suite" ? "suite" : "physical";
+    searchParams.get("definition") === "published"
+      ? "published"
+      : searchParams.get("definition") === "suite"
+        ? "suite"
+        : "physical";
+  const selectedGroupId = Number(searchParams.get("group_id"));
+  const groupId =
+    definition === "published" &&
+    Number.isSafeInteger(selectedGroupId) &&
+    selectedGroupId > 0
+      ? selectedGroupId
+      : undefined;
   const [group, setGroup] = useState<GroupDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const collectionToken = useMemo(
@@ -41,7 +52,7 @@ export function GroupPage() {
     let active = true;
     setGroup(null);
     setError(null);
-    void fetchGroup(id, definition)
+    void fetchGroup(id, definition, groupId)
       .then((loaded) => {
         if (active) setGroup(loaded);
       })
@@ -51,7 +62,7 @@ export function GroupPage() {
     return () => {
       active = false;
     };
-  }, [rootPgc, definition]);
+  }, [rootPgc, definition, groupId]);
 
   const names = useMemo(
     () =>
@@ -74,13 +85,16 @@ export function GroupPage() {
     saveCollection(collectionToken, {
       origin: "group",
       label: `${group.name} Group`,
-      returnTo: `/groups/${group.root_pgc}?definition=${definition}${browseToken ? `&browse=${encodeURIComponent(browseToken)}` : ""}`,
+      returnTo:
+        `/groups/${group.root_pgc}?definition=${definition}` +
+        (definition === "published" ? `&group_id=${group.group_id}` : "") +
+        (browseToken ? `&browse=${encodeURIComponent(browseToken)}` : ""),
       pgcs: [...new Set(group.members.map((member) => member.pgc))],
       scrollY: window.scrollY,
       group: {
         id: group.group_id,
         rootPgc: group.root_pgc,
-        definition: definition === "suite" ? "suite" : "physical",
+        definition,
       },
     });
   }

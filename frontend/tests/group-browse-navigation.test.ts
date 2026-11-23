@@ -101,7 +101,10 @@ describe("Groups catalogue context and member traversal", () => {
       "utf8",
     );
     expect(src).toContain('browseToken = searchParams.get("browse")');
-    expect(src).toContain("returnTo: `/groups/");
+    expect(src).toMatch(
+      /returnTo:\s*`\/groups\/\$\{group\.root_pgc\}\?definition=\$\{definition\}`/,
+    );
+    expect(src).toContain("`&group_id=$" + "{group.group_id}`");
     expect(src).toContain("browseToken ?");
     expect(src).toContain("group.group_id");
     expect(src).toContain("group.members.map");

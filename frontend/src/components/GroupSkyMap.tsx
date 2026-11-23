@@ -3,7 +3,13 @@ import A, {
   type AladinSource,
   type AladinView,
 } from "aladin-lite";
-import { useEffect, useRef, useState, type MouseEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type MouseEvent,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import type { GroupDetail, GroupMember } from "../api/groups.ts";
 import { fetchObjects, type CatalogObject } from "../api/objects.ts";
@@ -12,6 +18,16 @@ import { popupObjectRoute } from "../lib/popupNavigation.ts";
 import { groupPopupRoute } from "../lib/groupBrowsing.ts";
 import { greatCircleVertices } from "../lib/mdConnection.ts";
 import { trimGroupEdge } from "../lib/groupEdgeTrim.ts";
+import {
+  groupTidalEdges,
+  TIDAL_TONES,
+  type TidalTone,
+} from "../lib/groupTidalEdges.ts";
+import { GroupTidalUI } from "./GroupTidalUI.tsx";
+import {
+  buildCelestialSubgroups,
+  type CelestialSubgroup,
+} from "../lib/groupCelestialSubgroups.ts";
 import { markerDiameter } from "../lib/reticle.ts";
 import { morphologyColor } from "../lib/morphologyColors.ts";
 import {
@@ -29,6 +45,11 @@ import {
 } from "../lib/groupPreviewImageQuality.ts";
 
 type PositionedMember = GroupMember & { ra: number; dec: number };
+type SubgroupPresentation = {
+  enabled: boolean;
+  filter: number | "all";
+  emphasized: number | null;
+};
 
 type GroupGraphicOverlay = {
   add: (shape: object) => void;
@@ -36,6 +57,7 @@ type GroupGraphicOverlay = {
   reportChange: () => void;
 };
 type CaptureView = GroupDrawingView & {
+  pix2world: (x: number, y: number) => number[] | null;
   // Aladin can render a specifically sized screenshot, avoiding the arbitrary
   // dimensions of getViewData() when the preview generator is embedded.
   getViewDataURL: (options: {
@@ -119,8 +141,22 @@ type GroupDrawingApi = {
     name: string;
     color: string;
     lineWidth: number;
+    lineDash?: number[];
   }) => GroupGraphicOverlay;
   polyline: (vertices: [number, number][]) => object;
+  polygon: (
+    vertices: [number, number][],
+    options?: {
+      fill?: boolean;
+      fillColor?: string;
+      opacity?: number;
+      color?: string;
+      lineWidth?: number;
+      hoverColor?: string;
+      selectionColor?: string;
+      selectionLineWidth?: number;
+    },
+  ) => object;
 };
 type GroupDrawingView = AladinView & {
   addOverlay: (overlay: GroupGraphicOverlay) => void;
@@ -241,10 +277,29 @@ export function GroupSkyMap({
   onSnapshotError?: (reason: string) => void;
 }) {
   const skyRef = useRef<HTMLDivElement>(null);
-  const viewRef = useRef<AladinView | null>(null);
+  const viewRef = useRef<CaptureView | null>(null);
   const catalogueRef = useRef<AtlasCatalogSnapshot | null>(null);
   const navigate = useNavigate();
   const [mapError, setMapError] = useState<string | null>(null);
+  // Stage 03d: native celestial subgroup contours — no frame-dependent rasterizer.
+  const nativeSubgroupController = useRef<
+    ((state: SubgroupPresentation) => void) | null
+  >(null);
+  const nativeSubgroupState = useRef<SubgroupPresentation>({
+    enabled: true,
+    filter: "all",
+    emphasized: null,
+  });
+  const presentNativeSubgroups = useCallback(
+    (state: SubgroupPresentation): void => {
+      nativeSubgroupState.current = state;
+      nativeSubgroupController.current?.(state);
+    },
+    [],
+  );
+
+  const [mapRevision, setMapRevision] = useState(0);
+  const [mapSize, setMapSize] = useState({ width: 0, height: 0 });
 
   function onPopupClick(event: MouseEvent<HTMLDivElement>): void {
     const target = event.target;
@@ -321,6 +376,44 @@ export function GroupSkyMap({
     let snapshotRequested = false;
     let observer: ResizeObserver | null = null;
     let unregisterEdgeUpdate: (() => void) | null = null;
+    let interactionFrame: number | null = null;
+    let lastProjectionSignature:
+      [number, number, number, number, number] | null = null;
+    function scheduleInteractionUpdate(): void {
+      if (cancelled || miniature || interactionFrame !== null) return;
+      interactionFrame = window.requestAnimationFrame(() => {
+        interactionFrame = null;
+        if (!cancelled) {
+          const w = element.clientWidth;
+          const h = element.clientHeight;
+          const center = viewRef.current?.world2pix(rootRa, rootDec);
+          const fov = viewRef.current?.getFov()[0] ?? Number.NaN;
+          const signature: [number, number, number, number, number] = [
+            w,
+            h,
+            center?.[0] ?? Number.NaN,
+            center?.[1] ?? Number.NaN,
+            fov,
+          ];
+          const previous = lastProjectionSignature;
+          if (
+            previous &&
+            previous[0] === w &&
+            previous[1] === h &&
+            Math.abs(signature[2] - previous[2]) < 0.25 &&
+            Math.abs(signature[3] - previous[3]) < 0.25 &&
+            Math.abs(fov - previous[4]) <
+              Math.max(0.00001, Math.abs(fov) * 0.00015)
+          )
+            return;
+          lastProjectionSignature = signature;
+          setMapSize((old) =>
+            old.width === w && old.height === h ? old : { width: w, height: h },
+          );
+          setMapRevision((value) => value + 1);
+        }
+      });
+    }
     const timers: number[] = [];
 
     // Fit to what Aladin actually renders, after its first responsive resize.
@@ -396,19 +489,140 @@ export function GroupSkyMap({
       view = createdView as CaptureView;
       viewRef.current = view;
 
+      // Build sky polygons once from SOURCE membership. Aladin owns their
+      // projection, panning and zooming; React must not rebuild their outlines.
+      const celestial = miniature ? [] : buildCelestialSubgroups(group);
+      if (celestial.length > 0) {
+        // Stage 03e: opacity-isolated native celestial contours.
+        // The translucent fill never changes shared Canvas globalAlpha.
+        const subgroupFill = drawingApi.graphicOverlay({
+          name: "Subgroup translucent hover fill",
+          color: "#87d6d1",
+          lineWidth: 0.1,
+        });
+        const outlines = drawingApi.graphicOverlay({
+          name: "Source-defined MD subgroup boundaries",
+          color: "#a8dce2",
+          lineWidth: 1.6,
+          lineDash: [5, 5],
+        });
+        const highlights = drawingApi.graphicOverlay({
+          name: "Hovered MD subgroup stroke",
+          color: "#d2fff0",
+          lineWidth: 1.9,
+        });
+        view.addOverlay(subgroupFill);
+        view.addOverlay(outlines);
+        view.addOverlay(highlights);
+        let lastFilter = "";
+        let lastEmphasis: number | null = null;
+        const nativeByPgc = new Map<number, CelestialSubgroup>(
+          celestial.map((subgroup) => [subgroup.pgc, subgroup]),
+        );
+        const presentation = {
+          apply(state: SubgroupPresentation): void {
+            const filter = state.enabled ? String(state.filter) : "off";
+            if (lastFilter !== filter) {
+              lastFilter = filter;
+              outlines.removeAll();
+              for (const subgroup of celestial) {
+                if (
+                  !state.enabled ||
+                  (state.filter !== "all" && subgroup.pgc !== state.filter)
+                )
+                  continue;
+                for (const vertices of subgroup.polygons) {
+                  outlines.add(
+                    drawingApi.polygon(
+                      vertices.map(([ra, dec]): [number, number] => [ra, dec]),
+                      {
+                        fill: false,
+                        color: "#a8dce2",
+                        opacity: 1,
+                        lineWidth: 1.6,
+                        hoverColor: "#a8dce2",
+                        selectionColor: "#a8dce2",
+                        selectionLineWidth: 1.6,
+                      },
+                    ),
+                  );
+                }
+              }
+              outlines.reportChange();
+              subgroupFill.removeAll();
+              subgroupFill.reportChange();
+              highlights.removeAll();
+              highlights.reportChange();
+              lastEmphasis = null;
+            }
+            const desired =
+              state.enabled &&
+              (state.filter === "all" || state.filter === state.emphasized)
+                ? state.emphasized
+                : null;
+            if (lastEmphasis === desired) return;
+            lastEmphasis = desired;
+            subgroupFill.removeAll();
+            highlights.removeAll();
+            const selected =
+              desired === null ? undefined : nativeByPgc.get(desired);
+            if (selected) {
+              // Never fill projected holes: they may contain non-member galaxies.
+              const hasHoles = selected.polygons.length > 1;
+              for (const vertices of selected.polygons) {
+                if (!hasHoles) {
+                  // Alpha belongs to fillColor, not to the shared drawing state.
+                  subgroupFill.add(
+                    drawingApi.polygon(
+                      vertices.map(([ra, dec]): [number, number] => [ra, dec]),
+                      {
+                        fill: true,
+                        color: "#87d6d1",
+                        fillColor: "rgba(135, 214, 209, 0.13)",
+                        opacity: 1,
+                        lineWidth: 0.1,
+                      },
+                    ),
+                  );
+                }
+                // An independent opaque stroke remains visible throughout hover.
+                highlights.add(
+                  drawingApi.polygon(
+                    vertices.map(([ra, dec]): [number, number] => [ra, dec]),
+                    {
+                      fill: false,
+                      color: "#d2fff0",
+                      opacity: 1,
+                      lineWidth: 1.9,
+                      hoverColor: "#d2fff0",
+                      selectionColor: "#d2fff0",
+                      selectionLineWidth: 1.9,
+                    },
+                  ),
+                );
+              }
+            }
+            subgroupFill.reportChange();
+            highlights.reportChange();
+          },
+        };
+        nativeSubgroupController.current = presentation.apply;
+        presentation.apply(nativeSubgroupState.current);
+      }
+
       // The overlay is attached before adding links; its drawing remains
       // attached to the native Aladin zoom/pan transforms.
-      let lines: GroupGraphicOverlay | null = null;
+      const lines = new Map<TidalTone, GroupGraphicOverlay>();
       let markerRadius = new Map<number, number>();
       const mapView = createdView as CaptureView;
+      const scienceEdges = groupTidalEdges(members);
       function updateGroupEdges(): void {
-        if (cancelled || lines === null) return;
-        const overlay = lines;
-        overlay.removeAll();
-        for (const member of members) {
-          if (member.parent_md_pgc === null) continue;
-          const parent = byPgc.get(member.parent_md_pgc);
-          if (!parent) continue;
+        if (cancelled || lines.size === 0) return;
+        for (const overlay of lines.values()) overlay.removeAll();
+        for (const edge of scienceEdges) {
+          const parent = byPgc.get(edge.parentPgc);
+          const member = byPgc.get(edge.memberPgc);
+          if (!parent || !member) continue;
           const arc = greatCircleVertices(parent, member);
           const clipped = trimGroupEdge(
             arc,
@@ -416,9 +630,12 @@ export function GroupSkyMap({
             markerRadius.get(member.pgc) ?? 3.5,
             (ra, dec) => mapView.world2pix(ra, dec),
           );
-          if (clipped.length >= 2) overlay.add(drawingApi.polyline(clipped));
+          const overlay = lines.get(edge.tone);
+          if (overlay && clipped.length >= 2)
+            overlay.add(drawingApi.polyline(clipped));
         }
-        overlay.reportChange();
+        for (const overlay of lines.values()) overlay.reportChange();
+        scheduleInteractionUpdate();
       }
 
       // Close-up preview is the unannotated DSS2 field of the root galaxy.
@@ -426,12 +643,20 @@ export function GroupSkyMap({
       if (!portrait && atlas !== null) {
         // Aladin owns both layers, so they follow the same coordinate transform
         // and the same render cycle when panning and zooming.
-        lines = drawingApi.graphicOverlay({
-          name: "Group main-disturber relations",
-          color: "#e9bd70",
-          lineWidth: miniature ? 0.9 : 1.0,
-        });
-        view.addOverlay(lines);
+        for (const tone of [
+          "positive",
+          "negative",
+          "zero",
+          "unknown",
+        ] as TidalTone[]) {
+          const overlay = drawingApi.graphicOverlay({
+            name: `Group MD relations: ${tone}`,
+            color: TIDAL_TONES[tone],
+            lineWidth: miniature ? 0.9 : 1.35,
+          });
+          lines.set(tone, overlay);
+          view.addOverlay(overlay);
+        }
         const bounds = members.map((member) => {
           const object = atlas.byPgc.get(member.pgc);
           const diameter = Math.max(
@@ -449,7 +674,11 @@ export function GroupSkyMap({
         // Regenerate only when pixel scale changes. The native Aladin overlay
         // continues to track pan movements without a separate animated canvas.
         mapView.on("zoomChanged", updateGroupEdges);
-        unregisterEdgeUpdate = () => mapView.off?.("zoomChanged");
+        mapView.on("positionChanged", scheduleInteractionUpdate);
+        unregisterEdgeUpdate = () => {
+          mapView.off?.("zoomChanged");
+          mapView.off?.("positionChanged");
+        };
 
         const catalog: AladinCatalog = A.catalog({
           name: "Group galaxies",
@@ -479,6 +708,7 @@ export function GroupSkyMap({
         observer = new ResizeObserver(() => {
           fitToMembers();
           updateGroupEdges();
+          scheduleInteractionUpdate();
         });
         observer.observe(element);
         for (const delay of [100, 350, 850, 1400]) {
@@ -571,10 +801,13 @@ export function GroupSkyMap({
       captureAbort.abort();
       observer?.disconnect();
       unregisterEdgeUpdate?.();
+      if (interactionFrame !== null)
+        window.cancelAnimationFrame(interactionFrame);
       for (const timer of timers) window.clearTimeout(timer);
       element.removeEventListener("pointerdown", markInteraction);
       element.removeEventListener("wheel", markInteraction);
       element.removeEventListener("touchstart", markInteraction);
+      nativeSubgroupController.current = null;
       view?.remove?.();
       viewRef.current = null;
       catalogueRef.current = null;
@@ -596,6 +829,17 @@ export function GroupSkyMap({
       onClickCapture={onPopupClick}
     >
       <div className="group-sky-image" ref={skyRef} />
+      {!miniature && (
+        <GroupTidalUI
+          group={group}
+          view={viewRef.current}
+          revision={mapRevision}
+          width={mapSize.width}
+          height={mapSize.height}
+          onMemberNavigate={onMemberNavigate}
+          onSubgroupPresentation={presentNativeSubgroups}
+        />
+      )}
       {mapError !== null && !miniature ? (
         <p role="alert" className="catalog-status catalog-status-error">
           {mapError}

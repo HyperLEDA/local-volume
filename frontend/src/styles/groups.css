@@ -1133,6 +1133,142 @@
   padding: 0;
 }
 
+/* Milestone 02 / Stage 03: colour encodes tidal-sign ONLY for the exact MD pair. */
+.group-tidal-ui {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  font-size: 12px;
+}
+.group-tidal-hitmap {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.group-tidal-hit {
+  pointer-events: stroke;
+  cursor: pointer;
+  outline: none;
+}
+.group-tidal-hit:focus-visible {
+  stroke: rgb(255 255 255 / 0.05);
+}
+.group-tidal-highlight {
+  filter: drop-shadow(0 0 2px rgb(0 0 0 / 0.65));
+}
+.group-tidal-subgroup {
+  pointer-events: none;
+}
+.group-tidal-subgroup ellipse {
+  fill: none;
+  stroke: #8cc6ce;
+  stroke-width: 1.2px;
+  stroke-dasharray: 5 5;
+  stroke-opacity: 0.8;
+}
+.group-tidal-subgroup text {
+  fill: #e0f3f6;
+  font-size: 11px;
+  paint-order: stroke;
+  stroke: #10202b;
+  stroke-width: 3.2px;
+  stroke-linejoin: round;
+}
+.group-tidal-legend {
+  position: absolute;
+  left: 10px;
+  bottom: 32px;
+  pointer-events: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 10px;
+  max-width: calc(100% - 20px);
+  border-radius: 5px;
+  padding: 5px 7px;
+  background: rgb(10 22 31 / 0.78);
+  color: #ebf1f5;
+  font-size: 11px;
+}
+.group-tidal-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+.group-tidal-legend i {
+  display: inline-block;
+  width: 13px;
+  height: 2px;
+}
+.group-tidal-subgroups-control {
+  position: absolute;
+  right: 8px;
+  bottom: 70px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  color: #eaf3f5;
+  background: rgb(10 22 31 / 0.88);
+  border: 1px solid rgb(190 215 224 / 0.3);
+  border-radius: 5px;
+  padding: 6px 8px;
+  pointer-events: auto;
+  font-size: 11px;
+}
+.group-tidal-subgroups-control label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+}
+.group-tidal-subgroups-control input {
+  accent-color: #69c8b8;
+}
+.group-tidal-subgroups-control select {
+  max-width: 155px;
+  font-size: 11px;
+  min-height: 27px;
+  color: #eaf3f5;
+  background: #172b37;
+  border: 1px solid #63818d;
+  border-radius: 3px;
+}
+.group-tidal-popup {
+  position: absolute;
+  pointer-events: auto;
+  z-index: 7;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid #6995a1;
+  border-radius: 6px;
+  background: #122733;
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.5);
+  color: #f2f7f9;
+  line-height: 1.4;
+}
+.group-tidal-popup > div:first-child {
+  font-weight: 650;
+}
+.group-tidal-popup > div + div {
+  margin-top: 3px;
+}
+.group-sky-map--miniature .group-tidal-ui {
+  display: none;
+}
+@media (max-width: 520px) {
+  .group-tidal-legend {
+    bottom: 22px;
+    gap: 4px 6px;
+    font-size: 10px;
+  }
+  .group-tidal-subgroups-control {
+    bottom: 65px;
+    right: 5px;
+  }
+}
+
 /* #50: a clicked scatter point stays readable until explicitly dismissed. */
 .group-figure-tooltip--pinned {
   z-index: 20;
@@ -1162,5 +1298,52 @@
   .group-figure-tooltip {
     min-width: 0;
     max-width: min(220px, calc(100% - 10px));
+  }
+}
+
+/* Stage 03c: Galaxy-scale group matrix typography. */
+.group-detail-summary .group-parameters-matrix .parameter-matrix-caption {
+  font-family: var(--font-display, Georgia, serif);
+  font-size: var(--font-size-panel, 17px);
+  font-weight: 600;
+  padding: 12px 10px;
+}
+.group-detail-summary .group-parameters-matrix .parameter-block {
+  min-width: 0;
+  padding: 12px 9px;
+}
+.group-detail-summary .group-parameters-matrix .parameter-block-label {
+  font-size: 0.89rem;
+  font-weight: 500;
+  line-height: 1.3;
+  white-space: normal;
+}
+.group-detail-summary .group-parameters-matrix .parameter-block-value {
+  font-size: 1.07rem;
+  font-weight: 600;
+  line-height: 1.35;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.group-detail-summary .group-parameters-matrix .parameter-block-unit {
+  font-size: 0.84rem;
+}
+.group-detail-summary .group-parameters-matrix .parameter-block-reading {
+  justify-content: center;
+  column-gap: 6px;
+  row-gap: 3px;
+}
+.group-detail-summary .group-parameters-matrix .parameter-cell {
+  overflow-wrap: anywhere;
+  vertical-align: middle;
+}
+@media (max-width: 680px) {
+  .group-detail-summary {
+    padding: 12px;
+  }
+  .group-detail-summary .group-parameters-matrix .parameter-block {
+    padding: 10px 6px;
+  }
+  .group-detail-summary .group-parameters-matrix .parameter-block-label {
+    font-size: 0.84rem;
   }
 }

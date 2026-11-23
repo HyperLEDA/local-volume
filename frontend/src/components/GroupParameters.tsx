@@ -211,41 +211,47 @@ export function GroupParameters({
             <col key={i} />
           ))}
         </colgroup>
-        {rows.map((fields, index) => (
-          <tbody className="parameter-group" key={index}>
-            <tr className="parameter-data-row">
-              {fields.map((field) => (
-                <td
-                  className="parameter-cell"
-                  colSpan={12 / fields.length}
-                  key={field.key}
-                >
-                  <div className="parameter-block">
-                    <div
-                      className="parameter-block-label parameter-block-label--help"
-                      tabIndex={0}
-                    >
-                      {field.label}
-                      <span className="parameter-help-tooltip" role="tooltip">
-                        {field.help}
-                      </span>
-                    </div>
-                    <div className="parameter-block-reading">
-                      <span className="parameter-block-value">
-                        {field.value}
-                      </span>
-                      {field.unit && field.value !== "—" ? (
-                        <span className="parameter-block-unit">
-                          {field.unit}
+        {rows
+          .flatMap((fields) =>
+            fields.length === 4
+              ? [fields.slice(0, 2), fields.slice(2)]
+              : [fields],
+          )
+          .map((fields, index) => (
+            <tbody className="parameter-group" key={index}>
+              <tr className="parameter-data-row">
+                {fields.map((field) => (
+                  <td
+                    className="parameter-cell"
+                    colSpan={12 / fields.length}
+                    key={field.key}
+                  >
+                    <div className="parameter-block">
+                      <div
+                        className="parameter-block-label parameter-block-label--help"
+                        tabIndex={0}
+                      >
+                        {field.label}
+                        <span className="parameter-help-tooltip" role="tooltip">
+                          {field.help}
                         </span>
-                      ) : null}
+                      </div>
+                      <div className="parameter-block-reading">
+                        <span className="parameter-block-value">
+                          {field.value}
+                        </span>
+                        {field.unit && field.value !== "—" ? (
+                          <span className="parameter-block-unit">
+                            {field.unit}
+                          </span>
+                        ) : null}
+                      </div>
                     </div>
-                  </div>
-                </td>
-              ))}
-            </tr>
-          </tbody>
-        ))}
+                  </td>
+                ))}
+              </tr>
+            </tbody>
+          ))}
       </table>
     </section>
   );

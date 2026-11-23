@@ -13,6 +13,7 @@ import { AladinMap, type SkyFocus } from "../components/AladinMap.tsx";
 import { ObjectCoordinates } from "../components/ObjectCoordinates.tsx";
 import { ObjectMeasurementExports } from "../components/ObjectMeasurementExports.tsx";
 import { ExternalCatalogLinks } from "../components/ExternalCatalogLinks.tsx";
+import { ObjectGroupLinks } from "../components/ObjectGroupLinks.tsx";
 import { ObservedParameterCards } from "../components/ObservedParameterCards.tsx";
 import { PhysicalParametersTable } from "../components/PhysicalParametersTable.tsx";
 import { objectFovDecision } from "../lib/objectFov.ts";
@@ -371,6 +372,8 @@ export function ObjectPage() {
                     {initialFov.note}
                   </p>
                 ) : null}
+                {/* Stage 03c: group context under sky survey */}
+                <ObjectGroupLinks pgc={data.pgc} />
                 <ExternalCatalogLinks pgc={data.pgc} />
                 {skyCatalogError ? (
                   <p className="catalog-status" role="status">
@@ -417,6 +420,7 @@ export function ObjectPage() {
                 ) : null}
               </section>
               <ObjectCoordinates object={data} />
+              {focus === null ? <ObjectGroupLinks pgc={data.pgc} /> : null}
               {focus === null ? <ExternalCatalogLinks pgc={data.pgc} /> : null}
               <ObservedParameterCards rows={rows} pgc={pgc} />
               <PhysicalParametersTable pgc={pgc} />
