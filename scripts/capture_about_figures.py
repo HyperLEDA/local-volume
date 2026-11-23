@@ -9,6 +9,9 @@ Requires a local Chromium/Edge-family browser installed. Images come only from t
 actual pages at /, /object/28630 and /groups/<root>?definition=suite.
 """
 
+# Visual QA dependencies are installed separately from the base environment.
+# pyright: reportMissingImports=false
+
 from __future__ import annotations
 
 import argparse

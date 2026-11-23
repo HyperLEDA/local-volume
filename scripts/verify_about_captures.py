@@ -10,6 +10,9 @@ Usage:
   uv run --with pillow python scripts/verify_about_captures.py --dist --http
 """
 
+# Visual QA dependencies are installed separately from the base environment.
+# pyright: reportMissingImports=false
+
 from __future__ import annotations
 
 import argparse

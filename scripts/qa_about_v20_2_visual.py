@@ -6,6 +6,9 @@ http://127.0.0.1:8000. Images are saved in .about-qa-v20-2 in this worktree.
 No database or repository writes except screenshots in that QA directory.
 """
 
+# Visual QA dependencies are installed separately from the base environment.
+# pyright: reportMissingImports=false
+
 from pathlib import Path
 
 from playwright.sync_api import sync_playwright
