@@ -38,8 +38,12 @@ describe("navigation and scientific documents", () => {
     expect(html).toContain("@misc{LVLEDAOnline2026,");
     expect(html).toContain("Accessed 2026-11-20 (UTC)");
     const documentSource = read("../src/content/documents.md");
-    expect(documentSource).toContain("url          = {https://lv.leda.sao.ru/}");
-    expect(documentSource).not.toContain("url          = {https://leda.sao.ru/}");
+    expect(documentSource).toContain(
+      "url          = {https://lv.leda.sao.ru/}",
+    );
+    expect(documentSource).not.toContain(
+      "url          = {https://leda.sao.ru/}",
+    );
     expect(html).not.toContain("doi.org/10.0000");
   });
   test("Atlas header places two shortcuts to each side of the centered identity", () => {
@@ -60,7 +64,7 @@ describe("navigation and scientific documents", () => {
     expect(right).toContain('href="/acknowledgements"');
     expect(html).toContain('class="catalog-header-identity"');
   });
-  test("Image attribution stands immediately above bottom-aligned resources", () => {
+  test("image credits remain above resources and About precedes Explore", () => {
     const html = renderToStaticMarkup(
       <MemoryRouter initialEntries={["/"]}>
         <CatalogSidebar />
@@ -70,11 +74,15 @@ describe("navigation and scientific documents", () => {
     expect(panel).toContain("Images:");
     expect(panel).toContain("M81 (HST): NASA/ESA/STScI");
     expect(panel).toContain("M81/M82: NASA/ESA/Z. Levay/R. Gendler");
+    expect(panel.indexOf("About LV LEDA")).toBeLessThan(
+      panel.indexOf("Explore LV LEDA"),
+    );
     expect(panel.indexOf("Images:")).toBeLessThan(
       panel.indexOf('aria-label="Resources"'),
     );
     const styles = read("../src/components/scientificNavigation.css");
     expect(styles).toContain("margin-top: auto");
+    expect(styles).toContain("width: 228px");
     expect(styles).toContain(
       "grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr)",
     );

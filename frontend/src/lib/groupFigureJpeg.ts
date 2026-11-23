@@ -266,6 +266,19 @@ export function renderGroupFigureJpeg(plot: GroupFigure): string {
     ctx.stroke();
     ctx.setLineDash([]);
   }
+  // Issue #85: optional straight reference relations in the native Group Page renderer.
+  // The viewport is already clipped above, so extrapolated segments are not drawn outside it.
+  for (const relation of plot.lines ?? []) {
+    ctx.save();
+    ctx.strokeStyle = "#86929a";
+    ctx.lineWidth = 1.65;
+    ctx.setLineDash([9, 7]);
+    ctx.beginPath();
+    ctx.moveTo(px(xMin), py(relation.slope * xMin + relation.intercept));
+    ctx.lineTo(px(xMax), py(relation.slope * xMax + relation.intercept));
+    ctx.stroke();
+    ctx.restore();
+  }
   if (plot.kind === "scatter") {
     const colors: Record<string, string> = {
       "T ≤ 2": "#8b4d5d",
@@ -394,6 +407,15 @@ export function renderGroupFigureJpeg(plot: GroupFigure): string {
   ctx.rotate(-Math.PI / 2);
   drawScientificAxisLabel(ctx, plot.yLabel, 0, 0);
   ctx.restore();
+  // A reference-line label is a scientific legend, not an interface heading.
+  if (plot.lines?.length && plot.lines[0].label) {
+    ctx.save();
+    ctx.fillStyle = PALETTE.axis;
+    ctx.textAlign = "left";
+    ctx.font = "21px Arial, sans-serif";
+    ctx.fillText(plot.lines[0].label, RECT.x + 26, RECT.y + 34);
+    ctx.restore();
+  }
   // Legitimate legend (not a figure title): categories are otherwise ambiguous.
   if (plot.key === "morphological-segregation") {
     const entries = [

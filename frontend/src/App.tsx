@@ -1,7 +1,8 @@
-import { lazy, Suspense, useDeferredValue } from "react";
+import { lazy, Suspense, useDeferredValue, useEffect, useRef } from "react";
 import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { CatalogHeader } from "./components/CatalogHeader.tsx";
 import { CatalogSidebar } from "./components/CatalogSidebar.tsx";
+import { routeDocumentTitle } from "./lib/routeTitle.ts";
 import { RouteLoadErrorBoundary } from "./components/RouteLoadErrorBoundary.tsx";
 import {
   loadGroupPage,
@@ -12,6 +13,7 @@ import {
   loadPublicationsPage,
   loadAcknowledgementsPage,
   loadDocumentsPage,
+  loadAboutPage,
 } from "./pageLoaders.ts";
 
 // React.lazy and navigation hints reuse the same cached loader promises.
@@ -23,12 +25,29 @@ const GroupPage = lazy(loadGroupPage);
 const PublicationsPage = lazy(loadPublicationsPage);
 const AcknowledgementsPage = lazy(loadAcknowledgementsPage);
 const DocumentsPage = lazy(loadDocumentsPage);
+const AboutPage = lazy(loadAboutPage);
 
 // Keep the already rendered route visible while a new lazy page is loading.
 // Initial direct visits still suspend until their route module is ready.
 function PageRoutes() {
   const location = useLocation();
   const deferredLocation = useDeferredValue(location);
+  const previousLocationKey = useRef(deferredLocation.key);
+  useEffect(() => {
+    // Keep the more specific server-generated title on direct HTTP visits.
+    // The location key also avoids overwriting it during StrictMode's
+    // development-only duplicate effect execution.
+    if (previousLocationKey.current === deferredLocation.key) return;
+    previousLocationKey.current = deferredLocation.key;
+    document.title = routeDocumentTitle(
+      deferredLocation.pathname,
+      deferredLocation.search,
+    );
+  }, [
+    deferredLocation.key,
+    deferredLocation.pathname,
+    deferredLocation.search,
+  ]);
 
   return (
     <Suspense
@@ -76,6 +95,14 @@ function PageRoutes() {
           element={
             <RouteLoadErrorBoundary key="group">
               <GroupPage />
+            </RouteLoadErrorBoundary>
+          }
+        />
+        <Route
+          path="/about"
+          element={
+            <RouteLoadErrorBoundary key="about">
+              <AboutPage />
             </RouteLoadErrorBoundary>
           }
         />

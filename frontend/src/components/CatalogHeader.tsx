@@ -288,7 +288,7 @@ export function CatalogHeader() {
             <img src={saoLogo} alt="SAO" />
           </a>
           <h1 className="catalog-header-title--atlas">
-            <Link to="/">
+            <Link to="/about" aria-label="About LV LEDA">
               <span
                 className="catalog-title-main"
                 style={
