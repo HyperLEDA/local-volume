@@ -35,6 +35,15 @@ export type GroupMember = {
   b_mag: number | null;
   lvg_v_lg_kms: number | null;
   distance_method?: string | null;
+  distance_reference?: string | null;
+  distance_source_catalog?: string | null;
+  distance_source_name?: string | null;
+  distance_value_source?: "lv.physical" | "lv.observed" | null;
+  distance_method_for_value?: string | null;
+  distance_origin?:
+    "DIRECT_MEASURED" | "GROUP_ASSIGNED" | "MODEL_INFERRED" | "UNKNOWN";
+  distance_provenance_verified?: boolean;
+  distance_3d_eligible?: boolean;
   abs_b_mag?: number | null;
   log_mhi_msun?: number | null;
   log_m26_msun?: number | null;
@@ -56,6 +65,18 @@ export type GroupDetail = GroupSummary & {
   tidal_min: number | null;
   tidal_max: number | null;
   members: GroupMember[];
+  distance_contract?: string;
+  radius_measurements?: unknown[];
+  scene_center?: {
+    center_type: "root_md";
+    center_pgc: number;
+    ra: number;
+    dec: number;
+    distance_mpc: number | null;
+    distance_origin: string;
+    distance_provenance_verified: boolean;
+    physical_3d_eligible: boolean;
+  } | null;
 };
 
 export async function fetchGroups(
@@ -71,11 +92,67 @@ export async function fetchGroups(
 export async function fetchGroup(
   pgc: number,
   definition: GroupDefinition = "physical",
+  groupId?: number,
 ): Promise<GroupDetail> {
-  const response = await fetch(`/api/v1/group/${pgc}?definition=${definition}`);
+  const groupIdQuery =
+    definition === "published" && groupId !== undefined
+      ? `&group_id=${groupId}`
+      : "";
+  const response = await fetch(
+    `/api/v1/group/${pgc}?definition=${definition}${groupIdQuery}`,
+  );
   if (!response.ok)
     throw new Error(`Failed to load group (${response.status})`);
   const payload = (await response.json()) as { data: GroupDetail };
+  return payload.data;
+}
+
+export type GroupMembership = {
+  group_id: number;
+  root_pgc: number;
+  name: string;
+  definition: GroupDefinition;
+  data_status: "computed" | "pilot" | "validated";
+  source_catalog: string;
+  source_version: string;
+  source_sha256: string | null;
+  source_description: string | null;
+  member_pgc: number;
+  parent_md_pgc: number | null;
+  membership_status: "root" | "computed" | "supported" | "unconfirmed";
+  source_status: string;
+  hierarchy_depth: number;
+};
+
+export function groupMembershipUrl(member: GroupMembership): string {
+  if (
+    !Number.isSafeInteger(member.member_pgc) ||
+    member.member_pgc <= 0 ||
+    !Number.isSafeInteger(member.root_pgc) ||
+    member.root_pgc <= 0 ||
+    !["physical", "suite", "published"].includes(member.definition)
+  ) {
+    throw new Error("Invalid group membership selector");
+  }
+  if (member.definition === "published") {
+    if (!Number.isSafeInteger(member.group_id) || member.group_id <= 0)
+      throw new Error("Invalid published group identifier");
+    return `/groups/${member.root_pgc}?definition=published&group_id=${member.group_id}`;
+  }
+  if (member.group_id !== -member.root_pgc)
+    throw new Error("Inconsistent computed group identifier");
+  return `/groups/${member.root_pgc}?definition=${member.definition}`;
+}
+
+export async function fetchGroupMemberships(
+  memberPgc: number,
+): Promise<GroupMembership[]> {
+  if (!Number.isSafeInteger(memberPgc) || memberPgc <= 0)
+    throw new Error("Invalid member PGC");
+  const response = await fetch(`/api/v1/group-memberships/${memberPgc}`);
+  if (!response.ok)
+    throw new Error(`Group membership unavailable (${response.status})`);
+  const payload = (await response.json()) as { data: GroupMembership[] };
   return payload.data;
 }
 

@@ -9,7 +9,12 @@ _LIVE_SQL = """
 SELECT o.pgc, o.name, o.ra, o.dec,
        COALESCE(p.distance_mpc, obs.dist) AS dist_mpc, obs.morphology_t, obs.b_mag,
        COALESCE(p.v_lg_kms, obs.lvg_v_lg_kms) AS lvg_v_lg_kms,
-       obs.distance_method, p.abs_b_mag, p.log_mhi_msun, p.log_m26_msun,
+       obs.distance_method, obs.distance_reference,
+       obs.source_catalog AS distance_source_catalog,
+       obs.source_name AS distance_source_name,
+       obs.dist AS observed_distance_mpc, p.distance_mpc AS derived_distance_mpc,
+       p.distance_method AS derived_distance_method,
+       p.abs_b_mag, p.log_mhi_msun, p.log_m26_msun,
        p.e_distance_minus_mpc, p.e_distance_plus_mpc, p.e_v_lg_kms,
        p.distance_error_basis, p.velocity_error_basis,
        (p.derived_hi_limit_flag IS NOT NULL) AS hi_mass_is_upper_limit,
@@ -77,6 +82,41 @@ _PUBLISHED_MEMBERS_BATCH_SQL = (
 ORDER BY gm.group_id, gm.hierarchy_depth, o.name, o.pgc
 """
 )
+
+# A member PGC may occur in multiple versioned published group definitions.
+# This lookup preserves each group's stable identifier and membership status.
+_PUBLISHED_MEMBERSHIP_LOOKUP_SQL = """
+SELECT g.group_id, g.root_pgc, g.definition, g.data_status,
+       g.source_catalog, g.source_version, g.source_sha256, g.source_description,
+       root.name AS name, gm.member_pgc, gm.parent_md_pgc,
+       gm.membership_status, gm.source_status, gm.hierarchy_depth
+FROM lv.group_members gm
+JOIN lv.groups g ON g.group_id = gm.group_id
+JOIN lv.objects root ON root.pgc = g.root_pgc
+WHERE gm.member_pgc = %s AND g.definition = 'published'
+ORDER BY g.group_id
+"""
+
+_PUBLISHED_GROUP_BY_ID_SQL = """
+SELECT g.group_id, g.root_pgc, g.definition, g.data_status, g.source_catalog,
+       g.source_version, g.source_sha256, g.source_description,
+       o.name AS root_name, o.ra AS root_ra, o.dec AS root_dec,
+       obs.dist AS root_dist_mpc
+FROM lv.groups g
+JOIN lv.objects o ON o.pgc = g.root_pgc
+LEFT JOIN lv.observed obs ON obs.pgc = g.root_pgc
+WHERE g.definition = 'published' AND g.group_id = %s AND g.root_pgc = %s
+"""
+
+
+def select_published_memberships(storage: Storage, member_pgc: int) -> list[dict[str, object]]:
+    return storage.query(_PUBLISHED_MEMBERSHIP_LOOKUP_SQL, [member_pgc])
+
+
+def select_published_group_by_id(storage: Storage, group_id: int, root_pgc: int) -> dict[str, object] | None:
+    rows = storage.query(_PUBLISHED_GROUP_BY_ID_SQL, [group_id, root_pgc])
+    return rows[0] if len(rows) == 1 else None
+
 
 _TIDAL_SQL = """
 SELECT MIN(p.theta1) AS min_theta, MAX(p.theta1) AS max_theta

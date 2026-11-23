@@ -1,0 +1,99 @@
+/* Stage 03c: continuous interpolated contours with stable hover. No sky labels. */
+.group-tidal-subgroup {
+  pointer-events: none;
+}
+.group-tidal-subgroup path {
+  pointer-events: none;
+  stroke: #93c4cc;
+  stroke-width: 1.3px;
+  stroke-dasharray: 5 5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  stroke-opacity: 0.78;
+  fill: transparent;
+  transition:
+    fill-opacity 100ms ease,
+    stroke-opacity 100ms ease;
+}
+.group-tidal-subgroup--active path {
+  fill: #87d6d1;
+  fill-opacity: 0.13;
+  stroke: #b6ece5;
+  stroke-opacity: 0.96;
+  stroke-width: 1.6px;
+}
+.group-tidal-subgroup-popup {
+  display: flex;
+  flex-direction: column;
+  max-height: 56%;
+  min-height: 0;
+  overflow: hidden;
+  font-size: 12px;
+}
+.group-tidal-subgroup-popup-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgb(180 210 220 / 25%);
+}
+.group-tidal-subgroup-popup-title strong {
+  font-size: 13px;
+  font-weight: 650;
+}
+.group-tidal-subgroup-popup-title button {
+  color: inherit;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  min-width: 24px;
+  min-height: 24px;
+  font-size: 19px;
+}
+.group-tidal-subgroup-popup ul {
+  list-style: none;
+  margin: 6px -4px 0 0;
+  padding: 0 4px 0 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.group-tidal-subgroup-popup li + li {
+  border-top: 1px solid rgb(180 210 220 / 10%);
+}
+.group-tidal-subgroup-popup a {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 2px 8px;
+  padding: 5px 2px;
+  color: #d2edf2;
+  text-decoration: none;
+}
+.group-tidal-subgroup-popup a:hover,
+.group-tidal-subgroup-popup a:focus-visible {
+  color: #fff;
+  text-decoration: underline;
+}
+.group-tidal-subgroup-popup a span {
+  color: #9db4bf;
+  font-size: 10px;
+}
+.group-tidal-subgroups-control button {
+  color: #eaf3f5;
+  background: #1b3e4a;
+  border: 1px solid #63818d;
+  border-radius: 3px;
+  min-height: 28px;
+  cursor: pointer;
+}
+.group-tidal-subgroups-control button:focus-visible,
+.group-tidal-subgroup-popup button:focus-visible {
+  outline: 2px solid #b6ece5;
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .group-tidal-subgroup path {
+    transition: none;
+  }
+}

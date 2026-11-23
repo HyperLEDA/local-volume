@@ -11,7 +11,11 @@ export type CollectionNavigation = {
   returnTo: string;
   pgcs: number[];
   scrollY: number;
-  group?: { id: number; rootPgc: number; definition: "physical" | "suite" };
+  group?: {
+    id: number;
+    rootPgc: number;
+    definition: "physical" | "suite" | "published";
+  };
 };
 const PREFIX = "lv-leda-collection-v1:";
 const RETURN_KEY = "lv-leda-collection-scroll-v1";
@@ -65,15 +69,25 @@ export function validateCollection(raw: unknown): CollectionNavigation | null {
     const groupDefinition: unknown = g?.definition;
     if (
       !g ||
-      !validPgc(g.id) ||
+      typeof g.id !== "number" ||
+      !Number.isSafeInteger(g.id) ||
       !validPgc(g.rootPgc) ||
-      (groupDefinition !== "physical" && groupDefinition !== "suite")
+      (groupDefinition !== "physical" &&
+        groupDefinition !== "suite" &&
+        groupDefinition !== "published") ||
+      !(
+        validPgc(g.id) ||
+        (groupDefinition !== "published" && g.id === -g.rootPgc)
+      )
     )
       return null;
     if (
       path !== `/groups/${g.rootPgc}` ||
       new URLSearchParams(c.returnTo.split("?")[1] ?? "").get("definition") !==
-        g.definition
+        g.definition ||
+      (g.definition === "published" &&
+        new URLSearchParams(c.returnTo.split("?")[1] ?? "").get("group_id") !==
+          String(g.id))
     )
       return null;
   } else if (c.group !== undefined) return null;

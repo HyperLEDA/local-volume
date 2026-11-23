@@ -69,13 +69,20 @@ export function resolveHeaderContext(
     const rootPgc = Number(groupMatch[1]);
     if (!Number.isSafeInteger(rootPgc)) return null;
     const definition =
-      params.get("definition") === "suite" ? "suite" : "physical";
+      params.get("definition") === "published"
+        ? "published"
+        : params.get("definition") === "suite"
+          ? "suite"
+          : "physical";
     const token = params.get("browse");
-    const context = loadGroupBrowse(token);
+    const context = definition === "published" ? null : loadGroupBrowse(token);
     const neighbors = groupBrowseNeighbors(context, rootPgc, definition);
     if (!context || !neighbors || !token) {
       return {
-        backHref: `/groups?definition=${definition}`,
+        backHref:
+          definition === "published"
+            ? "/groups"
+            : `/groups?definition=${definition}`,
         backLabel: "Back to Groups",
         scrollY: null,
         index: null,
@@ -94,11 +101,19 @@ export function resolveHeaderContext(
       previousHref:
         neighbors.previous === null
           ? null
-          : groupHref(neighbors.previous, definition, browseToken),
+          : groupHref(
+              neighbors.previous,
+              definition === "published" ? "physical" : definition,
+              browseToken,
+            ),
       nextHref:
         neighbors.next === null
           ? null
-          : groupHref(neighbors.next, definition, browseToken),
+          : groupHref(
+              neighbors.next,
+              definition === "published" ? "physical" : definition,
+              browseToken,
+            ),
     };
   }
   return null;
