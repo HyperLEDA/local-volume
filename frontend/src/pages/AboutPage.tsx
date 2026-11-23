@@ -972,8 +972,21 @@ export function AboutPage() {
             <LocalFlowFigure snapshot={snapshot} failed={failed} />
             <aside className="about-v13-why-method">
               <h3>Tracing the local Hubble flow</h3>
-              <p>Why do nearby galaxies at similar distances sometimes have different radial velocities? This diagram compares TRGB-based distances with velocities in the Local Group frame for a selected sample within 11 Mpc. The overall distance–velocity trend traces nearby cosmic expansion, while its scatter draws attention to the dynamics of galaxies and their surroundings. <ScienceCitation id="localflow2009" /> <ScienceCitation id="cosmicflows" /></p>
-              <p>The distribution helps identify candidates for peculiar-motion studies, examine possible group associations and investigate how nearby structures shape the local velocity field</p>
+              <p>
+                Why do nearby galaxies at similar distances sometimes have
+                different radial velocities? This diagram compares TRGB-based
+                distances with velocities in the Local Group frame for a
+                selected sample within 11 Mpc. The overall distance–velocity
+                trend traces nearby cosmic expansion, while its scatter draws
+                attention to the dynamics of galaxies and their surroundings.{" "}
+                <ScienceCitation id="localflow2009" />{" "}
+                <ScienceCitation id="cosmicflows" />
+              </p>
+              <p>
+                The distribution helps identify candidates for peculiar-motion
+                studies, examine possible group associations and investigate how
+                nearby structures shape the local velocity field
+              </p>
             </aside>
           </div>
         </section>
