@@ -24,10 +24,10 @@ function TooltipMeasurements({
 }: {
   figure: GroupFigure;
   point: PlotPoint;
-  group: GroupDetail;
+  group?: GroupDetail;
 }) {
-  const sat = group.members.find((member) => member.pgc === point.pgc);
-  const md = group.members.find((member) => member.pgc === group.root_pgc);
+  const sat = group?.members.find((member) => member.pgc === point.pgc);
+  const md = group?.members.find((member) => member.pgc === group.root_pgc);
   if (figure.key === "group-depth") {
     return (
       <>
@@ -118,7 +118,7 @@ export function GroupFigureInspector({
   imageUrl,
 }: {
   figure: GroupFigure;
-  group: GroupDetail;
+  group?: GroupDetail;
   imageUrl: string;
 }) {
   const inspectorRef = useRef<HTMLDivElement>(null);
@@ -131,7 +131,7 @@ export function GroupFigureInspector({
   useEffect(() => {
     setHover(null);
     setPinned(null);
-  }, [figure.key, group.root_pgc, group.definition]);
+  }, [figure.key, group?.root_pgc, group?.definition]);
 
   useEffect(() => {
     if (pinned === null) return;

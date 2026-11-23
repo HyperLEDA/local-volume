@@ -5,12 +5,18 @@ import {
   loadPublicationsPage,
   loadAcknowledgementsPage,
   loadDocumentsPage,
+  loadAboutPage,
   preloadPage,
 } from "../pageLoaders.ts";
 
 type Theme = "light" | "dark";
 type NavIcon =
-  "atlas" | "groups" | "documents" | "publications" | "acknowledgements";
+  | "about"
+  | "atlas"
+  | "groups"
+  | "documents"
+  | "publications"
+  | "acknowledgements";
 type NavItem = {
   to: string;
   label: string;
@@ -43,7 +49,12 @@ function NavigationIcon({
       height="20"
       {...common}
     >
-      {name === "atlas" ? (
+      {name === "about" ? (
+        <>
+          <circle cx="12" cy="12" r="9" />
+          <path d="M12 10.5v6M12 7.5h.01" />
+        </>
+      ) : name === "atlas" ? (
         <>
           <circle cx="12" cy="12" r="9" />
           <ellipse cx="12" cy="12" rx="4.5" ry="9" />
@@ -97,6 +108,7 @@ function initialTheme(): Theme {
 
 export function CatalogSidebar() {
   const { pathname } = useLocation();
+  const aboutActive = pathname === "/about";
   const atlasActive = pathname === "/" || pathname.startsWith("/object/");
   const groupsActive =
     pathname === "/groups" || pathname.startsWith("/groups/");
@@ -125,6 +137,13 @@ export function CatalogSidebar() {
   }, [expanded]);
 
   const scientific: NavItem[] = [
+    {
+      to: "/about",
+      label: "About LV LEDA",
+      active: aboutActive,
+      icon: "about" as const,
+      preload: loadAboutPage,
+    },
     {
       to: "/",
       label: "Atlas",
@@ -287,6 +306,30 @@ export function CatalogSidebar() {
         aria-hidden={!expanded}
         inert={!expanded}
       >
+        <nav
+          className="scientific-sidebar-about-nav"
+          aria-label="About the project"
+        >
+          <Link
+            to="/about"
+            aria-current={aboutActive ? "page" : undefined}
+            className="scientific-sidebar-about-link"
+          >
+            <span className="scientific-sidebar-about-icon" aria-hidden="true">
+              <NavigationIcon name="about" />
+            </span>
+            <span className="scientific-sidebar-about-text">
+              <strong>About LV LEDA</strong>
+              <small>Project and scientific scope</small>
+            </span>
+            <span
+              className="scientific-sidebar-about-chevron"
+              aria-hidden="true"
+            >
+              ›
+            </span>
+          </Link>
+        </nav>
         <div className="scientific-sidebar-flyout-heading">Explore LV LEDA</div>
         <nav
           className="scientific-sidebar-cards"

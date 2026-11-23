@@ -73,8 +73,12 @@ describe("shared section navigation and sidebar polish", () => {
       </MemoryRouter>,
     );
     expect(html).toContain("M81/M82: NASA/ESA/Z. Levay/R. Gendler");
-    expect(html.indexOf("Images:")).toBeLessThan(
-      html.indexOf('aria-label="Resources"'),
+    const panel = html.slice(html.indexOf('id="scientific-sidebar-flyout"'));
+    expect(panel.indexOf("About LV LEDA")).toBeLessThan(
+      panel.indexOf("Explore LV LEDA"),
+    );
+    expect(panel.indexOf("Images:")).toBeLessThan(
+      panel.indexOf('aria-label="Resources"'),
     );
   });
 });

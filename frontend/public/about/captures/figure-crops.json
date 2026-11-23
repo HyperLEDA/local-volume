@@ -1,0 +1,37 @@
+{
+  "version": "v16.1",
+  "derived_at": "2026-11-22T22:47:23.218325+00:00",
+  "root_pgc": 42407,
+  "source_group_capture": "2026-11-22T22:01:02.676418+00:00",
+  "source_catalog": "lv.physical",
+  "source_version": "lv-physical-precomputed-2026-11-17-v2-uncertainties",
+  "images": {
+    "atlas-sky.webp": {
+      "source": "atlas.webp",
+      "source_sha256": "53967ee10f109d1bfc1b81fda512b4db77fe8685b8fc71919fb751ebe39a7669",
+      "crop_box_px": [
+        0,
+        0,
+        2800,
+        1469
+      ],
+      "width_px": 2800,
+      "height_px": 1469,
+      "sha256": "cb25845c1a959520fc34cf3c22402cbf8dfe1ef7e1cb421e8815db2d0cde0896"
+    },
+    "group-sky.webp": {
+      "source": "group-suite.webp",
+      "source_sha256": "e38aeb21fcdb9a0d68d0d59af069ac36aad0d8b0ba50fd46c4b738963ba5bb86",
+      "crop_box_px": [
+        0,
+        0,
+        1622,
+        1600
+      ],
+      "width_px": 1622,
+      "height_px": 1600,
+      "sha256": "2597d892df2bd9bd464a64ef23590da6bb55aac523e18d0ae2b6d79bed2b5057"
+    }
+  },
+  "note": "Pixel-only cropping of authentic LV LEDA screenshots; no synthetic content"
+}

@@ -24,7 +24,7 @@ describe("lazy route error recovery", () => {
     expect(html).not.toContain("Existing Atlas page");
   });
 
-  test("all eight routes have independent error boundaries", () => {
+  test("all nine routes have independent error boundaries", () => {
     const app = readFileSync(
       new URL("../src/App.tsx", import.meta.url),
       "utf8",
@@ -39,6 +39,7 @@ describe("lazy route error recovery", () => {
       "groups",
       "preview-builder",
       "group",
+      "about",
       "publications",
       "documents",
       "acknowledgements",

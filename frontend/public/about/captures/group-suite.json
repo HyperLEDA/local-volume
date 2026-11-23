@@ -1,0 +1,31 @@
+{
+  "root_pgc": 42407,
+  "name": "M 104",
+  "member_count": 120,
+  "source_catalog": "lv.physical",
+  "source_version": "lv-physical-precomputed-2026-11-17-v2-uncertainties",
+  "captured_at": "2026-11-22T22:01:02.676418+00:00",
+  "captures": {
+    "atlas": {
+      "route": "/",
+      "width_px": 2800,
+      "height_px": 1760,
+      "bytes": 730238,
+      "sha256": "53967ee10f109d1bfc1b81fda512b4db77fe8685b8fc71919fb751ebe39a7669"
+    },
+    "galaxy-pgc28630": {
+      "route": "/object/28630",
+      "width_px": 3312,
+      "height_px": 1720,
+      "bytes": 459150,
+      "sha256": "98b72e17249dfd045e875f3085bb6b50dce0e67296d420741cf8fa0770ba772a"
+    },
+    "group-suite": {
+      "route": "/groups/42407?definition=suite",
+      "width_px": 3312,
+      "height_px": 1600,
+      "bytes": 292898,
+      "sha256": "e38aeb21fcdb9a0d68d0d59af069ac36aad0d8b0ba50fd46c4b738963ba5bb86"
+    }
+  }
+}

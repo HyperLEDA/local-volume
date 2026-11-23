@@ -32,6 +32,8 @@ export type GroupFigure = {
   unavailable?: string;
   binWidth?: number;
   references?: ReferenceLine[];
+  /** Optional model/reference lines in the same coordinate system as the observations. */
+  lines?: { slope: number; intercept: number; label?: string }[];
   rug?: number[];
 };
 

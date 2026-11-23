@@ -24,6 +24,8 @@ describe("fixed navigation rail", () => {
     );
     expect(html).toContain('aria-label="Atlas"');
     expect(html).toContain('aria-label="Publications"');
+    expect(html).toContain('aria-label="About LV LEDA"');
+    expect(html).toContain('href="/about"');
     expect(html).toContain('aria-label="Acknowledgements"');
     expect(html).toContain('href="/acknowledgements"');
     expect(html).toContain('aria-label="Groups"');
@@ -73,7 +75,7 @@ describe("fixed navigation rail", () => {
     expect(html).toContain('aria-label="Switch to light theme"');
     expect(html).toContain('aria-pressed="true"');
     expect(html).toContain('aria-label="More navigation destinations"');
-    expect(html.match(/class="catalog-nav-tooltip"/g)).toHaveLength(6);
+    expect(html.match(/class="catalog-nav-tooltip"/g)).toHaveLength(7);
   });
 
   test("defaults to light and recognizes a saved dark preference", () => {

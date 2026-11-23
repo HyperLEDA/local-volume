@@ -39,6 +39,7 @@
   display: none;
 }
 
+/* #85: floating scientific navigation; compact, not a second permanent sidebar. */
 .scientific-sidebar-flyout {
   position: fixed;
   inset: 0 auto 0 52px;
@@ -160,8 +161,6 @@
   line-height: 1.34;
   color: #c4d3dc;
 }
-
-/* Attribution belongs immediately above the compact secondary navigation. */
 .scientific-sidebar-credits {
   margin-top: auto;
   display: grid;
@@ -221,6 +220,65 @@
   border-color: #354652;
   color: #e9f0f3;
 }
+/* The only new flyout element: a restrained About entry above Explore. */
+.scientific-sidebar-about-nav {
+  margin-bottom: 2px;
+}
+.scientific-sidebar-about-link {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 56px;
+  padding: 8px 9px;
+  border-radius: 6px;
+  border: 1px solid #3a515f;
+  color: #e9f0f3;
+  background: #1a2a34;
+  text-decoration: none;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease;
+}
+.scientific-sidebar-about-link:hover,
+.scientific-sidebar-about-link:focus-visible {
+  background: #213743;
+  border-color: #82c4cb;
+}
+.scientific-sidebar-about-link[aria-current="page"] {
+  background: #23414a;
+  border-color: #82c4cb;
+}
+.scientific-sidebar-about-icon {
+  flex: 0 0 27px;
+  display: grid;
+  place-items: center;
+  width: 27px;
+  height: 27px;
+  border: 1px solid #45616c;
+  border-radius: 5px;
+  color: #a4d7dc;
+}
+.scientific-sidebar-about-icon svg {
+  width: 16px;
+  height: 16px;
+}
+.scientific-sidebar-about-text {
+  display: grid;
+  gap: 2px;
+  flex: 1;
+}
+.scientific-sidebar-about-text strong {
+  font: 600 0.84rem/1.22 var(--font-ui);
+}
+.scientific-sidebar-about-text small {
+  font: 0.66rem/1.25 var(--font-ui);
+  color: #aebfc9;
+}
+.scientific-sidebar-about-chevron {
+  color: #9cc6d0;
+  font-size: 1rem;
+}
+
 .scientific-mobile-more {
   display: none;
 }
