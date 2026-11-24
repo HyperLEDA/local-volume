@@ -114,6 +114,16 @@ def test_production_and_test_http_indexing_without_deployment_change(tmp_path, m
     web_app._mount_frontend(app, tmp_path)  # noqa: SLF001
 
     with TestClient(app, base_url="https://lv.leda.sao.ru") as production:
+        for path in ("/about", "/about/"):
+            about = production.get(path)
+            assert about.status_code == 200
+            assert about.headers["content-type"].startswith("text/html")
+            assert "<title>About LV LEDA | LV LEDA</title>" in about.text
+            assert '<meta name="description" content="LV LEDA is a scientific galaxy catalogue' in about.text
+            assert '<link rel="canonical" href="https://lv.leda.sao.ru/about" />' in about.text
+            assert "x-robots-tag" not in about.headers
+            assert 'name="robots"' not in about.text
+            assert production.head(path).status_code == 200
         page = production.get("/object/2557")
         assert page.status_code == 200
         assert 'href="https://lv.leda.sao.ru/object/2557"' in page.text
@@ -127,6 +137,11 @@ def test_production_and_test_http_indexing_without_deployment_change(tmp_path, m
         assert "https://lv.leda.sao.ru/object/2557" in xml.text
 
     with TestClient(app, base_url="https://lv.leda.kraysent.dev") as staging:
+        about = staging.get("/about")
+        assert about.status_code == 200
+        assert about.headers["x-robots-tag"] == "noindex, nofollow"
+        assert '<meta name="robots" content="noindex,nofollow" />' in about.text
+        assert 'rel="canonical"' not in about.text
         page = staging.get("/object/2557")
         assert page.status_code == 200
         assert page.headers["x-robots-tag"] == "noindex, nofollow"
@@ -343,6 +358,8 @@ def test_http_routes_sitemap_status_agrees_with_entity_pages(tmp_path, monkeypat
             relative = url.removeprefix("https://example.org")
             response = client.get(relative)
             assert response.status_code == 200, (url, response.status_code)
+        assert paths.count("https://example.org/about") == 1
+        assert "https://example.org/about/" not in paths
         assert "https://example.org/groups/2557?definition=physical" in paths
         assert "https://example.org/groups/2004?definition=suite" in paths
         assert client.get("/sitemap-part/1.xml").status_code == 404
