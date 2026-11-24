@@ -19,11 +19,13 @@
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-markdown": "^10.1.0",
-    "react-router-dom": "^7.18.4"
+    "react-router-dom": "^7.18.4",
+    "three": "0.180.0"
   },
   "devDependencies": {
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
+    "@types/three": "0.180.0",
     "@vitejs/plugin-react": "^6.1.2",
     "oxlint": "1.79.0",
     "oxlint-tsgolint": "7.0.2001",

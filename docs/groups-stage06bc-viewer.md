@@ -1,0 +1,9 @@
+# Stage 06b–06c — catalogue-based group viewer
+
+First renderer is dependency-free SVG with true orthographic projection of the Stage 06a three-dimensional coordinates. This is a deliberate alternative to Three.js for the initial group-scale UI. No WebGL context, new package or database migration. 2D remains the default; switching modes remounts Aladin, so its camera is not preserved in this release. Existing group member navigation and diagnostics are retained.
+
+Rotate by dragging blank space; Pan toggles pan drag (Shift also pans). Preset projections and zoom/reset/rotation buttons are keyboard accessible. Click a marker or choose a member in the list; unpositioned members remain in the selector. The scale bar reflects the same isotropic projection scale as the points. The initial camera frames all positioned members (not uncertainty endpoints). No radius or dynamical boundness inferred.
+
+Morphology colors use the existing palette; size uses the absolute B mapping, 6–18 SVG units. Marker shapes encode distance origin. Relations reuse existing exact-pair tidal semantics; schematic endpoints produce dashed lines. Only the selected member's permitted interval is drawn and an unreviewed interval is dashed. Intervals are in the individual observer ray and relative to the fixed adopted centre; do not interpret as independent group depth uncertainty. Strict geometry gate is unchanged. Group-assigned positions remain schematic. The viewer is a catalogue representation, not a new distance analysis.
+
+QA: test orthographic axes, scale, rotation, bounds and source immutability; local browser acceptance still required for rendering, accessibility, navigation and group changes. Stage 06d refinements may include subgroup emphasis, improved touch gestures, WebGL/Three.js and a dedicated camera-continuity implementation.

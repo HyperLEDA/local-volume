@@ -4,7 +4,7 @@ from typing import cast
 
 from lv_backend.data import groups as data_groups
 from lv_backend.data.storage import Storage
-from lv_backend.domain import group_geometry
+from lv_backend.domain.distance_evidence import apply_distance_evidence
 from lv_backend.domain.physical_calculations import FORMULA_VERSION
 
 
@@ -194,6 +194,11 @@ def _live_components(rows: list[dict[str, object]], definition: str) -> dict[int
                     "observed_distance_mpc": row.get("observed_distance_mpc"),
                     "derived_distance_mpc": row.get("derived_distance_mpc"),
                     "derived_distance_method": row.get("derived_distance_method"),
+                    "observed_mu": row.get("observed_mu"),
+                    "observed_e_mu": row.get("observed_e_mu"),
+                    "modulus_method": row.get("modulus_method"),
+                    "distance_computed_revision": row.get("distance_computed_revision"),
+                    "distance_formula_version": row.get("distance_formula_version"),
                     "abs_b_mag": row.get("abs_b_mag"),
                     "log_mhi_msun": row.get("log_mhi_msun"),
                     "log_m26_msun": row.get("log_m26_msun"),
@@ -372,28 +377,11 @@ def find_member_groups(storage: Storage, member_pgc: int) -> list[dict[str, obje
 
 
 def detail_with_distance_lineage(group: dict[str, object]) -> dict[str, object]:
-    """Add data-origin evidence without upgrading method hints to verified distances."""
+    """Apply source-paired, versioned distance review evidence."""
     members = []
     for item in cast(list[dict[str, object]], group["members"]):
         member = dict(item)
-        distance = _number(member.get("dist_mpc"))
-        derived_distance = _number(member.get("derived_distance_mpc"))
-        observed_distance = _number(member.get("observed_distance_mpc"))
-        value_source = (
-            "lv.physical" if derived_distance is not None else "lv.observed" if observed_distance is not None else None
-        )
-        method = (
-            member.get("derived_distance_method") or member.get("distance_method")
-            if value_source == "lv.physical"
-            else member.get("distance_method")
-        )
-        method_text = method if isinstance(method, str) else None
-        member["distance_origin"] = group_geometry.distance_origin(distance, method_text)
-        member["distance_value_source"] = value_source
-        member["distance_method_for_value"] = method_text
-        # This flag stays false pending source-level scientific validation.
-        member["distance_provenance_verified"] = False
-        member["distance_3d_eligible"] = False
+        member.update(apply_distance_evidence(member))
         members.append(member)
 
     root = next((m for m in members if int(m["pgc"]) == int(group["root_pgc"])), None)
@@ -406,13 +394,20 @@ def detail_with_distance_lineage(group: dict[str, object]) -> dict[str, object]:
             "dec": root["dec"],
             "distance_mpc": root.get("dist_mpc"),
             "distance_origin": root["distance_origin"],
-            "distance_provenance_verified": False,
-            "physical_3d_eligible": False,
+            "distance_method_for_value": root["distance_method_for_value"],
+            "distance_reference_for_value": root["distance_reference_for_value"],
+            "distance_lineage_status": root["distance_lineage_status"],
+            "distance_lineage_reason": root["distance_lineage_reason"],
+            "distance_provenance_verified": root["distance_provenance_verified"],
+            "physical_3d_eligible": root["distance_3d_eligible"],
+            "distance_interval_verified": root["distance_interval_verified"],
+            "distance_value_review_status": root["distance_value_review_status"],
+            "distance_interval_review_status": root["distance_interval_review_status"],
         }
     return {
         **group,
         "members": members,
         "scene_center": center,
-        "distance_contract": "method_classification_unverified_v1",
+        "distance_contract": "source_paired_evidence_v3",
         "radius_measurements": [],
     }

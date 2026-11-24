@@ -19,6 +19,9 @@ export type GroupSummary = {
   unconfirmed_count: number | null;
 };
 
+export type DistanceReviewStatus =
+  "NOT_REVIEWED" | "VERIFIED" | "HOLD" | "STALE" | "BLOCKED" | "UNAVAILABLE";
+
 export type GroupMember = {
   group_id: number;
   pgc: number;
@@ -40,6 +43,26 @@ export type GroupMember = {
   distance_source_name?: string | null;
   distance_value_source?: "lv.physical" | "lv.observed" | null;
   distance_method_for_value?: string | null;
+  modulus_method?: string | null;
+  observed_mu?: number | string | null;
+  observed_e_mu?: number | string | null;
+  observed_distance_mpc?: number | null;
+  derived_distance_mpc?: number | null;
+  derived_distance_method?: string | null;
+  distance_computed_revision?: number | null;
+  distance_formula_version?: string | null;
+  distance_adoption_basis?: string | null;
+  distance_reference_for_value?: string | null;
+  distance_lineage_status?: "HOLD" | "NON_INDEPENDENT" | "REVIEW_READY";
+  distance_lineage_reason?: string;
+  distance_interval_traceable?: boolean;
+  distance_value_fingerprint?: string | null;
+  distance_interval_fingerprint?: string | null;
+  distance_value_review_status?: DistanceReviewStatus;
+  distance_interval_review_status?: DistanceReviewStatus;
+  distance_value_evidence_locator?: string | null;
+  distance_interval_evidence_locator?: string | null;
+  distance_interval_verified?: boolean;
   distance_origin?:
     "DIRECT_MEASURED" | "GROUP_ASSIGNED" | "MODEL_INFERRED" | "UNKNOWN";
   distance_provenance_verified?: boolean;
@@ -74,8 +97,15 @@ export type GroupDetail = GroupSummary & {
     dec: number;
     distance_mpc: number | null;
     distance_origin: string;
+    distance_method_for_value?: string | null;
+    distance_reference_for_value?: string | null;
+    distance_lineage_status?: "HOLD" | "NON_INDEPENDENT" | "REVIEW_READY";
+    distance_lineage_reason?: string;
     distance_provenance_verified: boolean;
     physical_3d_eligible: boolean;
+    distance_interval_verified?: boolean;
+    distance_value_review_status?: DistanceReviewStatus;
+    distance_interval_review_status?: DistanceReviewStatus;
   } | null;
 };
 
