@@ -88,6 +88,11 @@ def static_page(path: str, *, definition: str = "physical") -> PageInfo | None:
             canonical,
         )
     pages: dict[str, tuple[str, str]] = {
+        "about": (
+            "About LV LEDA",
+            "LV LEDA is a scientific galaxy catalogue and interactive sky atlas of the Local Volume, "
+            "developed within the HyperLEDA project.",
+        ),
         "documents": ("Scientific documents", "Documentation of the LV LEDA catalogue and scientific tools."),
         "publications": ("Publications", "Publications related to the LV LEDA scientific catalogue."),
         "acknowledgements": ("Acknowledgements", "Acknowledgements and project information for LV LEDA."),
@@ -185,7 +190,7 @@ def robots_text(origin: str | None) -> str:
 
 def sitemap_paths(object_pgcs: list[int], groups: dict[str, list[int]]) -> list[str]:
     """Only concrete catalogue records; no filtered or user-specific URLs."""
-    paths = ["/", "/groups", "/documents", "/publications", "/acknowledgements"]
+    paths = ["/", "/about", "/groups", "/documents", "/publications", "/acknowledgements"]
     valid_pgcs = sorted({pgc for pgc in object_pgcs if type(pgc) is int and pgc > 0})
     paths.extend(f"/object/{pgc}" for pgc in valid_pgcs)
     for definition in ("physical", "suite"):
