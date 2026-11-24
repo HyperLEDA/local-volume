@@ -94,6 +94,7 @@ def test_list_objects(client: fastapi.testclient.TestClient) -> None:
     index = body["data"]["pgc"].index(29146)
     assert body["data"]["bt"][index] == pytest.approx(10.6175)
     assert body["data"]["b_mag"][index] == pytest.approx(10.55)
+    assert len(body["data"]["abs_b_mag"]) == len(rows)
     assert body["data"]["ks_mag"][index] == pytest.approx(7.9)
     assert body["data"]["a26_arcmin"][index] == pytest.approx(2.3)
     assert body["data"]["morphology_t"][index] == 7

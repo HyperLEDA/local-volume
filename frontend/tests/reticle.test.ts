@@ -9,15 +9,16 @@ import type { CatalogObject } from "../src/api/objects.ts";
 function object(
   pgc: number,
   ra: number | null,
-  bt: number | null = null,
+  absBMag: number | null = null,
 ): CatalogObject {
   return {
     pgc,
     name: `PGC ${pgc}`,
     ra,
     dec: 0,
-    bt,
-    b_mag: bt,
+    bt: null,
+    b_mag: null,
+    abs_b_mag: absBMag,
     v_hel: null,
     type_name: null,
     names: [],
@@ -39,9 +40,9 @@ describe("reticle popup matching", () => {
   });
 
   test("uses the marker diameter when determining the hit radius", () => {
-    expect(markerDiameter(10)).toBeGreaterThan(markerDiameter(null));
+    expect(markerDiameter(-22)).toBeGreaterThan(markerDiameter(null));
     expect(
-      findReticleTarget([object(7, 410, 10)], viewport, project)?.pgc,
+      findReticleTarget([object(7, 409, -22)], viewport, project)?.pgc,
     ).toBe(7);
     expect(
       findReticleTarget([object(7, 410, null)], viewport, project),

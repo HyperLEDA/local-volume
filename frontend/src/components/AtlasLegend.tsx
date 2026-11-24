@@ -51,11 +51,16 @@ export function AtlasLegend({ tidalRange }: { tidalRange: AtlasRange | null }) {
           </div>
         </div>
         <div className="atlas-legend-section">
-          <span>B magnitude · diameter</span>
+          <span>
+            M<sub>B</sub> · marker diameter
+          </span>
           <div className="atlas-legend-sizes">
             <span className="atlas-legend-circle atlas-legend-circle--small" />
             <span className="atlas-legend-circle atlas-legend-circle--large" />{" "}
-            7–14 px · brighter = larger
+            6–12 px · more luminous = larger
+          </div>
+          <div className="atlas-legend-detail">
+            −10 to −22 mag · unknown: 6 px
           </div>
         </div>
         <div

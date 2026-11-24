@@ -626,8 +626,8 @@ export function GroupSkyMap({
           const arc = greatCircleVertices(parent, member);
           const clipped = trimGroupEdge(
             arc,
-            markerRadius.get(parent.pgc) ?? 3.5,
-            markerRadius.get(member.pgc) ?? 3.5,
+            markerRadius.get(parent.pgc) ?? 3,
+            markerRadius.get(member.pgc) ?? 3,
             (ra, dec) => mapView.world2pix(ra, dec),
           );
           const overlay = lines.get(edge.tone);
@@ -663,7 +663,7 @@ export function GroupSkyMap({
             4,
             Math.round(
               markerDiameter(
-                object?.b_mag ?? null,
+                object?.abs_b_mag ?? null,
                 OVERVIEW_MARKER_MAX_DIAMETER,
               ),
             ),

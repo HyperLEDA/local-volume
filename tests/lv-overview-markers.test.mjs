@@ -8,11 +8,11 @@ import {
   OVERVIEW_MARKER_STROKE_WIDTH,
 } from "../frontend/src/lib/overviewMarkers.ts";
 
-test("overview caps bright sources at 14px without changing faint 7px or local 18px", () => {
-  assert.equal(OVERVIEW_MARKER_MAX_DIAMETER, 14);
-  assert.equal(markerDiameter(null, 14), 7);
-  assert.equal(markerDiameter(25, 14), 7);
-  assert.equal(markerDiameter(-100, 14), 14);
+test("overview caps bright sources at 12px with faint 6px and local 18px", () => {
+  assert.equal(OVERVIEW_MARKER_MAX_DIAMETER, 12);
+  assert.equal(markerDiameter(null, 12), 6);
+  assert.equal(markerDiameter(25, 12), 6);
+  assert.equal(markerDiameter(-100, 12), 12);
   assert.equal(markerDiameter(-100), 18);
 });
 
@@ -45,14 +45,14 @@ test("invalid projected coordinates are not drawn", () => {
 });
 
 test("reticle hit tolerance matches the rendered overview size", () => {
-  const object = { pgc: 7, ra: 120, dec: 30, bt: 25, b_mag: -100 };
+  const object = { pgc: 7, ra: 120, dec: 30, bt: 25, b_mag: 25, abs_b_mag: -22 };
   const found = findReticleTarget(
     [object],
     [100, 100],
     () => [50 + 9, 50],
   );
   assert.equal(found, object);
-  const legacyOnly = { ...object, b_mag: null, bt: -100 };
+  const legacyOnly = { ...object, abs_b_mag: null, b_mag: -100, bt: -100 };
   assert.equal(findReticleTarget([legacyOnly], [100, 100], () => [59, 50]), null);
 });
 

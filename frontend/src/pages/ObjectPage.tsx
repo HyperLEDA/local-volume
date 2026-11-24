@@ -154,6 +154,8 @@ export function ObjectPage() {
         dec: data.dec ?? null,
         bt: data.bt ?? null,
         b_mag: data.b_mag ?? null,
+        abs_b_mag:
+          skyCatalog.find((row) => row.pgc === data.pgc)?.abs_b_mag ?? null,
         ks_mag: data.ks_mag ?? null,
         v_hel: data.v_hel ?? null,
         lvg_v_hel_kms: data.lvg_v_hel_kms ?? null,
@@ -164,7 +166,7 @@ export function ObjectPage() {
         names: data.names,
       },
     ];
-  }, [data]);
+  }, [data, skyCatalog]);
 
   const focus = useMemo((): SkyFocus | null => {
     if (

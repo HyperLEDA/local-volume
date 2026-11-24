@@ -3,7 +3,7 @@ import hashlib
 from lv_backend.data.storage import Storage
 from lv_backend.domain.physical_calculations import FORMULA_VERSION
 
-RENDER_VERSION = "sin-dss2-atlas-markers-v16-tight-fit"
+RENDER_VERSION = "sin-dss2-atlas-markers-v21-mb-6-12-gamma08"
 PORTRAIT_RENDER_VERSION = "sin-dss2-md-closeup-a26-x1.4-v18"
 
 # Temporary exception: LMC (PGC 17223) should be handled within the Milky Way group.
