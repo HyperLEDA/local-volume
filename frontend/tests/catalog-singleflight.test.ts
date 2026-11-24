@@ -10,6 +10,7 @@ function payload(pgc = 42) {
       name: ["NGC 42"],
       ra: [12.5],
       dec: [-4.2],
+      abs_b_mag: [-17.2],
       names: [["PGC 42", "LEDA 42"]],
     },
   };
@@ -42,6 +43,7 @@ describe("catalog in-flight request deduplication", () => {
       a[0].names.push("CHANGED");
       expect(b[0].names).toEqual(["PGC 42", "LEDA 42"]);
       expect(a[0].dist).toBeNull();
+      expect(a[0].abs_b_mag).toBe(-17.2);
     } finally {
       release(Response.json(payload()));
       globalThis.fetch = originalFetch;

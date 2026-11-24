@@ -16,7 +16,7 @@ describe('Groups v16 UI and preview cache', () => {
   });
   test('renderer version invalidates outdated hierarchy images and preserves portraits', () => {
     const s = read('lv_backend/data/group_previews.py');
-    expect(s).toContain('sin-dss2-atlas-markers-v16-tight-fit');
+    expect(s).toContain('sin-dss2-atlas-markers-v21-mb-6-12-gamma08');
     expect(s).toContain('sin-dss2-md-closeup-a26-x1.4-v18');
     expect(s).toContain('def cache_manifest(');
     expect(s).toContain('octet_length(image_webp)');

@@ -1,7 +1,10 @@
 import type { CatalogObject } from "../api/objects.ts";
 import { OVERVIEW_MARKER_MAX_DIAMETER } from "./overviewMarkers.ts";
 
-type ReticleObject = Pick<CatalogObject, "pgc" | "ra" | "dec" | "bt" | "b_mag">;
+type ReticleObject = Pick<
+  CatalogObject,
+  "pgc" | "ra" | "dec" | "bt" | "b_mag" | "abs_b_mag"
+>;
 type Pixel = readonly [number, number] | null;
 
 const MAX_AUTOMATIC_POPUP_FOV_DEGREES = 60;
@@ -18,12 +21,21 @@ export function reticlePopupAllowed(fov: readonly [number, number]): boolean {
   );
 }
 
-export function markerDiameter(bt: number | null, maxDiameter = 18): number {
-  if (bt === null || !Number.isFinite(bt)) {
-    return 7;
+/** Fixed absolute-magnitude encoding with gamma easing.
+ * M_B >= -10: 6 px; M_B <= -22: maxDiameter. Missing: 6 px.
+ * This is a visual encoding, not a physical galaxy diameter.
+ */
+export function markerDiameter(
+  absBMag: number | null,
+  maxDiameter = 18,
+): number {
+  if (absBMag === null || !Number.isFinite(absBMag)) {
+    return 6;
   }
-  const logFluxRatio = 0.4 * (17 - bt);
-  return Math.round(Math.min(maxDiameter, Math.max(7, 7 + 3 * logFluxRatio)));
+  const fraction = Math.max(0, Math.min(1, (-10 - absBMag) / 12));
+  return Math.round(
+    6 + (Math.max(6, maxDiameter) - 6) * Math.pow(fraction, 0.8),
+  );
 }
 
 function projectSafely(
@@ -77,7 +89,8 @@ export function findReticleTarget<T extends ReticleObject>(
 
     const distance = Math.hypot(pixel[0] - centerX, pixel[1] - centerY);
     const tolerance =
-      markerDiameter(object.b_mag ?? null, OVERVIEW_MARKER_MAX_DIAMETER) / 2 +
+      markerDiameter(object.abs_b_mag ?? null, OVERVIEW_MARKER_MAX_DIAMETER) /
+        2 +
       3;
     if (object.pgc === activePgc && distance <= tolerance + 8) {
       retained = object;

@@ -13,6 +13,7 @@ SUMMARY_COLUMNS: tuple[str, ...] = (
     "dec",
     "bt",
     "b_mag",
+    "abs_b_mag",
     "hi21_mag",
     "hi21_limit",
     "ks_mag",
@@ -112,7 +113,7 @@ COALESCE(
 _OBJECTS_QUERY = f"""
 SELECT o.pgc, o.name, o.ra, o.dec, obs.bt, obs.b_mag, obs.hi21_mag, obs.hi21_limit, obs.ks_mag,
        obs.a26_arcmin, obs.morphology_t, obs.w50_kms, obs.lvg_v_hel_kms,
-       obs.dist, obs.lvg_v_lg_kms, p.theta1, p.md_pgc, md.name AS md_name,
+       obs.dist, obs.lvg_v_lg_kms, p.abs_b_mag, p.theta1, p.md_pgc, md.name AS md_name,
        p.environment_coverage, obs.v_hel,
        obs.distance_method, o.type_name, {_NAMES_AGG}
 FROM lv.objects AS o
@@ -196,7 +197,9 @@ GROUP BY o.pgc, obs.pgc
 def select_schema(storage: Storage, columns: Sequence[str]) -> dict[str, schemas.ColumnMeta]:
     selected = [column for column in columns if column != "names"]
     object_columns = [column for column in selected if column in _OBJECT_COLUMNS]
-    physical_columns = [column for column in selected if column in {"theta1", "md_pgc", "environment_coverage"}]
+    physical_columns = [
+        column for column in selected if column in {"abs_b_mag", "theta1", "md_pgc", "environment_coverage"}
+    ]
     observed_columns = [
         column for column in selected if column not in _OBJECT_COLUMNS and column not in physical_columns
     ]

@@ -6,6 +6,7 @@ import A, {
 } from "aladin-lite";
 import {
   useEffect,
+  useMemo,
   useRef,
   useState,
   type MouseEvent,
@@ -20,6 +21,10 @@ import {
   type SkyRegion,
 } from "../lib/skyRegion.ts";
 import { useNavigate } from "react-router-dom";
+import { AtlasGroupContext } from "./AtlasGroupContext.tsx";
+import { useAtlasGroupContext } from "../lib/useAtlasGroupContext.ts";
+import { buildAtlasGroupGraph } from "../lib/atlasGroupContext.ts";
+import { TIDAL_TONES, type TidalTone } from "../lib/groupTidalEdges.ts";
 import type { CatalogObject } from "../api/objects.ts";
 import type { AtlasCamera } from "../lib/atlasCamera.ts";
 import {
@@ -205,6 +210,12 @@ export function setCatalogSources(
     ) {
       return [];
     }
+    const diameter = Math.max(
+      4,
+      Math.round(
+        markerDiameter(object.abs_b_mag ?? null, maxDiameter) * sizeScale,
+      ),
+    );
     const marker = A.marker(
       object.ra,
       object.dec,
@@ -215,20 +226,14 @@ export function setCatalogSources(
       },
       {
         morphology_t: object.morphology_t ?? null,
+        lv_marker_diameter: diameter,
         pgc: object.pgc,
         theta1: object.theta1 ?? null,
         tidal_min: tidalRange?.min ?? null,
         tidal_max: tidalRange?.max ?? null,
       },
     );
-    marker.setSize(
-      Math.max(
-        4,
-        Math.round(
-          markerDiameter(object.b_mag ?? null, maxDiameter) * sizeScale,
-        ),
-      ),
-    );
+    marker.setSize(diameter);
     return [marker];
   });
   if (sources.length === 0) {
@@ -376,6 +381,10 @@ export function AladinMap({
   const objectsRef = useRef(objects);
   const referenceObjectsRef = useRef(referenceObjects ?? objects);
   const mdOverlayRef = useRef<AtlasGraphicOverlay | null>(null);
+  const atlasGroupOverlaysRef = useRef(
+    new Map<TidalTone, AtlasGraphicOverlay>(),
+  );
+  const refreshGroupEdgesRef = useRef<(() => void) | null>(null);
   const mdCatalogRef = useRef<AladinCatalog | null>(null);
   const refreshReticlePopupRef = useRef<(() => void) | null>(null);
   const clearReticlePopupRef = useRef<(() => void) | null>(null);
@@ -471,6 +480,7 @@ export function AladinMap({
     if (container === null) {
       return;
     }
+    const mountedGroupOverlays = atlasGroupOverlaysRef.current;
     let cancelled = false;
     function isCancelled(): boolean {
       return cancelled;
@@ -604,7 +614,7 @@ export function AladinMap({
       view.addCatalog(catalog);
       if (isOverview) {
         const mdCatalog = A.catalog({
-          name: "Selected galaxy Main Disturber",
+          name: "Selected galaxy group / MD context (outside filters)",
           shape: drawSelectedObjectMarker,
           sourceSize: 7,
           color: "#f0cf88",
@@ -634,6 +644,22 @@ export function AladinMap({
       });
       (view as AladinView & AtlasDrawingView).addOverlay(mdOverlay);
       mdOverlayRef.current = mdOverlay;
+      if (isOverview) {
+        for (const tone of [
+          "positive",
+          "negative",
+          "zero",
+          "unknown",
+        ] as const) {
+          const layer = atlasDrawingApi.graphicOverlay({
+            name: `Atlas group relations: ${tone}`,
+            color: TIDAL_TONES[tone],
+            lineWidth: 1.35,
+          });
+          (view as AladinView & AtlasDrawingView).addOverlay(layer);
+          mountedGroupOverlays.set(tone, layer);
+        }
+      }
 
       let autoPopupPgc: number | null = null;
       let manualPopup = false;
@@ -691,6 +717,7 @@ export function AladinMap({
       }
 
       function onViewChanged(): void {
+        refreshGroupEdgesRef.current?.();
         if (manualPopup) {
           manualPopup = false;
           view.hidePopup();
@@ -828,6 +855,8 @@ export function AladinMap({
       regionOverlayRef.current = null;
       previewOverlayRef.current = null;
       mdOverlayRef.current = null;
+      mountedGroupOverlays.clear();
+      refreshGroupEdgesRef.current = null;
       mdCatalogRef.current = null;
       setReady(false);
       container.replaceChildren();
@@ -1140,55 +1169,136 @@ export function AladinMap({
     }
   }
 
-  // Draw only the currently clicked galaxy's MD connection (no implied group membership).
+  // Stage 04a: explicit catalogue group context, independent of Atlas filters.
+  const atlasSelected = useMemo(() => {
+    const reference = referenceObjects ?? objects;
+    return reference.find((object) => object.pgc === selectedPgc) ?? null;
+  }, [referenceObjects, objects, selectedPgc]);
+  const atlasContext = useAtlasGroupContext(
+    isOverview ? (atlasSelected?.pgc ?? null) : null,
+  );
+  const atlasGraph = useMemo(
+    () =>
+      atlasContext.detail === null
+        ? null
+        : buildAtlasGroupGraph(
+            atlasContext.detail,
+            referenceObjects ?? objects,
+          ),
+    [atlasContext.detail, referenceObjects, objects],
+  );
+  const visiblePgcs = useMemo(
+    () => new Set(objects.map((row) => row.pgc)),
+    [objects],
+  );
+  const atlasOutsideCount =
+    atlasGraph?.points.filter((row) => !visiblePgcs.has(row.pgc)).length ?? 0;
+  const atlasMd = useMemo(() => {
+    const mdPgc = atlasSelected?.md_pgc;
+    return typeof mdPgc === "number" &&
+      Number.isSafeInteger(mdPgc) &&
+      mdPgc > 0 &&
+      mdPgc !== atlasSelected?.pgc
+      ? ((referenceObjects ?? objects).find((row) => row.pgc === mdPgc) ?? null)
+      : null;
+  }, [atlasSelected, referenceObjects, objects]);
+
   useEffect(() => {
     const overlay = mdOverlayRef.current;
     const view = viewRef.current;
     const contextual = mdCatalogRef.current;
     if (!ready || overlay === null || view === null) return;
-    overlay.removeAll();
-    const selected =
-      objects.find((object) => object.pgc === selectedPgc) ?? null;
+    const mountedView = view;
+    const mdLayer = overlay;
+    const groupOverlays = atlasGroupOverlaysRef.current;
     const reference = referenceObjects ?? objects;
-    const md =
-      selected &&
-      typeof selected.md_pgc === "number" &&
-      Number.isSafeInteger(selected.md_pgc) &&
-      selected.md_pgc > 0
-        ? (reference.find((object) => object.pgc === selected.md_pgc) ?? null)
-        : null;
-    if (
-      hasSkyPosition(selected) &&
-      hasSkyPosition(md) &&
-      selected.pgc !== md.pgc
-    ) {
-      const vertices = greatCircleVertices(selected, md);
-      const width = view.getSize()[0];
-      const segments = visibleGreatCircleSegments(
-        vertices,
-        (ra, dec) => view.world2pix(ra, dec),
+    const useMd =
+      !isOverview ||
+      atlasContext.status === "none" ||
+      atlasContext.status === "error";
+    const mdVertices =
+      useMd && hasSkyPosition(atlasSelected) && hasSkyPosition(atlasMd)
+        ? greatCircleVertices(atlasSelected, atlasMd)
+        : [];
+    let frame: number | null = null;
+    function paint(): void {
+      mdLayer.removeAll();
+      for (const layer of groupOverlays.values()) layer.removeAll();
+      const width = mountedView.getSize()[0];
+      function project(ra: number, dec: number) {
+        return mountedView.world2pix(ra, dec);
+      }
+      for (const segment of visibleGreatCircleSegments(
+        mdVertices,
+        project,
         width,
-      );
-      for (const segment of segments)
-        overlay.add(atlasDrawingApi.polyline(segment));
+      ))
+        mdLayer.add(atlasDrawingApi.polyline(segment));
+      for (const arc of atlasGraph?.arcs ?? []) {
+        const layer = groupOverlays.get(arc.edge.tone);
+        if (layer === undefined) continue;
+        for (const segment of visibleGreatCircleSegments(
+          arc.vertices,
+          project,
+          width,
+        ))
+          layer.add(atlasDrawingApi.polyline(segment));
+      }
+      mdLayer.reportChange();
+      for (const layer of groupOverlays.values()) layer.reportChange();
     }
-    overlay.reportChange();
-    // The physical MD may be excluded by active filters; show its position explicitly.
+    function schedule(): void {
+      if (frame !== null) return;
+      frame = window.requestAnimationFrame(() => {
+        frame = null;
+        paint();
+      });
+    }
+    refreshGroupEdgesRef.current = schedule;
+    paint();
     if (contextual !== null) {
+      const extra = new Map<number, CatalogObject>();
+      for (const row of atlasGraph?.points ?? []) {
+        if (!visiblePgcs.has(row.pgc)) extra.set(row.pgc, row);
+      }
+      if (
+        useMd &&
+        atlasMd !== null &&
+        hasSkyPosition(atlasMd) &&
+        !visiblePgcs.has(atlasMd.pgc)
+      )
+        extra.set(atlasMd.pgc, atlasMd);
+      if (
+        atlasSelected !== null &&
+        hasSkyPosition(atlasSelected) &&
+        !visiblePgcs.has(atlasSelected.pgc)
+      )
+        extra.set(atlasSelected.pgc, atlasSelected);
       setCatalogSources(
         contextual,
-        md !== null &&
-          hasSkyPosition(md) &&
-          !objects.some((row) => row.pgc === md.pgc)
-          ? [md]
-          : [],
+        [...extra.values()],
         1,
-        14,
+        OVERVIEW_MARKER_MAX_DIAMETER,
         tidalRange,
         reference,
       );
     }
-  }, [selectedPgc, objects, referenceObjects, ready, tidalRange]);
+    return () => {
+      refreshGroupEdgesRef.current = null;
+      if (frame !== null) window.cancelAnimationFrame(frame);
+    };
+  }, [
+    atlasSelected,
+    atlasMd,
+    atlasContext.status,
+    atlasGraph,
+    visiblePgcs,
+    objects,
+    referenceObjects,
+    ready,
+    tidalRange,
+    isOverview,
+  ]);
 
   return (
     <>
@@ -1200,6 +1310,15 @@ export function AladinMap({
           isOverview ? "aladin-frame aladin-frame--overview" : "aladin-frame"
         }
       />
+      {isOverview && drawingMode === null && atlasSelected !== null ? (
+        <AtlasGroupContext
+          context={atlasContext}
+          selected={atlasSelected}
+          graph={atlasGraph}
+          outsideCount={atlasOutsideCount}
+          hasMd={hasSkyPosition(atlasMd)}
+        />
+      ) : null}
       {isOverview && drawingMode !== null ? (
         <div
           ref={drawSurfaceRef}

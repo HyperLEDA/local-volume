@@ -291,12 +291,12 @@
   box-sizing: border-box;
 }
 .atlas-legend-circle--small {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 .atlas-legend-circle--large {
-  width: 15px;
-  height: 15px;
+  width: 12px;
+  height: 12px;
 }
 .atlas-legend-stroke {
   width: 18px;

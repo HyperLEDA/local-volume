@@ -23,9 +23,10 @@ def test_catalog_schema_fetches_main_and_alias_metadata_once() -> None:
             {"column_name": "pgc", "param": {"description": "PGC identifier"}},
             {"column_name": "b_mag", "param": {"description": "B magnitude", "unit": "mag"}},
             {"column_name": "theta1", "param": {"description": "Tidal index"}},
+            {"column_name": "abs_b_mag", "param": {"description": "Absolute B magnitude", "unit": "mag"}},
         ]
     )
-    columns = ("pgc", "name", "b_mag", "theta1", "names")
+    columns = ("pgc", "name", "b_mag", "abs_b_mag", "theta1", "names")
     schema = select_schema(cast(Storage, storage), columns)
 
     assert list(schema) == list(columns)
@@ -33,11 +34,12 @@ def test_catalog_schema_fetches_main_and_alias_metadata_once() -> None:
     assert schema["names"].description == "Additional name"
     assert schema["names"].nice == "Aliases"
     assert schema["b_mag"].unit == "mag"
+    assert schema["abs_b_mag"].unit == "mag"
     assert schema["theta1"].description == "Tidal index"
     assert len(storage.calls) == 1
     sql, params = storage.calls[0]
     assert "CASE WHEN table_name = 'names' THEN 'names' ELSE column_name END" in sql
-    assert params == [["pgc", "name"], ["b_mag"], ["theta1"], True]
+    assert params == [["pgc", "name"], ["b_mag"], ["abs_b_mag", "theta1"], True]
 
 
 def test_catalog_schema_does_not_request_alias_metadata_if_absent() -> None:

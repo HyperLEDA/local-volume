@@ -17,6 +17,7 @@ export type CatalogObject = {
   bt: number | null;
   v_hel: number | null;
   b_mag?: number | null;
+  abs_b_mag?: number | null;
   hi21_mag?: number | null;
   hi21_limit?: string | null;
   ks_mag?: number | null;
@@ -76,6 +77,7 @@ type ObjectsListResponse = {
     dec: (number | null)[];
     bt?: (number | null)[];
     b_mag?: (number | null)[];
+    abs_b_mag?: (number | null)[];
     hi21_mag?: (number | null)[];
     hi21_limit?: (string | null)[];
     ks_mag?: (number | null)[];
@@ -154,6 +156,7 @@ export async function fetchObjects(): Promise<CatalogObject[]> {
     dec,
     bt,
     b_mag: bMag,
+    abs_b_mag: absBMag,
     hi21_mag: hi21Mag,
     hi21_limit: hi21Limit,
     ks_mag: ksMag,
@@ -181,6 +184,7 @@ export async function fetchObjects(): Promise<CatalogObject[]> {
     dec: dec[index] ?? null,
     bt: bt?.[index] ?? null,
     b_mag: bMag?.[index] ?? null,
+    abs_b_mag: absBMag?.[index] ?? null,
     hi21_mag: hi21Mag?.[index] ?? null,
     hi21_limit: hi21Limit?.[index] ?? null,
     ks_mag: ksMag?.[index] ?? null,

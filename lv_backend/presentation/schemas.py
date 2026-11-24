@@ -16,6 +16,7 @@ class ObjectSummaryColumns(pydantic.BaseModel):
     dec: list[float | None]
     bt: list[float | None]
     b_mag: list[float | None]
+    abs_b_mag: list[float | None]
     hi21_mag: list[float | None]
     hi21_limit: list[str | None]
     ks_mag: list[float | None]

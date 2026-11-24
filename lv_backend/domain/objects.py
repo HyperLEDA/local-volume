@@ -15,6 +15,7 @@ def list_objects(storage: Storage) -> schemas.ObjectsListResponse:
             dec=[row["dec"] for row in rows],
             bt=[row["bt"] for row in rows],
             b_mag=[row["b_mag"] for row in rows],
+            abs_b_mag=[row["abs_b_mag"] for row in rows],
             hi21_mag=[row["hi21_mag"] for row in rows],
             hi21_limit=[row["hi21_limit"] for row in rows],
             ks_mag=[row["ks_mag"] for row in rows],

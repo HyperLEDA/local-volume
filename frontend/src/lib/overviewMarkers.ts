@@ -2,11 +2,23 @@ import type { AladinSource } from "aladin-lite";
 import { morphologyColor } from "./morphologyColors.ts";
 import { tidalStrokeWidth } from "./tidalMarker.ts";
 
-/** The global map uses 7..14 px; object detail maps retain their 7..18 px cap. */
-export const OVERVIEW_MARKER_MAX_DIAMETER = 14;
+/** The global map uses 6..12 px; object detail maps use 6..18 px. */
+export const OVERVIEW_MARKER_MAX_DIAMETER = 12;
 export const OVERVIEW_MARKER_STROKE_WIDTH = 1.5;
 export const SELECTED_OBJECT_CROSS_COLOR = "#f6e5a8";
 export const SELECTED_OBJECT_CROSS_LINE_WIDTH = 1.5;
+
+/** Keep the catalogue-owned diameter independent of Aladin's source.size.
+ * Existing callers without this field retain their native size.
+ */
+function markerDisplayDiameter(source: AladinSource): number {
+  const diameter = source.data?.lv_marker_diameter;
+  return typeof diameter === "number" &&
+    Number.isFinite(diameter) &&
+    diameter >= 4
+    ? diameter
+    : (source.size ?? 7);
+}
 
 function drawCircleOutline(
   source: AladinSource,
@@ -16,7 +28,7 @@ function drawCircleOutline(
 ): boolean {
   const x = source.x;
   const y = source.y;
-  const diameter = source.size ?? 7;
+  const diameter = markerDisplayDiameter(source);
   if (
     typeof x !== "number" ||
     typeof y !== "number" ||
@@ -47,7 +59,7 @@ export function drawOverviewMarker(
 ): void {
   const x = source.x;
   const y = source.y;
-  const diameter = source.size ?? 7;
+  const diameter = markerDisplayDiameter(source);
   if (
     typeof x !== "number" ||
     typeof y !== "number" ||
@@ -80,7 +92,7 @@ export function drawSelectedObjectMarker(
 ): void {
   const x = source.x;
   const y = source.y;
-  const diameter = source.size ?? 7;
+  const diameter = markerDisplayDiameter(source);
   if (
     typeof x !== "number" ||
     typeof y !== "number" ||
