@@ -1,0 +1,947 @@
+.lv-three-launch-row {
+  display: flex;
+  justify-content: center;
+  padding-top: 10px;
+}
+.lv-three-launch {
+  border: 1px solid var(--line);
+  color: inherit;
+  background: var(--card);
+  font: inherit;
+  font-weight: 600;
+  border-radius: 7px;
+  padding: 9px 22px;
+  cursor: pointer;
+}
+.lv-three-launch:hover {
+  border-color: var(--accent);
+  background: var(--hover-tint);
+}
+.lv-three-dialog {
+  color: #dce6ee;
+  background: #101922;
+  border: 1px solid #344454;
+  border-radius: 14px;
+  box-shadow: 0 24px 90px #0009;
+  padding: 0;
+  width: min(1480px, 95vw);
+  max-width: 95vw;
+  height: min(880px, 91dvh);
+  max-height: 91dvh;
+  overflow: hidden;
+  margin: auto;
+  font: inherit;
+}
+.lv-three-dialog::backdrop {
+  background: rgba(4, 9, 15, 0.76);
+  backdrop-filter: blur(3px);
+}
+.lv-three-shell {
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+}
+.lv-three-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #2d3e4b;
+}
+.lv-three-eyebrow {
+  font-size: 0.67rem;
+  font-weight: 650;
+  letter-spacing: 0.12em;
+  color: #81b1bd;
+}
+.lv-three-header h2 {
+  font-size: 1.55rem;
+  line-height: 1.15;
+  margin: 7px 0 5px;
+}
+.lv-three-header h2 span {
+  font-weight: 400;
+  color: #a7bac8;
+}
+.lv-three-header p {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #9badba;
+}
+.lv-three-dialog button,
+.lv-three-dialog select {
+  color: inherit;
+  font: inherit;
+  border: 1px solid #3c4f60;
+  background: #1a2733;
+  border-radius: 6px;
+  padding: 7px 12px;
+}
+.lv-three-dialog button {
+  cursor: pointer;
+}
+.lv-three-dialog button:hover {
+  background: #263947;
+}
+.lv-three-dialog button[aria-pressed="true"] {
+  background: #294651;
+  border-color: #75aeb9;
+}
+.lv-three-dialog button:focus-visible,
+.lv-three-dialog select:focus-visible,
+.lv-three-launch:focus-visible {
+  outline: 2px solid #f5df9e;
+  outline-offset: 2px;
+}
+.lv-three-dialog .lv-three-close {
+  font-size: 1.55rem;
+  padding: 0;
+  width: 38px;
+  height: 38px;
+  line-height: 1;
+}
+.lv-three-toolbar {
+  display: flex;
+  gap: 10px 20px;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: #131f29;
+  border-bottom: 1px solid #2d3e4b;
+  font-size: 0.82rem;
+}
+.lv-three-segments {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+}
+.lv-three-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 310px);
+  min-height: 0;
+  gap: 14px;
+  padding: 14px;
+}
+.lv-three-main {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-height: 0;
+  min-width: 0;
+  background: #0c141e;
+  border: 1px solid #2c3c49;
+  border-radius: 9px;
+  overflow: hidden;
+}
+.lv-three-scene-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 15px;
+  font-size: 0.75rem;
+  color: #aabcc9;
+  border-bottom: 1px solid #223442;
+}
+.lv-three-scene-head b {
+  color: #dce6ee;
+}
+.lv-three-stage {
+  position: relative;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+.lv-three-canvas,
+.lv-three-labels {
+  position: absolute;
+  inset: 0;
+}
+.lv-three-canvas canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  cursor: grab;
+}
+.lv-three-canvas canvas:active {
+  cursor: grabbing;
+}
+.lv-three-labels {
+  pointer-events: none;
+  overflow: hidden;
+}
+.lv-three-labels span {
+  position: absolute;
+  top: 0;
+  left: 0;
+  white-space: nowrap;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-shadow:
+    0 1px 4px #000,
+    0 0 6px #000;
+}
+.lv-three-scale {
+  position: absolute;
+  left: 20px;
+  bottom: 20px;
+  border-bottom: 2px solid #a9bdcf;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  color: #dce6ee;
+  white-space: nowrap;
+  font-size: 0.74rem;
+  min-height: 20px;
+  pointer-events: none;
+}
+.lv-three-instructions {
+  padding: 10px 15px;
+  font-size: 0.74rem;
+  color: #90a3b2;
+  border-top: 1px solid #223442;
+}
+.lv-three-inspector {
+  overflow-y: auto;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  scrollbar-color: #40576a #17222c;
+}
+.lv-three-panel {
+  background: #182530;
+  border: 1px solid #324351;
+  border-radius: 8px;
+  padding: 14px;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.lv-three-panel h3 {
+  margin: 0 0 10px;
+  font-size: 0.92rem;
+  font-weight: 650;
+  color: #dce6ee;
+}
+.lv-three-panel p {
+  margin: 5px 0;
+}
+.lv-three-muted {
+  color: #9fb1bf;
+  font-size: 0.77rem;
+}
+.lv-three-stats,
+.lv-three-coords {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+  margin: 12px 0 5px;
+}
+.lv-three-stats div,
+.lv-three-coords div {
+  background: #101d27;
+  border-radius: 5px;
+  padding: 7px 4px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+}
+.lv-three-stats b,
+.lv-three-coords b {
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+.lv-three-stats span,
+.lv-three-coords span,
+.lv-three-coords small {
+  color: #9fb1bf;
+  font-size: 0.71rem;
+}
+.lv-three-select-label {
+  display: block;
+  font-size: 0.75rem;
+  color: #a9beca;
+}
+.lv-three-select-label select {
+  display: block;
+  width: 100%;
+  margin: 4px 0 12px;
+  box-sizing: border-box;
+}
+.lv-three-object-name {
+  font-size: 1.08rem;
+  font-weight: 650;
+  color: #f0e5be;
+}
+.lv-three-data {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 5px 8px;
+  margin: 10px 0;
+}
+.lv-three-data dt {
+  color: #9fb1bf;
+}
+.lv-three-data dd {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.lv-three-reference {
+  color: #8bb7c3;
+  font-size: 0.73rem;
+}
+.lv-three-dialog .lv-three-open {
+  width: 100%;
+  margin-top: 8px;
+  border-color: #628d99;
+  color: #dceff3;
+}
+.lv-three-legend > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.lv-three-legend > div > span:first-child {
+  min-width: 20px;
+  font-size: 1rem;
+  text-align: center;
+}
+.lv-three-gold {
+  color: #f5df9e;
+}
+.lv-three-legend .lv-three-morph {
+  margin: 12px 0 8px;
+  gap: 7px;
+}
+.lv-three-legend .lv-three-morph span {
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+.lv-three-morph i {
+  flex: 1;
+  height: 7px;
+  border-radius: 3px;
+  background: linear-gradient(
+    to right,
+    #c96d76,
+    #d99ea4,
+    #a995a6,
+    #91a8c6,
+    #6489bc,
+    #3f6fab
+  );
+}
+.lv-three-footer {
+  font-size: 0.74rem;
+  line-height: 1.35;
+  color: #9aadb9;
+  border-top: 1px solid #2d3e4b;
+  padding: 10px 20px;
+}
+.lv-three-fallback,
+.lv-three-unavailable {
+  padding: 22px;
+  color: #dce6ee;
+  position: relative;
+}
+@media (max-width: 800px) {
+  .lv-three-dialog {
+    width: 98vw;
+    max-width: 98vw;
+    height: 96dvh;
+    max-height: 96dvh;
+  }
+  .lv-three-shell {
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+  }
+  .lv-three-workspace {
+    display: flex;
+    flex-direction: column;
+    flex: none;
+  }
+  .lv-three-main {
+    height: min(62vh, 560px);
+    flex: none;
+  }
+  .lv-three-inspector {
+    overflow: visible;
+  }
+  .lv-three-header {
+    padding: 14px;
+  }
+  .lv-three-toolbar {
+    padding: 9px 14px;
+  }
+}
+
+/* Stage 06e: larger, higher-contrast scientific workspace. */
+.lv-three-dialog {
+  width: min(1640px, 97vw);
+  max-width: 97vw;
+  height: 94dvh;
+  max-height: 94dvh;
+}
+.lv-three-header {
+  padding: 14px 20px 12px;
+}
+.lv-three-header h2 {
+  font-size: 1.6rem;
+}
+.lv-three-toolbar {
+  padding: 9px 16px;
+  font-size: 0.88rem;
+}
+.lv-three-workspace {
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 320px);
+  gap: 12px;
+  padding: 12px;
+}
+.lv-three-main {
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+}
+.lv-three-scene-head {
+  font-size: 0.83rem;
+  padding: 10px 14px;
+  color: #bbcad6;
+}
+.lv-three-labels span {
+  font-size: 0.85rem;
+  font-weight: 650;
+}
+.lv-three-compass {
+  position: absolute;
+  right: 12px;
+  bottom: 9px;
+  width: 120px;
+  height: 120px;
+  pointer-events: none;
+  border-radius: 50%;
+  background: rgba(12, 21, 31, 0.74);
+}
+.lv-three-hover {
+  position: absolute;
+  z-index: 2;
+  max-width: calc(100% - 16px);
+  pointer-events: none;
+  background: #182934;
+  border: 1px solid #69828f;
+  color: #f0f5f8;
+  border-radius: 5px;
+  font-size: 0.88rem;
+  padding: 5px 9px;
+  box-shadow: 0 2px 8px #0008;
+  overflow-wrap: anywhere;
+}
+.lv-three-hover[hidden] {
+  display: none;
+}
+.lv-three-key {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 15px;
+  border-top: 1px solid #2d3e4b;
+  background: #14212b;
+  padding: 8px 13px;
+  font-size: 0.78rem;
+  color: #c7d5df;
+}
+.lv-three-key span {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+.lv-three-key-dot,
+.lv-three-key-diamond {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border: 1.5px solid #b8ccdf;
+  box-sizing: border-box;
+}
+.lv-three-key-dot {
+  background: #6489bc;
+  border-radius: 50%;
+}
+.lv-three-key-diamond {
+  transform: rotate(45deg);
+}
+.lv-three-key-morph i {
+  width: 54px;
+  height: 7px;
+  border-radius: 3px;
+  background: linear-gradient(to right, #c96d76, #a995a6, #91a8c6, #3f6fab);
+}
+.lv-three-instructions {
+  padding: 7px 13px;
+  font-size: 0.78rem;
+  color: #a6b8c6;
+}
+.lv-three-reference-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #15232d;
+  border: 1px solid #324351;
+  border-radius: 8px;
+  padding: 10px 13px;
+  color: #aebfcb;
+  font-size: 0.81rem;
+}
+.lv-three-reference-strip strong {
+  color: #e0e9ee;
+  font-size: 0.98rem;
+}
+.lv-three-panel {
+  padding: 12px;
+  font-size: 0.91rem;
+}
+.lv-three-panel h3 {
+  font-size: 1.02rem;
+}
+.lv-three-muted {
+  font-size: 0.82rem;
+  color: #b4c4d0;
+}
+.lv-three-select-label {
+  font-size: 0.82rem;
+}
+.lv-three-data {
+  gap: 6px 8px;
+}
+.lv-three-legend summary {
+  cursor: pointer;
+  color: #cbd8e3;
+  font-weight: 600;
+}
+.lv-three-legend[open] summary {
+  margin-bottom: 9px;
+}
+.lv-three-footer {
+  padding: 8px 16px;
+  color: #aebfcb;
+}
+@media (max-width: 800px) {
+  .lv-three-dialog {
+    width: 98vw;
+    max-width: 98vw;
+    height: 96dvh;
+    max-height: 96dvh;
+  }
+  .lv-three-main {
+    height: min(67vh, 580px);
+  }
+  .lv-three-compass {
+    width: 90px;
+    height: 90px;
+  }
+}
+
+/* Stage 06g: viewer-first workspace. */
+.lv-three-dialog {
+  box-sizing: border-box;
+  width: calc(100vw - 12px);
+  max-width: calc(100vw - 12px);
+  height: calc(100dvh - 12px);
+  max-height: calc(100dvh - 12px);
+  border-radius: 10px;
+}
+.lv-three-shell {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+.lv-three-header {
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+}
+.lv-three-header > div:first-child {
+  flex: 1;
+  min-width: 0;
+}
+.lv-three-header h2 {
+  margin: 3px 0;
+  font-size: 1.38rem;
+}
+.lv-three-header p {
+  font-size: 0.79rem;
+}
+.lv-three-dialog .lv-three-inspector-toggle {
+  flex: none;
+  white-space: nowrap;
+  font-size: 0.82rem;
+}
+.lv-three-dialog .lv-three-close {
+  flex: none;
+  width: 34px;
+  height: 34px;
+}
+.lv-three-toolbar {
+  gap: 6px 14px;
+  padding: 6px 10px;
+  font-size: 0.83rem;
+}
+.lv-three-toolbar button {
+  padding: 5px 9px;
+}
+.lv-three-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(256px, 19vw, 320px);
+  gap: 0;
+  padding: 0;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  align-items: stretch;
+}
+.lv-three-workspace--wide {
+  grid-template-columns: minmax(0, 1fr);
+}
+.lv-three-main {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  border: 0;
+  border-radius: 0;
+  min-height: 0;
+  min-width: 0;
+  height: auto;
+  overflow: hidden;
+  background: #0c151f;
+}
+.lv-three-stage {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+}
+.lv-three-scene-head {
+  padding: 6px 12px;
+  font-size: 0.79rem;
+}
+.lv-three-key {
+  padding: 5px 12px;
+  gap: 5px 14px;
+}
+.lv-three-instructions {
+  padding: 4px 12px;
+  font-size: 0.75rem;
+}
+.lv-three-inspector {
+  border-left: 1px solid #324351;
+  background: #111d27;
+  padding: 10px;
+  gap: 8px;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  box-sizing: border-box;
+}
+.lv-three-inspector[hidden] {
+  display: none;
+}
+.lv-three-inspector > * {
+  flex-shrink: 0;
+}
+.lv-three-panel {
+  padding: 10px 12px;
+}
+.lv-three-footer {
+  padding: 5px 12px;
+  font-size: 0.73rem;
+}
+@media (max-width: 800px) {
+  .lv-three-dialog {
+    width: calc(100vw - 6px);
+    max-width: calc(100vw - 6px);
+    height: calc(100dvh - 6px);
+    max-height: calc(100dvh - 6px);
+  }
+  .lv-three-shell {
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+  }
+  .lv-three-header,
+  .lv-three-toolbar,
+  .lv-three-footer {
+    flex-shrink: 0;
+  }
+  .lv-three-header {
+    flex-wrap: wrap;
+  }
+  .lv-three-header > div:first-child {
+    flex-basis: 55%;
+  }
+  .lv-three-workspace {
+    display: flex;
+    flex-direction: column;
+    flex: none;
+    overflow: visible;
+  }
+  .lv-three-main {
+    height: max(320px, 68dvh);
+    flex: none;
+  }
+  .lv-three-workspace--wide .lv-three-main {
+    height: max(320px, 72dvh);
+  }
+  .lv-three-inspector {
+    border-left: 0;
+    border-top: 1px solid #324351;
+    overflow: visible;
+  }
+  .lv-three-scene-head {
+    gap: 4px 8px;
+  }
+}
+/* Stage 06h: clean, galaxy-first scene. */
+.lv-three-shell {
+  grid-template-rows: auto auto minmax(0, 1fr);
+}
+.lv-three-header {
+  padding: 6px 12px;
+}
+.lv-three-header > div:first-child {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+}
+.lv-three-header h2 {
+  margin: 0;
+}
+.lv-three-header p {
+  margin: 0;
+}
+.lv-three-main {
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+.lv-three-key {
+  padding: 5px 10px;
+  gap: 5px 12px;
+}
+.lv-three-visible-count {
+  margin-right: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.lv-three-view-help {
+  margin-left: auto;
+  color: #9fb1bf;
+}
+.lv-three-interval-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+}
+.lv-three-interval-status {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  max-width: calc(100% - 24px);
+  padding: 5px 8px;
+  color: #ffe2a0;
+  background: #101922e6;
+  border: 1px solid #6c6047;
+  border-radius: 5px;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  pointer-events: none;
+}
+.lv-three-interval-status[hidden] {
+  display: none;
+}
+@media (max-width: 800px) {
+  .lv-three-header > div:first-child {
+    display: block;
+  }
+  .lv-three-view-help {
+    margin-left: 0;
+  }
+}
+/* Stage 06i: square scientific viewer, persistent coordinate axes. */
+.lv-three-dialog {
+  --lv-inspector-width: 292px;
+  --lv-viewer-side: max(
+    260px,
+    min(900px, calc(100dvh - 220px), calc(100vw - 326px))
+  );
+  box-sizing: border-box;
+  width: calc(var(--lv-viewer-side) + var(--lv-inspector-width) + 2px);
+  max-width: calc(100vw - 24px);
+  height: auto;
+  max-height: calc(100dvh - 24px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  margin: auto;
+  border-radius: 12px;
+}
+.lv-three-dialog--solo {
+  width: calc(var(--lv-viewer-side) + 2px);
+}
+.lv-three-shell {
+  display: grid;
+  grid-template-rows: auto auto auto;
+  height: auto;
+  overflow: visible;
+}
+.lv-three-header {
+  padding: 10px 12px;
+}
+.lv-three-header h2 {
+  font-size: 1.35rem;
+  line-height: 1.2;
+}
+.lv-three-toolbar {
+  justify-content: flex-start;
+  gap: 5px 10px;
+  padding: 6px 10px;
+  font-size: 0.78rem;
+}
+.lv-three-toolbar .lv-three-segments {
+  gap: 4px;
+}
+.lv-three-toolbar button {
+  padding: 4px 7px;
+  white-space: nowrap;
+}
+.lv-three-workspace {
+  grid-template-columns: minmax(0, 1fr) var(--lv-inspector-width);
+  align-items: stretch;
+  overflow: visible;
+  gap: 0;
+  padding: 0;
+}
+.lv-three-workspace--wide {
+  grid-template-columns: minmax(0, 1fr);
+}
+.lv-three-main,
+.lv-three-workspace--wide .lv-three-main {
+  display: flex;
+  flex-direction: column;
+  height: auto;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+.lv-three-stage {
+  flex: none;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  min-height: 0;
+  min-width: 0;
+}
+.lv-three-key {
+  flex: none;
+  padding: 7px 10px;
+  gap: 4px 11px;
+  font-size: 0.78rem;
+  min-width: 0;
+}
+.lv-three-view-help {
+  margin-left: 0;
+}
+.lv-three-inspector {
+  contain: size;
+  align-self: stretch;
+  min-height: 0;
+  min-width: 0;
+  overflow: auto;
+  padding: 10px;
+}
+.lv-three-inspector[hidden] {
+  display: none;
+}
+.lv-three-labels span {
+  font-size: 0.88rem;
+}
+.lv-three-compass {
+  width: 110px;
+  height: 110px;
+}
+@media (max-width: 800px) {
+  .lv-three-dialog,
+  .lv-three-dialog--solo {
+    --lv-viewer-side: min(680px, calc(100vw - 20px));
+    width: calc(var(--lv-viewer-side) + 2px);
+    max-width: calc(100vw - 16px);
+    max-height: calc(100dvh - 16px);
+  }
+  .lv-three-workspace {
+    display: flex;
+    flex-direction: column;
+  }
+  .lv-three-main,
+  .lv-three-workspace--wide .lv-three-main {
+    flex: none;
+    height: auto;
+  }
+  .lv-three-inspector {
+    contain: none;
+    overflow: visible;
+    border-left: 0;
+    border-top: 1px solid #324351;
+  }
+  .lv-three-compass {
+    width: 86px;
+    height: 86px;
+  }
+}
+
+/* Stage 06j: moderately wider square viewer workspace. */
+.lv-three-shell {
+  grid-template-columns: minmax(0, 1fr);
+}
+.lv-three-toolbar,
+.lv-three-header {
+  min-width: 0;
+}
+@media (min-width: 801px) {
+  .lv-three-dialog {
+    --lv-inspector-width: clamp(320px, 28vw, 380px);
+    --lv-viewer-side: max(
+      260px,
+      min(
+        940px,
+        calc(100dvh - 180px),
+        calc(100vw - var(--lv-inspector-width) - 34px)
+      )
+    );
+  }
+}
+
+/* Stage 06k: moderate landscape viewport. */
+@media (min-width: 801px) {
+  .lv-three-dialog {
+    --lv-inspector-width: clamp(300px, 24vw, 360px);
+    --lv-viewer-side: max(
+      260px,
+      min(
+        1120px,
+        calc(125dvh - 225px),
+        calc(100vw - var(--lv-inspector-width) - 34px)
+      )
+    );
+  }
+  .lv-three-stage {
+    aspect-ratio: 5 / 4;
+  }
+}
+@media (max-width: 800px) {
+  .lv-three-stage {
+    aspect-ratio: 1 / 1;
+  }
+}

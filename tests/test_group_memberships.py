@@ -1,3 +1,4 @@
+import math
 from typing import cast
 
 import pytest
@@ -25,7 +26,11 @@ def _member(pgc: int, parent: int | None, method: str | None = "TRGB") -> dict[s
         "distance_source_name": "test",
         "derived_distance_mpc": 4.0,
         "observed_distance_mpc": 4.0,
-        "derived_distance_method": method,
+        "derived_distance_method": "observed_mu",
+        "modulus_method": method,
+        "observed_mu": 5 * math.log10(4.0) + 25,
+        "distance_formula_version": "test-v1",
+        "distance_computed_revision": 7,
     }
 
 
@@ -50,10 +55,15 @@ def test_detail_provenance_adds_only_fields_and_preserves_original() -> None:
     center = cast(dict[str, object], output["scene_center"])
     members = cast(list[dict[str, object]], output["members"])
     assert center["center_type"] == "root_md"
-    assert output["distance_contract"] == "method_classification_unverified_v1"
+    assert output["distance_contract"] == "source_paired_evidence_v3"
     assert output["radius_measurements"] == []
     assert members[1]["distance_origin"] == "DIRECT_MEASURED"
     assert members[1]["distance_value_source"] == "lv.physical"
+    assert members[1]["distance_method_for_value"] == "TRGB"
+    assert members[1]["distance_lineage_status"] == "REVIEW_READY"
+    assert center["distance_lineage_status"] == "REVIEW_READY"
+    assert center["distance_value_review_status"] == "NOT_REVIEWED"
+    assert members[1]["distance_interval_verified"] is False
     assert members[1]["distance_provenance_verified"] is False
     assert members[1]["distance_3d_eligible"] is False
     assert "distance_origin" not in cast(list[dict[str, object]], group["members"])[1]

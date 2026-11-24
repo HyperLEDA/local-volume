@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import {
   fetchGroup,
@@ -14,6 +14,9 @@ import {
   consumeCollectionReturn,
 } from "../lib/collectionNavigation.ts";
 import "../styles/groups.css";
+import "../components/GroupSceneView.css";
+
+const GroupSceneView = lazy(() => import("../components/GroupSceneView.tsx"));
 
 function value(v: number | null, digits: number): string {
   return v === null || !Number.isFinite(v) ? "—" : v.toFixed(digits);
@@ -37,6 +40,7 @@ export function GroupPage() {
       ? selectedGroupId
       : undefined;
   const [group, setGroup] = useState<GroupDetail | null>(null);
+  const [sceneOpen, setSceneOpen] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const collectionToken = useMemo(
     () => `group-${rootPgc}-${definition}-${newCollectionToken()}`,
@@ -114,17 +118,49 @@ export function GroupPage() {
       {group && (
         <>
           <div className="group-overview-layout">
-            <section className="group-map-panel" aria-label="Group sky map">
-              <GroupSkyMap
-                group={group}
-                onMemberNavigate={(pgc) => {
-                  if (!group.members.some((member) => member.pgc === pgc))
-                    return null;
-                  saveGroupNavigation();
-                  return `/object/${pgc}?nav=${encodeURIComponent(collectionToken)}`;
-                }}
-              />
-            </section>
+            <div>
+              <section className="group-map-panel" aria-label="Group sky map">
+                <GroupSkyMap
+                  group={group}
+                  onMemberNavigate={(pgc) => {
+                    if (!group.members.some((member) => member.pgc === pgc))
+                      return null;
+                    saveGroupNavigation();
+                    return `/object/${pgc}?nav=${encodeURIComponent(collectionToken)}`;
+                  }}
+                />
+              </section>
+              <div className="lv-three-launch-row">
+                <button
+                  className="lv-three-launch"
+                  type="button"
+                  aria-haspopup="dialog"
+                  onClick={() =>
+                    setSceneOpen(
+                      `${group.definition}:${group.group_id}:${group.root_pgc}`,
+                    )
+                  }
+                >
+                  3D Group
+                </button>
+              </div>
+              {sceneOpen ===
+                `${group.definition}:${group.group_id}:${group.root_pgc}` && (
+                <Suspense fallback={<p role="status">Loading 3D Group…</p>}>
+                  <GroupSceneView
+                    key={sceneOpen}
+                    group={group}
+                    onClose={() => setSceneOpen(null)}
+                    onMemberNavigate={(pgc) => {
+                      if (!group.members.some((member) => member.pgc === pgc))
+                        return null;
+                      saveGroupNavigation();
+                      return `/object/${pgc}?nav=${encodeURIComponent(collectionToken)}`;
+                    }}
+                  />
+                </Suspense>
+              )}
+            </div>
             <div className="group-detail-summary">
               <div className="group-detail-identity">
                 <h2 className="group-detail-title">{group.name} Group</h2>
