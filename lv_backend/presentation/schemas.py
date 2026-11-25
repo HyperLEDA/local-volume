@@ -93,10 +93,51 @@ class ObjectDetail(pydantic.BaseModel):
     names: list[str]
 
 
+class SpatialDistance(pydantic.BaseModel):
+    """Adopted catalogue distance plus independent value and interval review."""
+
+    pgc: int
+    dist_mpc: float | None = None
+    observed_distance_mpc: float | None = None
+    derived_distance_mpc: float | None = None
+    observed_mu: str | None = None
+    observed_e_mu: str | None = None
+    distance_method: str | None = None
+    modulus_method: str | None = None
+    distance_reference: str | None = None
+    distance_source_catalog: str | None = None
+    distance_source_name: str | None = None
+    derived_distance_method: str | None = None
+    distance_computed_revision: int | None = None
+    distance_formula_version: str | None = None
+    distance_error_basis: str | None = None
+    e_distance_minus_mpc: float | None = None
+    e_distance_plus_mpc: float | None = None
+    distance_origin: str
+    distance_value_source: str | None = None
+    distance_adoption_basis: str | None = None
+    distance_method_for_value: str | None = None
+    distance_reference_for_value: str | None = None
+    distance_lineage_status: str
+    distance_lineage_reason: str
+    distance_interval_traceable: bool
+    distance_value_fingerprint: str | None = None
+    distance_interval_fingerprint: str | None = None
+    distance_value_review_status: str
+    distance_interval_review_status: str
+    distance_value_evidence_locator: str | None = None
+    distance_interval_evidence_locator: str | None = None
+    distance_provenance_verified: bool
+    distance_interval_verified: bool
+    distance_3d_eligible: bool
+
+
 class ObjectsListResponse(pydantic.BaseModel):
     model_config = pydantic.ConfigDict(populate_by_name=True)
 
     data: ObjectSummaryColumns
+    distance_contract: str | None = None
+    spatial_distances: list[SpatialDistance] = pydantic.Field(default_factory=list)
     schema_: dict[str, ColumnMeta] = pydantic.Field(alias="schema")
 
 

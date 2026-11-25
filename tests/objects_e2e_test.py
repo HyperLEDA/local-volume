@@ -86,6 +86,15 @@ def test_list_objects(client: fastapi.testclient.TestClient) -> None:
     rows = _sample_rows()
     assert len(body["data"]["pgc"]) == 25
     assert body["data"]["pgc"] == [row["pgc"] for row in rows]
+    assert body["distance_contract"] == "source_paired_evidence_v3"
+    spatial = body["spatial_distances"]
+    assert [item["pgc"] for item in spatial] == body["data"]["pgc"]
+    fallback = next(item for item in spatial if item["pgc"] == 29146)
+    assert fallback["dist_mpc"] == pytest.approx(3.85)
+    assert fallback["distance_value_source"] == "lv.observed"
+    assert fallback["distance_3d_eligible"] is False
+    assert fallback["distance_interval_verified"] is False
+    assert fallback.get("distance_reference_for_value") is None
     assert body["data"]["name"] == [row["name"] for row in rows]
     assert body["data"]["ra"] == pytest.approx([row["ra"] for row in rows])
     assert body["data"]["dec"] == pytest.approx([row["dec"] for row in rows])

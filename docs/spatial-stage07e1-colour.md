@@ -1,0 +1,5 @@
+# Stage 07e.1 — quantitative colour
+
+The default remains morphology. Neutral and numeric colour do not change marker geometry, sample, camera, eligibility, or group membership. Numeric sources: spatial_distance.dist_mpc (adopted), lvg_v_lg_kms (catalogue LG velocity), abs_b_mag (derived), theta1 (computed). No fallback to legacy distance, heliocentric velocity or apparent B magnitude. Missing/nonfinite values use grey, not zero. Group colours use the root PGC; not group means. The linear domain is all positioned objects in the input Atlas selection, before distance quality/volume/display filters, and signed modes use a symmetric zero-centred range. Constant/empty domains are handled explicitly. No clipping except to the declared domain. Lighting/transparency on group glyphs modify apparent colours; the legend and inspector show base colour. Morphology palette unchanged. No H I mass or K luminosity until supported global provenance/limit contract. No physical measurements implied.
+
+QA: pure colour policy tests, full frontend regression, real-data legend, missing data, camera stability and both themes. Scientific and browser acceptance remain separate.

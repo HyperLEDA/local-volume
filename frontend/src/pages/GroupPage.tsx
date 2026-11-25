@@ -15,6 +15,7 @@ import {
 } from "../lib/collectionNavigation.ts";
 import "../styles/groups.css";
 import "../components/GroupSceneView.css";
+import "../components/sky3DLaunch.css";
 
 const GroupSceneView = lazy(() => import("../components/GroupSceneView.tsx"));
 
@@ -119,7 +120,10 @@ export function GroupPage() {
         <>
           <div className="group-overview-layout">
             <div>
-              <section className="group-map-panel" aria-label="Group sky map">
+              <section
+                className="group-map-panel lv-sky-3d-host"
+                aria-label="Group sky map"
+              >
                 <GroupSkyMap
                   group={group}
                   onMemberNavigate={(pgc) => {
@@ -129,10 +133,8 @@ export function GroupPage() {
                     return `/object/${pgc}?nav=${encodeURIComponent(collectionToken)}`;
                   }}
                 />
-              </section>
-              <div className="lv-three-launch-row">
                 <button
-                  className="lv-three-launch"
+                  className="lv-sky-3d-launch"
                   type="button"
                   aria-haspopup="dialog"
                   onClick={() =>
@@ -141,9 +143,21 @@ export function GroupPage() {
                     )
                   }
                 >
+                  <svg
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <path d="M10 2 17 6v8l-7 4-7-4V6z M3 6l7 4 7-4 M10 10v8" />
+                  </svg>
                   3D Group
                 </button>
-              </div>
+              </section>
               {sceneOpen ===
                 `${group.definition}:${group.group_id}:${group.root_pgc}` && (
                 <Suspense fallback={<p role="status">Loading 3D Group…</p>}>

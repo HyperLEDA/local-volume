@@ -1,5 +1,6 @@
 from lv_backend.data import objects as data_objects
 from lv_backend.data.storage import Storage
+from lv_backend.domain.spatial_distances import DISTANCE_CONTRACT, spatial_distance
 from lv_backend.presentation import schemas
 
 
@@ -7,6 +8,8 @@ def list_objects(storage: Storage) -> schemas.ObjectsListResponse:
     column_schema = data_objects.select_schema(storage, data_objects.SUMMARY_COLUMNS)
     rows = data_objects.select_objects(storage)
     return schemas.ObjectsListResponse(
+        distance_contract=DISTANCE_CONTRACT,
+        spatial_distances=[spatial_distance(row) for row in rows],
         data=schemas.ObjectSummaryColumns(
             pgc=[row["pgc"] for row in rows],
             name=[row["name"] for row in rows],

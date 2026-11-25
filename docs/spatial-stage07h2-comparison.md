@@ -1,0 +1,3 @@
+# Stage 07h.2: Population comparison
+
+Comparison is a categorical colour overlay on the current filtered galaxy positions. It does not filter the sample, alter geometry, camera, picking, MD links or sample transfer. A and B independently combine the existing nominal catalogue criteria with OR/AND. Five mutually exclusive classes include unresolved membership; missing data are not false. Defaults on enabling: dwarf versus negative Theta1. Group mode and Reset disable comparison. The previous physical colour mode resumes when comparison is disabled. Comparison is persisted in the browser session; the existing frozen sample still exports the underlying selection, not comparison labels. Publication export of comparison metadata remains future work.

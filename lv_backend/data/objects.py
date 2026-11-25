@@ -115,6 +115,15 @@ SELECT o.pgc, o.name, o.ra, o.dec, obs.bt, obs.b_mag, obs.hi21_mag, obs.hi21_lim
        obs.a26_arcmin, obs.morphology_t, obs.w50_kms, obs.lvg_v_hel_kms,
        obs.dist, obs.lvg_v_lg_kms, p.abs_b_mag, p.theta1, p.md_pgc, md.name AS md_name,
        p.environment_coverage, obs.v_hel,
+       COALESCE(p.distance_mpc, obs.dist) AS dist_mpc,
+       obs.distance_reference, obs.source_catalog AS distance_source_catalog,
+       obs.source_name AS distance_source_name,
+       obs.dist AS observed_distance_mpc, p.distance_mpc AS derived_distance_mpc,
+       p.distance_method AS derived_distance_method,
+       obs.mu AS observed_mu, obs.e_mu AS observed_e_mu, obs.modulus_method,
+       p.computed_revision AS distance_computed_revision,
+       CASE WHEN p.pgc IS NOT NULL THEN s.formula_version END AS distance_formula_version,
+       p.e_distance_minus_mpc, p.e_distance_plus_mpc, p.distance_error_basis,
        obs.distance_method, o.type_name, {_NAMES_AGG}
 FROM lv.objects AS o
 LEFT JOIN lv.observed AS obs ON obs.pgc = o.pgc
@@ -125,7 +134,7 @@ LEFT JOIN lv.physical AS p ON p.pgc = o.pgc
   AND s.formula_version = %s
 LEFT JOIN lv.objects AS md ON md.pgc = p.md_pgc
 LEFT JOIN lv.names AS n ON n.pgc = o.pgc
-GROUP BY o.pgc, obs.pgc, p.pgc, md.pgc
+GROUP BY o.pgc, obs.pgc, p.pgc, md.pgc, s.formula_version
 ORDER BY o.pgc
 """
 

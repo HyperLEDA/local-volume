@@ -6,40 +6,15 @@
  * use the conventional pole (l=47.37 deg, b=+6.32 deg) and SGL=0 direction
  * (l=137.37 deg, b=0 deg). No catalog coordinates are modified.
  */
+import { unitDirection } from "./groupGeometry3d.ts";
+import {
+  galacticVectorToSupergalactic,
+  rotateIcrsVector,
+} from "./spatialFrames.ts";
+
 export type AngularPosition = { longitude: number; latitude: number };
 
-const TO_RAD = Math.PI / 180;
 const TO_DEG = 180 / Math.PI;
-
-const ICRS_TO_GALACTIC = [
-  [-0.0548755604162154, -0.873437090234885, -0.4838350155487132],
-  [0.4941094278755837, -0.4448296299600112, 0.746982244497219],
-  [-0.8676661490190047, -0.1980763734312015, 0.4559837761750669],
-] as const;
-
-type Vector = readonly [number, number, number];
-
-function unitVector(longitude: number, latitude: number): Vector {
-  const lon = longitude * TO_RAD;
-  const lat = latitude * TO_RAD;
-  return [
-    Math.cos(lat) * Math.cos(lon),
-    Math.cos(lat) * Math.sin(lon),
-    Math.sin(lat),
-  ];
-}
-
-function dot(a: Vector, b: Vector): number {
-  return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-}
-
-function cross(a: Vector, b: Vector): Vector {
-  return [
-    a[1] * b[2] - a[2] * b[1],
-    a[2] * b[0] - a[0] * b[2],
-    a[0] * b[1] - a[1] * b[0],
-  ];
-}
 
 function longitudeDegrees(y: number, x: number): number {
   return (((Math.atan2(y, x) * TO_DEG) % 360) + 360) % 360;
@@ -49,38 +24,31 @@ function latitudeDegrees(z: number): number {
   return Math.asin(Math.min(1, Math.max(-1, z))) * TO_DEG;
 }
 
-function validEquatorial(ra: number, dec: number): boolean {
-  return Number.isFinite(ra) && Number.isFinite(dec) && dec >= -90 && dec <= 90;
-}
-
 export function icrsToGalactic(
   ra: number,
   dec: number,
 ): AngularPosition | null {
-  if (!validEquatorial(ra, dec)) return null;
-  const vector = unitVector(ra, dec);
-  const result = ICRS_TO_GALACTIC.map((row) => dot(row, vector));
+  const vector = unitDirection({ ra, dec });
+  if (vector === null) return null;
+  const result = rotateIcrsVector(vector, "GALACTIC");
   return {
     longitude: longitudeDegrees(result[1], result[0]),
     latitude: latitudeDegrees(result[2]),
   };
 }
 
-const SUPERGALACTIC_Z = unitVector(47.37, 6.32);
-const SUPERGALACTIC_X = unitVector(137.37, 0);
-const SUPERGALACTIC_Y = cross(SUPERGALACTIC_Z, SUPERGALACTIC_X);
-
 export function galacticToSupergalactic(
   galactic: AngularPosition,
 ): AngularPosition | null {
-  if (!validEquatorial(galactic.longitude, galactic.latitude)) return null;
-  const vector = unitVector(galactic.longitude, galactic.latitude);
+  const vector = unitDirection({
+    ra: galactic.longitude,
+    dec: galactic.latitude,
+  });
+  if (vector === null) return null;
+  const result = galacticVectorToSupergalactic(vector);
   return {
-    longitude: longitudeDegrees(
-      dot(vector, SUPERGALACTIC_Y),
-      dot(vector, SUPERGALACTIC_X),
-    ),
-    latitude: latitudeDegrees(dot(vector, SUPERGALACTIC_Z)),
+    longitude: longitudeDegrees(result[1], result[0]),
+    latitude: latitudeDegrees(result[2]),
   };
 }
 
