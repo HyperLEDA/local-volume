@@ -19,6 +19,7 @@ from lv_backend.data import physical_refresh as data_physical_refresh
 from lv_backend.data import storage as data_storage
 from lv_backend.domain import groups as domain_groups
 from lv_backend.domain import objects
+from lv_backend.domain import spatial_photometry as domain_spatial_photometry
 from lv_backend.presentation import discovery, schemas
 
 _DIST_DIR = pathlib.Path(__file__).resolve().parents[2] / "frontend" / "dist"
@@ -93,6 +94,22 @@ def get_physical(request: fastapi.Request, pgc: int) -> dict[str, object]:
 @api.get("/physical/refresh-status")
 def get_physical_refresh_status(request: fastapi.Request) -> dict[str, object]:
     return {"data": data_physical.refresh_status(request.app.state.storage)}
+
+
+@api.get("/spatial/physical-groups")
+def spatial_physical_groups(request: fastapi.Request) -> dict[str, object]:
+    try:
+        return {"data": domain_groups.spatial_physical_groups(request.app.state.storage)}
+    except RuntimeError as exc:
+        raise fastapi.HTTPException(status_code=409, detail=str(exc)) from exc
+
+
+@api.get("/spatial/photometry")
+def spatial_photometry(request: fastapi.Request) -> dict[str, object]:
+    try:
+        return {"data": domain_spatial_photometry.spatial_photometry(request.app.state.storage)}
+    except RuntimeError as exc:
+        raise fastapi.HTTPException(status_code=409, detail=str(exc)) from exc
 
 
 @api.get("/groups")

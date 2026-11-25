@@ -264,6 +264,21 @@ def _published_group(storage: Storage, root_pgc: int, group_id: int | None = Non
     return {**_summary(row, members, tidal_range), "source_description": row["source_description"], "members": members}
 
 
+def spatial_physical_groups(storage: Storage) -> dict[str, object]:
+    """One current canonical physical catalogue, including exact member PGCs.
+
+    The covered PGCs distinguish non-members from unavailable membership.
+    No nearest-neighbour or MD-bucket approximation is used.
+    """
+    rows = data_groups.select_live_objects(storage)
+    groups = []
+    for group in derive_live_groups(rows, "physical"):
+        members = cast(list[dict[str, object]], group["members"])
+        summary = {key: value for key, value in group.items() if key not in ("members", "tidal_min", "tidal_max")}
+        groups.append({**summary, "member_pgcs": [int(member["pgc"]) for member in members]})
+    return {"catalogue_pgcs": [int(row["pgc"]) for row in rows], "groups": groups}
+
+
 def list_groups(storage: Storage, definition: str = "physical") -> list[dict[str, object]]:
     if definition not in ("physical", "suite", "published"):
         raise ValueError("Unsupported group definition")

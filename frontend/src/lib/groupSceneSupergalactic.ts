@@ -1,23 +1,12 @@
 import type { GroupScene } from "./groupScene3d.ts";
 import type { Vec3 } from "./groupGeometry3d.ts";
+import { rotateIcrsVector } from "./spatialFrames.ts";
 
 export type SceneFrameMode = "LOCAL" | "SUPERGALACTIC";
 export type ViewerScene = Pick<
   GroupScene,
   "status" | "rootPgc" | "centre" | "points" | "displayExtentKpc"
 >;
-
-// ICRS -> Galactic (IAU J2000 orientation) -> Supergalactic.
-// SG north pole: Galactic l=47.37 deg, b=6.32 deg; SGX: l=137.37 deg, b=0.
-const ICRS_TO_SG = [
-  [0.375015477807805, 0.341358961829025, 0.861880183426672],
-  [-0.89832045561652, -0.095727140724987, 0.428785113488734],
-  [0.228874966795218, -0.935045653274549, 0.270750578700876],
-] as const;
-
-function dot(a: Vec3, b: Vec3): number {
-  return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-}
 
 export function supergalacticOffset(
   local: Vec3,
@@ -43,11 +32,7 @@ export function supergalacticOffset(
     x * east[1] + y * north[1] + z * los[1],
     x * east[2] + y * north[2] + z * los[2],
   ];
-  return [
-    dot(ICRS_TO_SG[0], icrs),
-    dot(ICRS_TO_SG[1], icrs),
-    dot(ICRS_TO_SG[2], icrs),
-  ];
+  return rotateIcrsVector(icrs, "SUPERGALACTIC");
 }
 
 export function frameAxisLabels(

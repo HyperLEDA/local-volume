@@ -118,6 +118,8 @@ type AladinMapProps = {
   onCancelDraw?: () => void;
   onObjectNavigate?: (pgc: number) => string | null;
   onAtlasCamera?: (view: AtlasCamera | null) => void;
+  onAtlasSelectionChange?: (pgc: number | null) => void;
+  atlasSelectionRequest?: { pgc: number | null } | null;
   onDetailScaleChange?: (scale: GalaxyAngularScale | null) => void;
 };
 
@@ -331,6 +333,8 @@ export function AladinMap({
   onCancelDraw,
   onObjectNavigate,
   onAtlasCamera,
+  onAtlasSelectionChange,
+  atlasSelectionRequest,
   onDetailScaleChange,
 }: AladinMapProps) {
   const isOverview = fov >= 180;
@@ -388,7 +392,16 @@ export function AladinMap({
   const mdCatalogRef = useRef<AladinCatalog | null>(null);
   const refreshReticlePopupRef = useRef<(() => void) | null>(null);
   const clearReticlePopupRef = useRef<(() => void) | null>(null);
+  const selectionCallback = useRef(onAtlasSelectionChange);
+  const applySelection = useRef<((pgc: number | null) => void) | null>(null);
+  useEffect(() => {
+    selectionCallback.current = onAtlasSelectionChange;
+  }, [onAtlasSelectionChange]);
   const [ready, setReady] = useState(false);
+  useEffect(() => {
+    if (isOverview && ready && atlasSelectionRequest)
+      applySelection.current?.(atlasSelectionRequest.pgc);
+  }, [isOverview, ready, atlasSelectionRequest]);
   const [selectedPgc, setSelectedPgc] = useState<number | null>(null);
   const [mapError, setMapError] = useState<string | null>(null);
   const regionOverlayRef = useRef<AtlasGraphicOverlay | null>(null);
@@ -737,11 +750,12 @@ export function AladinMap({
           markerClickedThisClick = true;
           manualPopup = true;
           const markerPgc = (source.data as { pgc?: unknown } | null)?.pgc;
-          setSelectedPgc(
+          const selected =
             typeof markerPgc === "number" && Number.isSafeInteger(markerPgc)
               ? markerPgc
-              : null,
-          );
+              : null;
+          setSelectedPgc(selected);
+          if (isOverview) selectionCallback.current?.(selected);
           autoPopupPgc = null;
           if (pendingUpdate !== null) {
             clearTimeout(pendingUpdate);
@@ -765,9 +779,25 @@ export function AladinMap({
         manualPopup = false;
         autoPopupPgc = null;
         setSelectedPgc(null);
+        if (isOverview) selectionCallback.current?.(null);
         view.hidePopup();
       }
 
+      applySelection.current = (pgc) => {
+        if (pendingUpdate !== null) {
+          clearTimeout(pendingUpdate);
+          pendingUpdate = null;
+        }
+        manualPopup = false;
+        autoPopupPgc = null;
+        view.hidePopup();
+        setSelectedPgc(
+          pgc !== null &&
+            objectsRef.current.some((object) => object.pgc === pgc)
+            ? pgc
+            : null,
+        );
+      };
       view.on("objectClicked", onObjectClicked);
       view.on("click", onSkyClick);
 
@@ -844,6 +874,7 @@ export function AladinMap({
       overlayControllerRef.current?.dispose();
       overlayControllerRef.current = null;
       listeners.detach?.();
+      applySelection.current = null;
       clearReticlePopupRef.current = null;
       refreshReticlePopupRef.current = null;
       catalogRef.current = null;

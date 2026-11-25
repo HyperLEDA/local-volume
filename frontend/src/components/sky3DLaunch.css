@@ -1,0 +1,71 @@
+/* Shared 3D launcher for the full sky maps only. Aladin keeps its projection menu. */
+.lv-sky-3d-host {
+  position: relative;
+  --lv-sky-3d-height: 32px;
+  --lv-sky-3d-offset: 38px;
+}
+.lv-sky-3d-host .aladin-projection-control {
+  top: calc(0.2rem + var(--lv-sky-3d-offset)) !important;
+  right: 0.2rem !important;
+}
+.lv-sky-3d-host > .lv-sky-3d-launch {
+  position: absolute;
+  z-index: 60;
+  top: calc(0.2rem + 1px);
+  right: 0.2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 0;
+  min-height: var(--lv-sky-3d-height);
+  padding: 4px 9px;
+  border: 1px solid #86a9bf;
+  border-radius: 5px;
+  background: rgb(19 39 53 / 96%);
+  color: #f0f6fb;
+  font: inherit;
+  font-size: 0.79rem;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.lv-sky-3d-host > .lv-sky-3d-launch:hover:not(:disabled) {
+  border-color: #c8e4f5;
+  background: #2a4b61;
+}
+.lv-sky-3d-host > .lv-sky-3d-launch:focus-visible {
+  outline: 2px solid #d1eff9;
+  outline-offset: 2px;
+}
+.lv-sky-3d-host > .lv-sky-3d-launch:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.lv-sky-3d-launch svg {
+  flex: 0 0 auto;
+  width: 15px;
+  height: 15px;
+}
+.catalog--overview .catalog-sky.lv-sky-3d-host > .atlas-fullscreen-toggle {
+  top: calc(54px + var(--lv-sky-3d-offset));
+}
+.catalog--overview
+  .catalog-sky.lv-sky-3d-host.atlas-sky--maximized
+  > .atlas-fullscreen-toggle {
+  top: calc(env(safe-area-inset-top, 0px) + 54px + var(--lv-sky-3d-offset));
+}
+.catalog--overview
+  .catalog-sky.lv-sky-3d-host.atlas-sky--maximized
+  > .lv-sky-3d-launch {
+  top: calc(env(safe-area-inset-top, 0px) + 0.2rem + 1px);
+  right: max(0.2rem, env(safe-area-inset-right, 0px));
+  z-index: 200;
+}
+@media (pointer: coarse) {
+  .lv-sky-3d-host {
+    --lv-sky-3d-height: 44px;
+    --lv-sky-3d-offset: 50px;
+  }
+}

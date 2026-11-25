@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import type { GroupDetail } from "../api/groups.ts";
 import { buildGroupScene, type PositionKind } from "../lib/groupScene3d.ts";
 import {
-  INITIAL_SCENE_OPTIONS,
   visibleScenePoint,
   type SceneView,
 } from "../lib/groupSceneWebGLPolicy.ts";
@@ -14,6 +13,11 @@ import {
 } from "../lib/groupSceneSupergalactic.ts";
 import GroupSceneThree from "./GroupSceneThree.tsx";
 import "./GroupSceneView.css";
+import {
+  groupSessionId,
+  readGroupPreferences,
+  saveGroupPreferences,
+} from "../lib/groupSession.ts";
 
 const KINDS: Record<PositionKind, string> = {
   INDIVIDUAL_ADOPTED: "Individual catalogue distance",
@@ -35,7 +39,21 @@ export default function GroupSceneView({
   onMemberNavigate: (pgc: number) => string | null;
   onClose: () => void;
 }) {
-  const [frameMode, setFrameMode] = useState<SceneFrameMode>("LOCAL");
+  const sessionId = groupSessionId(
+    group.definition,
+    group.group_id,
+    group.root_pgc,
+  );
+  const [restored] = useState(() =>
+    readGroupPreferences(
+      sessionId,
+      new Set(group.members.map((member) => member.pgc)),
+      group.root_pgc,
+    ),
+  );
+  const [frameMode, setFrameMode] = useState<SceneFrameMode>(
+    restored.frameMode,
+  );
   const localScene = useMemo(() => buildGroupScene(group), [group]);
   const scene = useMemo(
     () => viewerScene(localScene, frameMode),
@@ -44,19 +62,17 @@ export default function GroupSceneView({
   const axisLabels = frameAxisLabels(frameMode);
   const navigate = useNavigate();
   const dialog = useRef<HTMLDialogElement>(null);
-  const [inspectorOpen, setInspectorOpen] = useState(true);
-  const [selected, setSelected] = useState<number | null>(group.root_pgc);
-  const [relations, setRelations] = useState<boolean>(
-    INITIAL_SCENE_OPTIONS.relations,
-  );
+  const [inspectorOpen, setInspectorOpen] = useState(restored.inspectorOpen);
+  const [selected, setSelected] = useState<number | null>(restored.selected);
+  const [relations, setRelations] = useState<boolean>(restored.relations);
   const [individualOnly, setIndividualOnly] = useState<boolean>(
-    INITIAL_SCENE_OPTIONS.individualOnly,
+    restored.individualOnly,
   );
 
-  const [grid, setGrid] = useState<boolean>(INITIAL_SCENE_OPTIONS.grid);
-  const [box, setBox] = useState<boolean>(INITIAL_SCENE_OPTIONS.box);
-  const [sphere, setSphere] = useState<boolean>(INITIAL_SCENE_OPTIONS.sphere);
-  const [view, setView] = useState<SceneView>("orbit");
+  const [grid, setGrid] = useState<boolean>(restored.grid);
+  const [box, setBox] = useState<boolean>(restored.box);
+  const [sphere, setSphere] = useState<boolean>(restored.sphere);
+  const [view, setView] = useState<SceneView>(restored.view);
   const [viewRevision, setViewRevision] = useState(0);
   const current = scene.points.find((p) => p.pgc === selected);
   const count = scene.points.filter((p) =>
@@ -73,6 +89,30 @@ export default function GroupSceneView({
     const el = dialog.current;
     if (el && !el.open) el.showModal();
   }, []);
+  useEffect(() => {
+    saveGroupPreferences(sessionId, {
+      frameMode,
+      view,
+      selected,
+      inspectorOpen,
+      relations,
+      individualOnly,
+      grid,
+      box,
+      sphere,
+    });
+  }, [
+    sessionId,
+    frameMode,
+    view,
+    selected,
+    inspectorOpen,
+    relations,
+    individualOnly,
+    grid,
+    box,
+    sphere,
+  ]);
   function setCamera(next: SceneView) {
     setView(next);
     setViewRevision((n) => n + 1);
@@ -203,6 +243,7 @@ export default function GroupSceneView({
           <section className="lv-three-main" aria-label="Group spatial scene">
             {scene.status === "READY" ? (
               <GroupSceneThree
+                sessionId={sessionId}
                 scene={scene}
                 members={group.members}
                 selected={selected}
@@ -412,9 +453,10 @@ export default function GroupSceneView({
                 guides. Adopted distances are not necessarily independently
                 verified. The grid is the plane through the group centre (LOS =
                 0 or relative ΔSGZ = 0), not the absolute supergalactic equator.
-                Drag to orbit, right drag to pan, scroll or pinch to zoom, click
-                a galaxy to inspect. The D interval is shown for the selected
-                galaxy only, when available.
+                Drag to orbit, right drag to pan, scroll or pinch to zoom. WASD
+                or arrows to pan (Shift faster); Enter or double-click to focus.
+                Click a galaxy to inspect, empty space to clear. The D interval
+                is shown for the selected galaxy only, when available.
               </p>
             </details>
           </aside>

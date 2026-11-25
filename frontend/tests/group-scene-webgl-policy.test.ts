@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
+import { decodeGroupPreferences } from "../src/lib/groupSession.ts";
 import {
   INITIAL_SCENE_OPTIONS,
   viewVectors,
@@ -7,8 +8,19 @@ import {
   pickProjectedMarker,
 } from "../src/lib/groupSceneWebGLPolicy.ts";
 describe("Three.js group modal", () => {
-  test("relations start off on every new scene", () => {
+  test("relations start off for a new group and restore a saved preference", () => {
     expect(INITIAL_SCENE_OPTIONS.relations).toBe(false);
+    const members = new Set([1]);
+    expect(decodeGroupPreferences(null, members, 1).relations).toBe(false);
+    expect(
+      decodeGroupPreferences({ relations: true }, members, 1).relations,
+    ).toBe(true);
+    expect(
+      decodeGroupPreferences({ relations: false }, members, 1).relations,
+    ).toBe(false);
+    expect(
+      decodeGroupPreferences({ relations: "true" }, members, 1).relations,
+    ).toBe(false);
   });
   test("camera presets use positive east/north/LOS consistently", () => {
     expect(viewVectors("XY")).toEqual({ position: [0, 0, 1], up: [0, 1, 0] });
@@ -51,7 +63,11 @@ describe("Three.js group modal", () => {
       "utf8",
     );
     expect(modal).toContain("showModal()");
-    expect(modal).toContain("INITIAL_SCENE_OPTIONS.relations");
+    expect(modal).toContain("readGroupPreferences(");
+    expect(modal).toContain("useState<boolean>(restored.relations)");
+    expect(modal).toContain("saveGroupPreferences(sessionId, {");
+    expect(modal).toContain("relations={relations}");
+    expect(modal).toContain("setRelations((v) => !v)");
     expect(engine).toContain("relations.visible = next.relations");
     expect(engine).toContain("renderer.dispose()");
   });

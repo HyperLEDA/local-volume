@@ -1,0 +1,3 @@
+# Stage 07g.2 — nominal sphere and box selections
+
+One applied shape at a time. Sphere uses Euclidean radius about a signed Cartesian centre. Box uses full positive axis lengths, inclusive half-length boundaries. Coordinates and lengths are in Mpc in the explicitly chosen observer frame. Rotating the display does not change membership. Individual catalogue positions only, intersected with existing Atlas filters, distance quality and radial scope. No group-centre proxy, schematic depth or probabilistic membership. The boundary guides are display-only. Apply commits the draft; Clear removes the active geometry. Reset also clears the saved region. Old slice sessions remain readable. No database changes or export/Analysis integration yet.

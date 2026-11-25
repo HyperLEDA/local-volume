@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import {
   fetchObjects,
   createCatalogQueryMatcher,
@@ -31,6 +31,35 @@ import { sortObjectsByRa } from "../lib/atlasRaSort.ts";
 import { findAtlasNamedTarget } from "../lib/atlasNamedSearch.ts";
 import "../components/atlasControls.css";
 import "../components/atlasFullscreen.css";
+import "../components/SpatialAtlasView.css";
+import "../components/sky3DLaunch.css";
+import { atlasSpatialUrl } from "../lib/atlasSession.ts";
+import {
+  readSpatialSample,
+  storeSpatialSample,
+  spatialSampleIds,
+  spatialSampleUrl,
+  spatialSampleLabel,
+  downloadSpatialSample,
+  type SpatialSample,
+} from "../lib/atlasSpatialSample.ts";
+
+function SpatialLoadFailure({ onClose }: { onClose: () => void }) {
+  return (
+    <div role="alert">
+      Spatial Atlas could not load. Sky remains available. Reload the page
+      before retrying.{" "}
+      <button type="button" onClick={onClose}>
+        Close
+      </button>
+    </div>
+  );
+}
+const SpatialAtlasView = lazy(() =>
+  import("../components/SpatialAtlasView.tsx").catch(() => ({
+    default: SpatialLoadFailure,
+  })),
+);
 
 export function ObjectsPage() {
   const {
@@ -45,6 +74,13 @@ export function ObjectsPage() {
     [],
   );
   const [query, setQuery] = useState(initialState.query);
+  const [spatialSample, setSpatialSample] = useState(() =>
+    readSpatialSample(window.location.search),
+  );
+  const sampleIds = useMemo(
+    () => spatialSampleIds(spatialSample),
+    [spatialSample],
+  );
   const [filters, setFilters] = useState<ScientificFiltersState>(
     initialState.filters,
   );
@@ -62,7 +98,17 @@ export function ObjectsPage() {
   const [objects, setObjects] = useState<CatalogObject[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [focus, setFocus] = useState<SkyFocus | null>(null);
+  const [spatialOpen, setSpatialOpen] = useState(
+    () => new URLSearchParams(window.location.search).get("spatial") === "1",
+  );
   const focusRequestId = useRef(0);
+  const pendingSkySelection = useRef<number | null | undefined>(undefined);
+  const [launchSelection, setLaunchSelection] = useState<
+    number | null | undefined
+  >(undefined);
+  const [skySelectionRequest, setSkySelectionRequest] = useState<{
+    pgc: number | null;
+  } | null>(null);
   const collectionToken = useMemo(() => newCollectionToken(), []);
 
   const bounds = useMemo(() => atlasBounds(objects ?? []), [objects]);
@@ -125,12 +171,13 @@ export function ObjectsPage() {
     const matchesName = createCatalogQueryMatcher(query);
     return objects.filter(
       (object) =>
+        (sampleIds === null || sampleIds.has(object.pgc)) &&
         (coordinateQuery || matchesName(object)) &&
         matchesScientificFilters(object, filters) &&
         (nearby === null || isWithinSkyRadius(object, nearby, radiusArcmin)) &&
         (region === null || regionContains(region, object.ra, object.dec)),
     );
-  }, [objects, query, filters, nearby, radiusArcmin, region]);
+  }, [objects, query, filters, nearby, radiusArcmin, region, sampleIds]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -164,6 +211,48 @@ export function ObjectsPage() {
     }
   }, [objects]);
 
+  function rememberSkySelection(pgc: number | null) {
+    pendingSkySelection.current = pgc;
+  }
+  function returnSpatialSelection(pgc: number | null) {
+    setSkySelectionRequest({ pgc });
+  }
+  function changeSpatialOpen(open: boolean) {
+    if (open) {
+      setLaunchSelection(pendingSkySelection.current);
+      pendingSkySelection.current = undefined;
+    }
+    window.history.replaceState(
+      window.history.state,
+      "",
+      atlasSpatialUrl(window.location.href, open),
+    );
+    setSpatialOpen(open);
+  }
+  function clearSpatialSample() {
+    window.history.replaceState(
+      window.history.state,
+      "",
+      spatialSampleUrl(window.location.href, null),
+    );
+    setSpatialSample({ token: null, sample: null });
+  }
+  function transferSpatialSample(sample: SpatialSample): boolean {
+    const saved = storeSpatialSample(sample);
+    if (!saved) return false;
+    const sampleUrl = spatialSampleUrl(window.location.href, saved.token);
+    window.history.replaceState(
+      window.history.state,
+      "",
+      atlasSpatialUrl(new URL(sampleUrl, window.location.origin).href, false),
+    );
+    setSpatialSample(saved);
+    pendingSkySelection.current = undefined;
+    setLaunchSelection(undefined);
+    setSkySelectionRequest({ pgc: null });
+    setSpatialOpen(false);
+    return true;
+  }
   function saveAtlasNavigation() {
     saveCollection(collectionToken, {
       origin: "atlas",
@@ -186,11 +275,13 @@ export function ObjectsPage() {
         <>
           <section
             ref={skyRef}
-            className={`catalog-sky${atlasMaximized ? " atlas-sky--maximized" : ""}`}
+            className={`catalog-sky lv-sky-3d-host${atlasMaximized ? " atlas-sky--maximized" : ""}`}
             aria-label="Sky"
           >
             <AladinMap
               onAtlasCamera={onCameraReady}
+              onAtlasSelectionChange={rememberSkySelection}
+              atlasSelectionRequest={skySelectionRequest}
               objects={filtered}
               referenceObjects={objects}
               onObjectNavigate={(pgc) => {
@@ -209,6 +300,27 @@ export function ObjectsPage() {
               }}
               onCancelDraw={() => setDrawingMode(null)}
             />
+            <button
+              type="button"
+              className="lv-sky-3d-launch"
+              aria-haspopup="dialog"
+              onClick={() => changeSpatialOpen(true)}
+              disabled={spatialOpen}
+            >
+              <svg
+                viewBox="0 0 20 20"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path d="M10 2 17 6v8l-7 4-7-4V6z M3 6l7 4 7-4 M10 10v8" />
+              </svg>
+              3D Atlas
+            </button>
             <button
               type="button"
               className={`atlas-fullscreen-toggle${atlasMaximized ? " atlas-fullscreen-toggle--exit" : ""}`}
@@ -276,6 +388,35 @@ export function ObjectsPage() {
                 radiusArcmin={radiusArcmin}
               />
             </div>
+            {spatialSample.token !== null ? (
+              <div
+                className="atlas-overview-commandbar"
+                role="group"
+                aria-label="Frozen spatial sample"
+              >
+                <span role="status">
+                  {spatialSample.sample
+                    ? `${spatialSampleLabel(spatialSample.sample)} · ${gridObjects.length} / ${spatialSample.sample.pgcs.length} galaxies`
+                    : "Spatial sample unavailable · no galaxies selected"}
+                </span>
+                <div className="lv-spatial-views">
+                  {spatialSample.sample ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (spatialSample.sample)
+                          downloadSpatialSample(spatialSample.sample);
+                      }}
+                    >
+                      Export sample JSON
+                    </button>
+                  ) : null}
+                  <button type="button" onClick={clearSpatialSample}>
+                    Clear spatial sample
+                  </button>
+                </div>
+              </div>
+            ) : null}
             <AtlasActiveCriteria
               query={query}
               onQueryClear={() => {
@@ -293,6 +434,7 @@ export function ObjectsPage() {
                 if (parseAtlasCoordinates(query) !== null) setQuery("");
               }}
               onClearAll={() => {
+                clearSpatialSample();
                 setQuery("");
                 setNearby(null);
                 setRegion(null);
@@ -323,6 +465,38 @@ export function ObjectsPage() {
               </div>
             )}
           </section>
+          {spatialOpen ? (
+            <Suspense
+              fallback={
+                <p role="status">
+                  Loading Spatial Atlas…{" "}
+                  <button
+                    type="button"
+                    onClick={() => changeSpatialOpen(false)}
+                  >
+                    Cancel
+                  </button>
+                </p>
+              }
+            >
+              <SpatialAtlasView
+                objects={gridObjects}
+                onTransferSample={transferSpatialSample}
+                initialSkySelection={launchSelection}
+                onSelectionReturn={returnSpatialSelection}
+                onClose={() => changeSpatialOpen(false)}
+                onShowSky={(pgc) => {
+                  const object = gridObjects.find((row) => row.pgc === pgc);
+                  if (object) locate(object);
+                }}
+                onObjectNavigate={(pgc) => {
+                  if (!gridObjects.some((row) => row.pgc === pgc)) return null;
+                  saveAtlasNavigation();
+                  return `/object/${pgc}?nav=${encodeURIComponent(collectionToken)}`;
+                }}
+              />
+            </Suspense>
+          ) : null}
         </>
       ) : null}
     </main>

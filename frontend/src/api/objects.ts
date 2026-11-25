@@ -1,5 +1,6 @@
 import { formatParameterDisplay } from "../lib/precision.ts";
 import { displayedKs } from "../lib/estimatedKs.ts";
+import type { GroupMember } from "./groups.ts";
 
 export type ColumnMeta = {
   description: string;
@@ -8,7 +9,51 @@ export type ColumnMeta = {
   nice?: string | null;
 };
 
+// Additive global evidence contract; never infer provenance from legacy dist.
+export type SpatialDistance = Pick<GroupMember, "pgc"> &
+  Partial<
+    Pick<
+      GroupMember,
+      | "dist_mpc"
+      | "observed_distance_mpc"
+      | "derived_distance_mpc"
+      | "observed_mu"
+      | "observed_e_mu"
+      | "distance_method"
+      | "modulus_method"
+      | "distance_reference"
+      | "distance_source_catalog"
+      | "distance_source_name"
+      | "derived_distance_method"
+      | "distance_computed_revision"
+      | "distance_formula_version"
+      | "distance_error_basis"
+      | "e_distance_minus_mpc"
+      | "e_distance_plus_mpc"
+      | "distance_origin"
+      | "distance_value_source"
+      | "distance_adoption_basis"
+      | "distance_method_for_value"
+      | "distance_reference_for_value"
+      | "distance_lineage_status"
+      | "distance_lineage_reason"
+      | "distance_interval_traceable"
+      | "distance_value_fingerprint"
+      | "distance_interval_fingerprint"
+      | "distance_value_review_status"
+      | "distance_interval_review_status"
+      | "distance_value_evidence_locator"
+      | "distance_interval_evidence_locator"
+      | "distance_provenance_verified"
+      | "distance_interval_verified"
+      | "distance_3d_eligible"
+    >
+  >;
+
+export const SPATIAL_DISTANCE_CONTRACT = "source_paired_evidence_v3";
+
 export type CatalogObject = {
+  spatial_distance?: SpatialDistance | null;
   pgc: number;
   name: string;
   distance_method?: string | null;
@@ -69,6 +114,8 @@ export type CatalogObjectDetail = {
 };
 
 type ObjectsListResponse = {
+  distance_contract?: string;
+  spatial_distances?: SpatialDistance[];
   data: {
     pgc: number[];
     name: string[];
@@ -146,8 +193,90 @@ async function fetchCatalogPayload(): Promise<ObjectsListResponse> {
   }
 }
 
+// Old API responses and malformed/misaligned spatial blocks retain the Sky catalogue.
+// Do not join by approximate position, silently reorder, or substitute legacy dist.
+function validSpatialRecord(
+  row: SpatialDistance | undefined,
+  id: number,
+): boolean {
+  if (row?.pgc !== id) return false;
+  const d = row.dist_mpc;
+  const validD = typeof d === "number" && Number.isFinite(d);
+  if (d !== undefined && d !== null && !validD) return false;
+  if (
+    ![
+      "DIRECT_MEASURED",
+      "GROUP_ASSIGNED",
+      "MODEL_INFERRED",
+      "UNKNOWN",
+    ].includes(row.distance_origin ?? "") ||
+    !["HOLD", "NON_INDEPENDENT", "REVIEW_READY"].includes(
+      row.distance_lineage_status ?? "",
+    ) ||
+    typeof row.distance_lineage_reason !== "string"
+  )
+    return false;
+  const reviews = [
+    "NOT_REVIEWED",
+    "VERIFIED",
+    "HOLD",
+    "STALE",
+    "BLOCKED",
+    "UNAVAILABLE",
+  ];
+  if (
+    !reviews.includes(row.distance_value_review_status ?? "") ||
+    !reviews.includes(row.distance_interval_review_status ?? "") ||
+    typeof row.distance_provenance_verified !== "boolean" ||
+    typeof row.distance_3d_eligible !== "boolean" ||
+    typeof row.distance_interval_traceable !== "boolean" ||
+    typeof row.distance_interval_verified !== "boolean"
+  )
+    return false;
+  if (
+    row.distance_3d_eligible &&
+    (typeof d !== "number" ||
+      !Number.isFinite(d) ||
+      d <= 0 ||
+      id === 5064336 ||
+      row.distance_origin !== "DIRECT_MEASURED" ||
+      !row.distance_provenance_verified ||
+      row.distance_value_review_status !== "VERIFIED" ||
+      row.distance_lineage_status !== "REVIEW_READY")
+  )
+    return false;
+  if (
+    row.distance_interval_verified &&
+    (!row.distance_provenance_verified ||
+      !row.distance_interval_traceable ||
+      row.distance_interval_review_status !== "VERIFIED")
+  )
+    return false;
+  return true;
+}
+
+function spatialRecords(body: ObjectsListResponse): SpatialDistance[] | null {
+  const rows = body.spatial_distances;
+  const ids = body.data.pgc;
+  if (
+    body.distance_contract !== SPATIAL_DISTANCE_CONTRACT ||
+    !Array.isArray(rows) ||
+    rows.length !== ids.length ||
+    new Set(ids).size !== ids.length ||
+    !ids.every(
+      (id, index) =>
+        Number.isSafeInteger(id) &&
+        id > 0 &&
+        validSpatialRecord(rows[index], id),
+    )
+  )
+    return null;
+  return rows;
+}
+
 export async function fetchObjects(): Promise<CatalogObject[]> {
   const body = await fetchCatalogPayload();
+  const spatial = spatialRecords(body);
   const {
     pgc,
     name,
@@ -178,6 +307,7 @@ export async function fetchObjects(): Promise<CatalogObject[]> {
   } = body.data;
   return pgc.map((id, index) => ({
     pgc: id,
+    spatial_distance: spatial === null ? null : { ...spatial[index] },
     name: name[index] ?? "",
     distance_method: distanceMethod?.[index] ?? null,
     ra: ra[index] ?? null,

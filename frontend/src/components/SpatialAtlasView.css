@@ -1,0 +1,963 @@
+.lv-spatial-launch {
+  min-height: 44px;
+  padding: 6px 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--card);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.lv-spatial-dialog {
+  box-sizing: border-box;
+  width: min(1840px, calc(100vw - 24px));
+  height: calc(100vh - 24px);
+  height: calc(100dvh - 24px);
+  max-width: none;
+  max-height: calc(100dvh - 24px);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--ui-text-primary);
+  padding: 10px;
+}
+.lv-spatial-dialog::backdrop {
+  background: rgb(5 12 18 / 68%);
+}
+.lv-spatial-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 8px;
+  padding: 6px 10px 10px 4px;
+  border-bottom: 1px solid var(--line);
+  flex: 0 0 auto;
+}
+.lv-spatial-header p {
+  grid-column: 1 / -1;
+}
+.lv-spatial-header button {
+  white-space: nowrap;
+  font-size: 0.85rem;
+}
+.lv-spatial-header h2 small {
+  display: block;
+}
+.lv-spatial-header h2 {
+  margin: 0;
+  font-size: 1.35rem;
+}
+.lv-spatial-header h2 small {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--muted);
+}
+.lv-spatial-header p,
+.lv-spatial-help,
+.lv-spatial-warning {
+  color: var(--muted);
+  font-size: 0.83rem;
+  margin: 6px 0;
+}
+.lv-spatial-dialog button,
+.lv-spatial-dialog select {
+  min-height: 44px;
+  max-width: 100%;
+  color: inherit;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 6px 10px;
+  font: inherit;
+}
+.lv-spatial-dialog button {
+  cursor: pointer;
+}
+.lv-spatial-dialog button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.lv-spatial-dialog button:focus-visible,
+.lv-spatial-dialog select:focus-visible,
+.lv-spatial-launch:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.lv-spatial-toolbar {
+  display: grid;
+  gap: 6px;
+}
+.lv-spatial-views {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+.lv-spatial-views button {
+  min-width: 0;
+  padding-inline: 4px;
+  font-size: 0.85rem;
+}
+.lv-spatial-views .lv-spatial-grid-toggle {
+  grid-column: 1 / -1;
+}
+.lv-spatial-toolbar label {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  min-width: 0;
+}
+.lv-spatial-toolbar select {
+  width: 100%;
+  min-width: 0;
+  font-size: 0.85rem;
+}
+.lv-spatial-toolbar > button {
+  justify-self: stretch;
+  font-size: 0.85rem;
+}
+.lv-spatial-workspace {
+  display: grid;
+  grid-template-columns: clamp(240px, 17vw, 290px) minmax(0, 1fr) clamp(
+      260px,
+      19vw,
+      320px
+    );
+  grid-template-areas: "controls viewer inspector";
+  gap: 10px;
+  height: 100%;
+  min-height: 0;
+}
+.lv-spatial-main,
+.lv-spatial-controls,
+.lv-spatial-inspector {
+  min-width: 0;
+  min-height: 0;
+}
+.lv-spatial-main {
+  grid-area: viewer;
+  display: flex;
+}
+.lv-spatial-stage {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+.lv-spatial-stage--dark {
+  background: #101820;
+  color: #e7edf2;
+}
+.lv-spatial-stage--light {
+  background: #f3f5f7;
+  color: #273341;
+}
+.lv-spatial-canvas,
+.lv-spatial-labels {
+  position: absolute;
+  inset: 0;
+}
+.lv-spatial-canvas canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+.lv-spatial-labels {
+  pointer-events: none;
+  overflow: hidden;
+}
+.lv-spatial-labels span {
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.lv-spatial-scale {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  border-bottom: 2px solid currentColor;
+  font-size: 0.8rem;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.lv-spatial-message {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  padding: 10px;
+  background: var(--card);
+  color: var(--ui-text-primary);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.lv-spatial-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 8px 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.lv-spatial-controls,
+.lv-spatial-inspector {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+.lv-spatial-controls {
+  grid-area: controls;
+  border-right: 1px solid var(--line);
+}
+.lv-spatial-inspector {
+  grid-area: inspector;
+  border-left: 1px solid var(--line);
+}
+.lv-spatial-inspector .lv-spatial-sidebar-scroll {
+  padding: 0 4px 8px 10px;
+}
+.lv-spatial-sidebar-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding: 0 10px 8px 4px;
+}
+.lv-spatial-panel {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+.lv-spatial-panel:last-child {
+  border-bottom: none;
+}
+.lv-spatial-panel > h3:first-child {
+  margin-top: 0;
+}
+.lv-spatial-panel select,
+.lv-spatial-panel input {
+  min-width: 0;
+}
+.lv-spatial-picker select {
+  text-overflow: ellipsis;
+}
+.lv-spatial-sidebar-scroll :focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.lv-spatial-controls h3,
+.lv-spatial-inspector h3 {
+  font-size: 1rem;
+  margin: 12px 0 8px;
+}
+.lv-spatial-data {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 5px 8px;
+  font-size: 0.83rem;
+  margin: 8px 0 12px;
+}
+.lv-spatial-data dt {
+  color: var(--muted);
+}
+.lv-spatial-data dd {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.lv-spatial-coordinate {
+  display: contents;
+}
+.lv-spatial-picker {
+  display: grid;
+  gap: 5px;
+  font-size: 0.83rem;
+}
+.lv-spatial-picker select,
+.lv-spatial-picker input {
+  width: 100%;
+  box-sizing: border-box;
+}
+.lv-spatial-picker input {
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--card);
+  color: inherit;
+  padding: 6px 10px;
+  font: inherit;
+}
+.lv-spatial-picker + .lv-spatial-picker {
+  margin-top: 8px;
+}
+.lv-spatial-grid-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.lv-spatial-grid-toggle input {
+  accent-color: var(--accent);
+}
+.lv-spatial-overlaps {
+  display: grid;
+  gap: 4px;
+  max-height: 220px;
+  overflow: auto;
+}
+
+/* Keep the three desktop regions separate. At narrower widths the viewer
+   stays above two independently scrollable panels, without squeezing it. */
+@media (max-width: 1050px) {
+  .lv-spatial-workspace {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: minmax(0, 1.2fr) minmax(0, 1fr);
+    grid-template-areas: "viewer viewer" "controls inspector";
+    gap: 8px;
+  }
+  .lv-spatial-controls,
+  .lv-spatial-inspector {
+    border-top: 1px solid var(--line);
+  }
+  .lv-spatial-controls {
+    border-right: 0;
+  }
+}
+@media (max-width: 680px), (max-height: 440px) {
+  .lv-spatial-dialog {
+    width: calc(100vw - 12px);
+    padding: 6px;
+    height: calc(100dvh - 12px);
+    max-height: calc(100dvh - 12px);
+    overflow-y: auto;
+  }
+  .lv-spatial-workspace {
+    height: auto;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(280px, 55dvh) auto;
+    grid-template-areas: "controls" "viewer" "inspector";
+    gap: 8px;
+  }
+  .lv-spatial-controls,
+  .lv-spatial-inspector,
+  .lv-spatial-sidebar-scroll {
+    overflow: visible;
+    border: 0;
+  }
+  .lv-spatial-header {
+    padding: 4px 4px 6px;
+  }
+  .lv-spatial-inspector .lv-spatial-sidebar-scroll,
+  .lv-spatial-sidebar-scroll {
+    padding-inline: 4px;
+  }
+}
+.lv-spatial-group-card {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 10px;
+  margin-top: 10px;
+}
+.lv-spatial-group-card > h3:first-child {
+  margin-top: 0;
+}
+.lv-spatial-group-card > button {
+  width: 100%;
+}
+
+/* Stage 07d.7 — compact scientific workspace, no select menus. */
+.lv-spatial-workspace {
+  grid-template-columns: clamp(215px, 15.5vw, 265px) minmax(0, 1fr) clamp(
+      270px,
+      19vw,
+      330px
+    );
+}
+.lv-spatial-header {
+  align-items: center;
+  gap: 6px;
+}
+.lv-spatial-header p {
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+}
+.lv-spatial-dialog .lv-spatial-return {
+  min-height: 36px;
+  padding: 4px 8px;
+}
+.lv-spatial-panel {
+  padding: 12px 0;
+}
+.lv-spatial-controls h3,
+.lv-spatial-inspector h3 {
+  margin: 0 0 8px;
+}
+.lv-spatial-setting {
+  display: grid;
+  gap: 5px;
+  margin-top: 12px;
+}
+.lv-spatial-setting > span {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.lv-spatial-choice {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  min-width: 0;
+}
+.lv-spatial-dialog .lv-spatial-choice button {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 34px;
+  padding: 5px 4px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.2;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+.lv-spatial-dialog .lv-spatial-choice button[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--accent) 15%, var(--card));
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
+  color: var(--ui-text-primary);
+  font-weight: 600;
+}
+.lv-spatial-dialog .lv-spatial-choice button:hover:not([aria-pressed="true"]),
+.lv-spatial-dialog .lv-spatial-results button:hover {
+  background: color-mix(in srgb, var(--accent) 8%, var(--card));
+  color: var(--ui-text-primary);
+}
+.lv-spatial-views {
+  margin-top: 8px;
+}
+.lv-spatial-views button {
+  min-height: 36px;
+}
+.lv-spatial-grid-toggle {
+  min-height: 36px;
+  margin-top: 5px;
+}
+.lv-spatial-frame-overlay {
+  position: absolute;
+  z-index: 3;
+  top: 10px;
+  right: 10px;
+  max-width: calc(100% - 20px);
+  border-radius: 8px;
+}
+.lv-spatial-frame-overlay .lv-spatial-choice {
+  background: rgb(16 24 32 / 90%);
+  border-color: #405362;
+}
+.lv-spatial-dialog .lv-spatial-frame-overlay button {
+  flex: 0 1 auto;
+  padding-inline: 9px;
+  color: #bccbd7;
+  white-space: nowrap;
+}
+.lv-spatial-dialog .lv-spatial-frame-overlay button[aria-pressed="true"] {
+  background: #31495c;
+  border-color: #7297b8;
+  color: #fff;
+}
+.lv-spatial-dialog
+  .lv-spatial-frame-overlay
+  button:hover:not([aria-pressed="true"]) {
+  background: #233543;
+  color: #fff;
+}
+.lv-spatial-stage--light .lv-spatial-frame-overlay .lv-spatial-choice {
+  background: rgb(245 248 251 / 94%);
+  border-color: #b8c6d2;
+}
+.lv-spatial-dialog .lv-spatial-stage--light .lv-spatial-frame-overlay button {
+  color: #425467;
+}
+.lv-spatial-dialog
+  .lv-spatial-stage--light
+  .lv-spatial-frame-overlay
+  button[aria-pressed="true"] {
+  background: #d9e7f4;
+  border-color: #7798b7;
+  color: #203e5a;
+}
+.lv-spatial-dialog
+  .lv-spatial-stage--light
+  .lv-spatial-frame-overlay
+  button:hover:not([aria-pressed="true"]) {
+  background: #e6edf4;
+  color: #203e5a;
+}
+.lv-spatial-message {
+  top: 60px;
+  z-index: 2;
+}
+.lv-spatial-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.lv-spatial-search {
+  margin-top: 9px;
+}
+.lv-spatial-picker input {
+  min-height: 38px;
+}
+.lv-spatial-result-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-top: 3px;
+}
+.lv-spatial-dialog .lv-spatial-result-header button {
+  border: 0;
+  background: transparent;
+  min-height: 30px;
+  padding: 4px 5px;
+  font-size: 0.78rem;
+  color: var(--ui-text-primary);
+}
+.lv-spatial-results {
+  display: grid;
+  max-height: 172px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.lv-spatial-dialog .lv-spatial-results button {
+  display: grid;
+  text-align: left;
+  gap: 2px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  padding: 7px 8px;
+  min-height: 41px;
+  font-size: 0.8rem;
+}
+.lv-spatial-dialog .lv-spatial-results button:last-child {
+  border-bottom: 0;
+}
+.lv-spatial-dialog .lv-spatial-results button[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--accent) 13%, var(--card));
+}
+.lv-spatial-results button small {
+  color: var(--muted);
+  font-size: 0.74rem;
+}
+.lv-spatial-dialog .lv-spatial-results .lv-spatial-more {
+  text-align: center;
+  color: var(--muted);
+}
+.lv-spatial-results > p {
+  padding: 0 8px;
+}
+.lv-spatial-object-card {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 7px;
+  border: 1px solid color-mix(in srgb, var(--accent) 38%, var(--line));
+}
+.lv-spatial-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+}
+.lv-spatial-card-head small {
+  font-size: 0.74rem;
+  color: var(--muted);
+}
+.lv-spatial-card-head h3 {
+  margin: 4px 0 0;
+  font-size: 1.06rem;
+}
+.lv-spatial-dialog .lv-spatial-card-head button {
+  min-height: 30px;
+  width: 30px;
+  flex: 0 0 30px;
+  padding: 0;
+  font-size: 1.1rem;
+}
+.lv-spatial-card-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+  gap: 6px;
+  margin: 10px 0 4px;
+}
+.lv-spatial-card-actions button {
+  min-height: 36px;
+  font-size: 0.82rem;
+  padding: 5px;
+}
+.lv-spatial-card-actions button:last-child {
+  background: color-mix(in srgb, var(--accent) 12%, var(--card));
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
+}
+.lv-spatial-details {
+  margin-top: 9px;
+  font-size: 0.8rem;
+}
+.lv-spatial-details summary {
+  cursor: pointer;
+  color: var(--muted);
+  padding: 5px 0;
+}
+.lv-spatial-details summary:hover,
+.lv-spatial-details[open] summary {
+  color: var(--ui-text-primary);
+}
+.lv-spatial-data {
+  font-size: 0.8rem;
+  gap: 5px 8px;
+  margin: 9px 0 7px;
+}
+.lv-spatial-counts {
+  display: flex;
+  gap: 6px;
+}
+.lv-spatial-counts > div {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+  padding: 9px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.lv-spatial-counts strong {
+  font-size: 1.3rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.lv-spatial-counts span {
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+.lv-spatial-legend {
+  gap: 6px 12px;
+  margin: 5px 0;
+}
+.lv-spatial-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.lv-spatial-key-sphere {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 30% 25%,
+    #c6d9f1,
+    #6488ad 45%,
+    #314f70 85%
+  );
+}
+@media (max-width: 1050px) {
+  .lv-spatial-workspace {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 680px), (max-height: 440px) {
+  .lv-spatial-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .lv-spatial-dialog .lv-spatial-choice button,
+  .lv-spatial-views button {
+    min-height: 44px;
+  }
+  .lv-spatial-dialog .lv-spatial-frame-overlay button {
+    min-height: 44px;
+    padding-inline: 6px;
+    font-size: 0.75rem;
+  }
+  .lv-spatial-message {
+    top: 68px;
+  }
+}
+
+.lv-spatial-color-options .lv-spatial-choice {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.lv-spatial-color-legend {
+  display: grid;
+  gap: 5px;
+  margin-block: 10px;
+  font-size: 0.8rem;
+}
+.lv-spatial-color-bar {
+  height: 10px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+}
+.lv-spatial-color-ticks {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+  font-size: 0.76rem;
+  font-variant-numeric: tabular-nums;
+}
+.lv-spatial-color-legend .lv-spatial-help {
+  margin: 0;
+}
+.lv-spatial-color-swatch {
+  display: inline-block;
+  flex: 0 0 10px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-inline-end: 4px;
+  border: 1px solid var(--line);
+}
+.lv-spatial-active-color {
+  display: flex;
+  align-items: center;
+  font-size: 0.82rem;
+  margin-block: 8px;
+}
+
+.lv-spatial-marker-key {
+  display: grid;
+  gap: 5px;
+  margin-block: 9px;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.lv-spatial-marker-examples {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+}
+.lv-spatial-marker-examples > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+.lv-spatial-marker-examples i {
+  display: inline-block;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--muted);
+}
+
+/* Compact global reset beside the Appearance heading. */
+.lv-spatial-panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 7px;
+  margin-bottom: 8px;
+}
+.lv-spatial-controls .lv-spatial-panel-heading h3 {
+  margin: 0;
+}
+.lv-spatial-dialog .lv-spatial-reset-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 28px;
+  min-height: 28px;
+  padding: 0;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 5px;
+}
+.lv-spatial-dialog .lv-spatial-reset-icon:hover {
+  color: var(--ink);
+  background: var(--hover-tint);
+  border-color: var(--line);
+}
+@media (pointer: coarse) {
+  .lv-spatial-dialog .lv-spatial-reset-icon {
+    width: 44px;
+    min-height: 44px;
+  }
+}
+
+.lv-spatial-slice-inputs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 10px;
+}
+.lv-spatial-slice-inputs label {
+  display: grid;
+  gap: 4px;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.lv-spatial-slice-inputs input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 5px;
+  font: inherit;
+  color: var(--ink);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+}
+
+/* Stage 07h.2a: task-oriented controls, persistent scene, compact inspector. */
+.lv-spatial-tools {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+.lv-spatial-tool-nav {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 3px;
+  padding: 7px 10px 7px 4px;
+  flex: 0 0 auto;
+  border-bottom: 1px solid var(--line);
+}
+.lv-spatial-dialog .lv-spatial-tool-nav button {
+  min-height: 34px;
+  font-size: 0.82rem;
+  padding: 4px 5px;
+  background: transparent;
+  border-color: transparent;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.lv-spatial-dialog .lv-spatial-tool-nav button[aria-pressed="true"] {
+  color: var(--ui-text-primary);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+  background: color-mix(in srgb, var(--accent) 12%, var(--card));
+  font-weight: 600;
+}
+.lv-spatial-active-dot {
+  display: inline-block;
+  vertical-align: middle;
+  width: 6px;
+  height: 6px;
+  margin-left: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.lv-spatial-active-summary {
+  display: grid;
+  gap: 3px;
+  padding: 5px 10px 5px 4px;
+  border-bottom: 1px solid var(--line);
+  flex: 0 0 auto;
+}
+.lv-spatial-dialog .lv-spatial-active-summary button {
+  text-align: left;
+  font-size: 0.75rem;
+  color: var(--ui-text-primary);
+  border: 0;
+  background: transparent;
+  min-height: 28px;
+  padding: 3px 4px;
+}
+.lv-spatial-tool-page[hidden] {
+  display: none !important;
+}
+.lv-spatial-tool-disclosure > summary {
+  cursor: pointer;
+  font-size: 0.92rem;
+  font-weight: 600;
+  padding: 4px 0;
+  color: var(--ui-text-primary);
+}
+.lv-spatial-tool-disclosure[open] > summary {
+  margin-bottom: 8px;
+}
+.lv-spatial-transfer > button {
+  width: 100%;
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+}
+.lv-spatial-inspector .lv-spatial-counts {
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.lv-spatial-inspector .lv-spatial-counts > div {
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  gap: 2px;
+}
+.lv-spatial-inspector .lv-spatial-counts strong {
+  font-size: 1.1rem;
+}
+.lv-spatial-inspector .lv-spatial-panel {
+  padding-block: 10px;
+}
+@media (pointer: coarse) {
+  .lv-spatial-dialog .lv-spatial-tool-nav button,
+  .lv-spatial-dialog .lv-spatial-active-summary button {
+    min-height: 44px;
+  }
+  .lv-spatial-tool-disclosure > summary {
+    min-height: 44px;
+    box-sizing: border-box;
+    padding-block: 12px;
+  }
+}
+@media (max-width: 680px), (max-height: 440px) {
+  .lv-spatial-workspace {
+    grid-template-areas: "header" "viewer" "tools" "inspector";
+    grid-template-rows: auto minmax(280px, 55dvh) auto auto;
+  }
+  .lv-spatial-controls {
+    display: contents;
+  }
+  .lv-spatial-header {
+    grid-area: header;
+  }
+  .lv-spatial-tools {
+    grid-area: tools;
+    overflow: visible;
+  }
+  .lv-spatial-tool-nav {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    padding-inline: 4px;
+  }
+  .lv-spatial-dialog .lv-spatial-tool-nav button {
+    font-size: 0.76rem;
+    min-height: 44px;
+    padding-inline: 2px;
+  }
+}

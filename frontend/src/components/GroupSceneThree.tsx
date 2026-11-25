@@ -1,6 +1,25 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import {
+  groupGeometryKey,
+  readGroupCamera,
+  saveGroupCamera,
+} from "../lib/groupSession.ts";
+import {
+  bindSpatialKeyboard,
+  panSpatialCamera,
+  spatialPointerMoved,
+} from "../lib/spatialKeyboard.ts";
+import {
+  atlasFlightProgress,
+  atlasFlightScale,
+} from "../lib/atlasCameraFlight.ts";
+import {
+  isAtlasGroupDoubleTap,
+  type GroupTap,
+} from "../lib/atlasSpatialScene.ts";
+import type { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { createFrameScheduler } from "../lib/spatialRenderPolicy.ts";
 import type { ScenePoint } from "../lib/groupScene3d.ts";
 import type { Vec3 } from "../lib/groupGeometry3d.ts";
 import { morphologyColor } from "../lib/morphologyColors.ts";
@@ -15,6 +34,14 @@ import {
   type SceneFrameMode,
 } from "../lib/groupSceneSupergalactic.ts";
 import { markerRadius } from "../lib/groupSceneCamera.ts";
+import {
+  createMarkerTexture,
+  createSpatialRenderer,
+  createSpatialOrbitControls,
+  projectSpatialPoint,
+  setOrthographicFrame,
+  orthographicPixelsPerUnit,
+} from "../lib/spatialThreePrimitives.ts";
 import {
   formatKpc,
   pickProjectedMarker,
@@ -34,11 +61,12 @@ import {
 } from "../lib/groupSceneWebGLPolicy.ts";
 
 type Props = {
+  sessionId: string;
   scene: ViewerScene;
   frameMode: SceneFrameMode;
   members: readonly TidalMember[];
   selected: number | null;
-  onSelect: (pgc: number) => void;
+  onSelect: (pgc: number | null) => void;
   relations: boolean;
   individualOnly: boolean;
   grid: boolean;
@@ -56,46 +84,6 @@ const AXES = [
   { name: "N", vector: [0, 1, 0] as Vec3, color: "#92c5af" },
   { name: "LOS+", vector: [0, 0, 1] as Vec3, color: "#9cb9df" },
 ];
-function createMarkerTexture(
-  kind: ScenePoint["kind"] | "halo",
-): THREE.CanvasTexture {
-  const canvas = document.createElement("canvas");
-  canvas.width = canvas.height = 96;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Canvas 2D unavailable");
-  ctx.translate(48, 48);
-  ctx.strokeStyle = "#fff";
-  ctx.fillStyle = "#fff";
-  ctx.lineWidth = 11;
-  ctx.lineJoin = "round";
-  ctx.beginPath();
-  if (kind === "ASSIGNED_PROJECTION") {
-    ctx.moveTo(0, -35);
-    ctx.lineTo(35, 0);
-    ctx.lineTo(0, 35);
-    ctx.lineTo(-35, 0);
-    ctx.closePath();
-  } else if (kind === "MODEL_ESTIMATE") {
-    ctx.moveTo(0, -35);
-    ctx.lineTo(35, 29);
-    ctx.lineTo(-35, 29);
-    ctx.closePath();
-  } else if (kind === "UNCLASSIFIED_ESTIMATE") {
-    ctx.rect(-29, -29, 58, 58);
-    ctx.setLineDash([12, 8]);
-  } else {
-    ctx.arc(0, 0, kind === "halo" ? 38 : 34, 0, 2 * Math.PI);
-  }
-  if (kind === "INDIVIDUAL_ADOPTED") {
-    ctx.globalAlpha = 0.7;
-    ctx.fill();
-    ctx.globalAlpha = 1;
-  }
-  ctx.stroke();
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  return texture;
-}
 function createEngine(
   host: HTMLDivElement,
   labels: HTMLDivElement,
@@ -104,13 +92,7 @@ function createEngine(
   tooltip: HTMLDivElement,
   initial: Props,
 ): Engine {
-  const renderer = new THREE.WebGLRenderer({
-    antialias: true,
-    alpha: false,
-    powerPreference: "high-performance",
-  });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-  renderer.setClearColor(0x0c151f, 1);
+  const renderer = createSpatialRenderer(0x0c151f);
   const canvas = renderer.domElement;
   canvas.setAttribute("aria-label", "Interactive 3D galaxy positions");
   canvas.setAttribute("role", "img");
@@ -375,19 +357,25 @@ function createEngine(
     controls: OrbitControls | null = null,
     width = 1,
     height = 1,
-    raf = 0,
     disposed = false;
   let lastViewRevision = -1;
+  const geometryKey = groupGeometryKey(initial.scene, initial.frameMode);
+  let pendingCamera = readGroupCamera(
+    initial.sessionId,
+    initial.frameMode,
+    geometryKey,
+  );
+  let flightFrame: number | null = null;
+  let previousTap: GroupTap | null = null;
+  function stopFlight() {
+    if (flightFrame !== null) cancelAnimationFrame(flightFrame);
+    flightFrame = null;
+  }
   function pixelsPerKpc() {
-    return (height * camera.zoom) / (camera.top - camera.bottom);
+    return orthographicPixelsPerUnit(camera, height);
   }
   function project(p: THREE.Vector3) {
-    const q = p.clone().project(camera);
-    return {
-      x: ((q.x + 1) * width) / 2,
-      y: ((1 - q.y) * height) / 2,
-      depth: q.z,
-    };
+    return projectSpatialPoint(p, camera, width, height);
   }
   function drawDistanceInterval() {
     intervalOverlay.style.display = "none";
@@ -471,7 +459,6 @@ function createEngine(
     ctx.fill();
   }
   function draw() {
-    raf = 0;
     if (disposed) return;
     camera.updateMatrixWorld();
     const scale = pixelsPerKpc();
@@ -535,8 +522,9 @@ function createEngine(
     scaleText.textContent = `${formatKpc(bar)} kpc`;
     scaleText.style.width = `${bar * scale}px`;
   }
+  const scheduler = createFrameScheduler(draw);
   function schedule() {
-    if (!disposed && !raf) raf = requestAnimationFrame(draw);
+    if (!disposed) scheduler.schedule();
   }
   function fitFrame() {
     camera.updateMatrixWorld();
@@ -557,13 +545,39 @@ function createEngine(
       galaxyFitHalfHeight(projected, aspect),
       props.sphere ? sphereFitHalfHeight(guideRadius, aspect) : 0,
     );
-    camera.left = -v * aspect;
-    camera.right = v * aspect;
-    camera.top = v;
-    camera.bottom = -v;
-    camera.updateProjectionMatrix();
+    setOrthographicFrame(camera, v, aspect);
+  }
+  function focus(pgc: number) {
+    const entry = byPgc.get(pgc);
+    if (disposed || !controls || !entry?.sprite.visible) return;
+    const orbit = controls;
+    const destination = entry.sprite.position.clone();
+    stopFlight();
+    const fromTarget = orbit.target.clone();
+    const offset = camera.position.clone().sub(fromTarget);
+    const fromZoom = camera.zoom;
+    const toZoom = Math.max(fromZoom, Math.min(orbit.maxZoom, 2.5));
+    const began = performance.now();
+    const reduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    function advance(now: number) {
+      flightFrame = null;
+      if (disposed || controls !== orbit) return;
+      const progress = reduced ? 1 : atlasFlightProgress(now - began);
+      orbit.target.lerpVectors(fromTarget, destination, progress);
+      camera.position.copy(orbit.target).add(offset);
+      camera.zoom = atlasFlightScale(fromZoom, toZoom, progress);
+      camera.updateProjectionMatrix();
+      orbit.update();
+      schedule();
+      if (progress < 1) flightFrame = requestAnimationFrame(advance);
+    }
+    if (reduced) advance(began);
+    else flightFrame = requestAnimationFrame(advance);
   }
   function frame(view: SceneView) {
+    stopFlight();
     controls?.dispose();
     const vectors = viewVectors(view);
     camera.position.copy(
@@ -574,22 +588,50 @@ function createEngine(
     camera.up.copy(vec(vectors.up));
     camera.zoom = 1;
     camera.lookAt(0, 0, 0);
-    controls = new OrbitControls(camera, canvas);
-    controls.enableDamping = false;
-    controls.enablePan = true;
-    controls.enableZoom = true;
-    controls.minZoom = 0.12;
-    controls.maxZoom = 30;
+    controls = createSpatialOrbitControls(camera, canvas);
     controls.target.set(0, 0, 0);
     controls.update();
     fitFrame();
     controls.addEventListener("change", schedule);
+    controls.addEventListener("start", stopFlight);
     schedule();
+  }
+  function restoreCamera() {
+    const orbit = controls;
+    if (!pendingCamera || !orbit || width <= 1 || height <= 1) return;
+    const state = pendingCamera;
+    pendingCamera = null;
+    if (state.halfHeight === null) return;
+    camera.position.set(...state.position);
+    camera.up.set(...state.up);
+    camera.zoom = state.zoom;
+    orbit.target.set(...state.target);
+    setOrthographicFrame(camera, state.halfHeight, width / height);
+    orbit.update();
+    schedule();
+  }
+  function persistCamera() {
+    if (
+      disposed ||
+      !controls ||
+      width <= 1 ||
+      height <= 1 ||
+      pendingCamera !== null
+    )
+      return;
+    saveGroupCamera(initial.sessionId, initial.frameMode, geometryKey, {
+      position: [camera.position.x, camera.position.y, camera.position.z],
+      target: [controls.target.x, controls.target.y, controls.target.z],
+      up: [camera.up.x, camera.up.y, camera.up.z],
+      zoom: camera.zoom,
+      halfHeight: camera.top,
+    });
   }
   function resize() {
     const rect = host.getBoundingClientRect();
     if (rect.width < 1 || rect.height < 1) return;
     if (rect.width === width && rect.height === height) return;
+    stopFlight();
     const firstLayout = width === 1 && height === 1;
     width = rect.width;
     height = rect.height;
@@ -603,6 +645,7 @@ function createEngine(
       camera.right = v * aspect;
       camera.updateProjectionMatrix();
     }
+    restoreCamera();
     schedule();
   }
   function update(next: Props) {
@@ -646,6 +689,10 @@ function createEngine(
     canvas.style.cursor = "";
   }
   function hover(e: PointerEvent) {
+    if (start && spatialPointerMoved(start, e)) {
+      start = null;
+      previousTap = null;
+    }
     if (e.buttons !== 0 || e.pointerType === "touch") {
       hideTooltip();
       return;
@@ -663,12 +710,33 @@ function createEngine(
     tooltip.style.left = `${Math.max(8, Math.min(width - tooltip.offsetWidth - 8, pos.x + 12))}px`;
     tooltip.style.top = `${Math.max(8, Math.min(height - tooltip.offsetHeight - 8, pos.y - 30))}px`;
   }
+  const keyboard = bindSpatialKeyboard(canvas, {
+    move(x, y, seconds, fast) {
+      if (disposed || !controls) return;
+      stopFlight();
+      hideTooltip();
+      panSpatialCamera(camera, controls.target, x, y, seconds, fast);
+      controls.update();
+      schedule();
+    },
+    focus() {
+      if (props.selected !== null) focus(props.selected);
+    },
+  });
   function down(e: PointerEvent) {
     hideTooltip();
+    stopFlight();
+    keyboard.stop();
+    if (e.isPrimary) canvas.focus({ preventScroll: true });
+    if (!e.isPrimary) previousTap = null;
     start =
-      e.button === 0 ? { x: e.clientX, y: e.clientY, id: e.pointerId } : null;
+      e.isPrimary && e.button === 0
+        ? { x: e.clientX, y: e.clientY, id: e.pointerId }
+        : null;
   }
   function cancel() {
+    stopFlight();
+    previousTap = null;
     start = null;
     hideTooltip();
   }
@@ -679,11 +747,26 @@ function createEngine(
       !from ||
       from.id !== e.pointerId ||
       Math.hypot(from.x - e.clientX, from.y - e.clientY) > 5
-    )
+    ) {
+      previousTap = null;
       return;
+    }
     const pgc = picked(e);
-    if (pgc !== null) props.onSelect(pgc);
+    props.onSelect(pgc);
+    if (pgc === null) {
+      previousTap = null;
+      return;
+    }
+    const tap = { pgc, time: e.timeStamp, x: e.clientX, y: e.clientY };
+    if (isAtlasGroupDoubleTap(previousTap, tap)) {
+      previousTap = null;
+      focus(pgc);
+    } else previousTap = tap;
   }
+  canvas.addEventListener("wheel", stopFlight, {
+    capture: true,
+    passive: true,
+  });
   canvas.addEventListener("pointerdown", down);
   canvas.addEventListener("pointerup", up);
   canvas.addEventListener("pointercancel", cancel);
@@ -693,11 +776,18 @@ function createEngine(
   observer.observe(host);
   resize();
   update(initial);
+  restoreCamera();
+  window.addEventListener("pagehide", persistCamera);
   return {
     update,
     dispose() {
+      persistCamera();
+      window.removeEventListener("pagehide", persistCamera);
       disposed = true;
-      cancelAnimationFrame(raf);
+      keyboard.dispose();
+      stopFlight();
+      canvas.removeEventListener("wheel", stopFlight, true);
+      scheduler.dispose();
       observer.disconnect();
       controls?.dispose();
       canvas.removeEventListener("pointerdown", down);
@@ -756,7 +846,7 @@ export default function GroupSceneThree(props: Props) {
       element.replaceChildren();
       setError(true);
     }
-  }, [props.scene, props.members, props.frameMode]);
+  }, [props.scene, props.members, props.frameMode, props.sessionId]);
   return (
     <div className="lv-three-stage">
       <div className="lv-three-canvas" ref={host} />
