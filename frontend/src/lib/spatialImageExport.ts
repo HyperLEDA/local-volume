@@ -136,6 +136,7 @@ export function composeSpatialImage(
 
 export async function downloadSpatialPng(
   image: HTMLCanvasElement,
+  filename = "LV-LEDA-3D-Atlas.png",
 ): Promise<void> {
   const blob = await new Promise<Blob>((resolve, reject) => {
     image.toBlob((value) => {
@@ -146,7 +147,7 @@ export async function downloadSpatialPng(
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = "LV-LEDA-3D-Atlas.png";
+  link.download = filename;
   try {
     document.body.appendChild(link);
     link.click();
