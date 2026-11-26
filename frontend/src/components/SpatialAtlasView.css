@@ -961,3 +961,384 @@
     padding-inline: 2px;
   }
 }
+
+/* Compact in-scene environment controls, independent of the inspector scroll. */
+.lv-spatial-environment-hud {
+  position: absolute;
+  right: 10px;
+  bottom: 12px;
+  z-index: 3;
+  max-width: min(270px, calc(100% - 24px));
+  padding: 7px 9px;
+  border: 1px solid #405362;
+  border-radius: 6px;
+  background: rgb(16 24 32 / 94%);
+  color: #e7edf2;
+  font-size: 0.78rem;
+}
+.lv-spatial-stage--light .lv-spatial-environment-hud {
+  background: rgb(245 248 251 / 96%);
+  color: #273341;
+  border-color: #b8c6d2;
+}
+.lv-spatial-environment-hud > button {
+  width: 100%;
+}
+.lv-spatial-environment-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin: 6px 0;
+}
+.lv-spatial-environment-inputs label {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.lv-spatial-environment-inputs input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+}
+.lv-spatial-environment-hud .lv-spatial-data {
+  margin-block: 5px;
+}
+.lv-spatial-environment-hud small {
+  display: block;
+  margin-top: 5px;
+  color: inherit;
+  opacity: 0.8;
+}
+.lv-spatial-environment-nearest {
+  color: inherit;
+  border-left: 2px solid #e7aa49;
+  padding-left: 5px;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 600px) {
+  .lv-spatial-environment-hud {
+    bottom: 44px;
+    max-width: min(230px, calc(100% - 24px));
+  }
+}
+
+.lv-spatial-space-label {
+  margin-bottom: 4px;
+  padding: 4px 8px;
+  font-size: 0.78rem;
+  color: #e7edf2;
+  background: rgb(16 24 32 / 94%);
+  border-radius: 5px;
+  text-align: right;
+}
+.lv-spatial-stage--light .lv-spatial-space-label {
+  color: #273341;
+  background: rgb(245 248 251 / 94%);
+}
+
+/* Stage 07j.7a: common control language, scoped to Spatial Atlas. */
+.lv-spatial-dialog {
+  --spatial-input-bg: var(--card);
+  --spatial-input-fg: var(--ui-text-primary);
+  --spatial-input-line: var(--line);
+}
+.lv-spatial-dialog .lv-spatial-panel input[type="number"],
+.lv-spatial-dialog .lv-spatial-environment-hud input[type="number"],
+.lv-spatial-dialog .lv-spatial-panel input[type="search"] {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 36px;
+  padding: 5px 8px;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  color: var(--spatial-input-fg);
+  background: var(--spatial-input-bg);
+  border: 1px solid var(--spatial-input-line);
+  border-radius: 5px;
+}
+.lv-spatial-dialog input:focus-visible,
+.lv-spatial-dialog summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.lv-spatial-dialog label.lv-spatial-environment-inputs {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  color: var(--muted);
+  margin-block: 8px;
+}
+.lv-spatial-dialog input[type="range"] {
+  width: 100%;
+  min-width: 0;
+  accent-color: var(--accent);
+}
+.lv-spatial-dialog .lv-spatial-panel .lv-spatial-grid-toggle {
+  display: flex;
+  width: 100%;
+  box-sizing: border-box;
+  align-items: flex-start;
+  min-height: 28px;
+  gap: 7px;
+  margin-top: 3px;
+  padding-block: 4px;
+  line-height: 1.35;
+}
+.lv-spatial-dialog .lv-spatial-grid-toggle input {
+  flex: 0 0 auto;
+  margin: 3px 0 0;
+}
+.lv-spatial-dialog .lv-spatial-setting {
+  margin-top: 9px;
+  gap: 5px;
+}
+.lv-spatial-dialog .lv-spatial-panel .lv-spatial-help {
+  line-height: 1.45;
+}
+.lv-spatial-dialog .lv-spatial-tool-disclosure > summary {
+  min-height: 30px;
+  box-sizing: border-box;
+  padding: 5px 0;
+  line-height: 1.4;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+.lv-spatial-section-state {
+  display: block;
+  padding-left: 13px;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 400;
+}
+.lv-spatial-dialog .lv-spatial-tool-disclosure > .lv-spatial-choice {
+  margin-top: 6px;
+}
+.lv-spatial-dialog .lv-spatial-full-action {
+  display: block;
+  width: 100%;
+  min-height: 36px;
+  margin-top: 10px;
+  font-size: 0.84rem;
+}
+.lv-spatial-dialog .lv-spatial-legend > span {
+  color: var(--ui-text-primary);
+}
+.lv-spatial-dialog .lv-spatial-legend .lv-spatial-color-swatch {
+  margin-inline-end: 0;
+}
+.lv-spatial-line-key {
+  font-style: normal;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.lv-spatial-legend-line {
+  display: block;
+  margin-top: 3px;
+  font-variant-numeric: tabular-nums;
+}
+.lv-spatial-environment-hud {
+  --spatial-input-bg: #101820;
+  --spatial-input-fg: #e7edf2;
+  --spatial-input-line: #405362;
+}
+.lv-spatial-stage--light .lv-spatial-environment-hud {
+  --spatial-input-bg: #f5f8fb;
+  --spatial-input-fg: #273341;
+  --spatial-input-line: #b8c6d2;
+}
+.lv-spatial-dialog
+  .lv-spatial-environment-hud
+  .lv-spatial-environment-inputs
+  label {
+  font-size: 0.78rem;
+  color: inherit;
+}
+@media (pointer: coarse) {
+  .lv-spatial-dialog .lv-spatial-panel input[type="number"],
+  .lv-spatial-dialog .lv-spatial-environment-hud input[type="number"],
+  .lv-spatial-dialog .lv-spatial-panel input[type="search"],
+  .lv-spatial-dialog .lv-spatial-panel .lv-spatial-grid-toggle,
+  .lv-spatial-dialog .lv-spatial-tool-disclosure > summary,
+  .lv-spatial-dialog .lv-spatial-full-action {
+    min-height: 44px;
+  }
+}
+
+/* Stage 07j.7b: direct task navigation and compact, consistent forms. */
+.lv-spatial-tool-page [hidden] {
+  display: none !important;
+}
+.lv-spatial-dialog .lv-spatial-subnav {
+  margin-bottom: 10px;
+}
+.lv-spatial-dialog .lv-spatial-subnav.lv-spatial-panel {
+  padding: 9px 0;
+  margin-bottom: 0;
+}
+.lv-spatial-dialog .lv-spatial-subnav .lv-spatial-choice {
+  background: color-mix(in srgb, var(--card) 95%, var(--accent));
+}
+.lv-spatial-dialog .lv-spatial-tool-page .lv-spatial-panel {
+  padding-block: 10px;
+}
+.lv-spatial-dialog .lv-spatial-panel h3 {
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 650;
+  line-height: 1.35;
+  margin-bottom: 8px;
+}
+.lv-spatial-dialog .lv-spatial-panel-heading h3 {
+  margin: 0;
+}
+.lv-spatial-dialog .lv-spatial-axis-inputs {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+  margin-top: 0;
+}
+.lv-spatial-dialog .lv-spatial-axis-inputs input {
+  padding-inline: 5px;
+}
+.lv-spatial-dialog .lv-spatial-panel .lv-spatial-grid-toggle {
+  min-height: 26px;
+  padding-block: 3px;
+}
+.lv-spatial-dialog .lv-spatial-primary:not(:disabled),
+.lv-spatial-dialog .lv-spatial-transfer > button:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 14%, var(--card));
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
+  color: var(--ui-text-primary);
+  font-weight: 600;
+}
+.lv-spatial-dialog .lv-spatial-primary:not(:disabled):hover,
+.lv-spatial-dialog .lv-spatial-transfer > button:not(:disabled):hover {
+  background: color-mix(in srgb, var(--accent) 24%, var(--card));
+}
+.lv-spatial-method-note {
+  margin: 9px 0 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+.lv-spatial-dialog .lv-spatial-export .lv-spatial-full-action {
+  margin-top: 0;
+}
+.lv-spatial-dialog .lv-spatial-comparison-editor {
+  margin-top: 8px;
+}
+@media (pointer: coarse) {
+  .lv-spatial-dialog .lv-spatial-panel .lv-spatial-grid-toggle {
+    min-height: 44px;
+  }
+}
+
+/* Stage 07j.7c: fixed export footer, reset controls, compact inspector. */
+.lv-spatial-title-row {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+}
+.lv-spatial-brand {
+  min-width: 0;
+}
+.lv-spatial-dialog .lv-spatial-title-row h2 {
+  font-size: 1.25rem;
+  white-space: normal;
+  line-height: 1.15;
+}
+.lv-spatial-dialog .lv-spatial-title-row .lv-spatial-reset-icon {
+  width: 25px;
+  min-height: 28px;
+}
+.lv-spatial-dialog .lv-spatial-panel-heading {
+  justify-content: flex-start;
+  gap: 5px;
+  margin-bottom: 6px;
+  min-height: 28px;
+}
+.lv-spatial-dialog .lv-spatial-panel-heading h3 {
+  margin: 0;
+}
+.lv-spatial-page-heading {
+  padding: 8px 0 2px;
+}
+.lv-spatial-page-heading .lv-spatial-panel-heading {
+  margin: 0;
+}
+.lv-spatial-setting-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+.lv-spatial-export-footer {
+  flex: 0 0 auto;
+  padding: 9px 10px 9px 4px;
+  border-top: 1px solid var(--line);
+  background: var(--card);
+}
+.lv-spatial-dialog .lv-spatial-export-footer .lv-spatial-full-action {
+  margin: 0;
+}
+.lv-spatial-inspector .lv-spatial-panel {
+  padding-block: 10px;
+}
+.lv-spatial-inspector .lv-spatial-selection-panel .lv-spatial-object-card {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+}
+.lv-spatial-inspector .lv-spatial-object-card h3 {
+  margin: 3px 0 0;
+  font-size: 1.06rem;
+}
+.lv-spatial-inspector .lv-spatial-card-actions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+  margin: 8px 0 3px;
+}
+.lv-spatial-inspector .lv-spatial-card-actions button:last-child {
+  grid-column: 1 / -1;
+}
+.lv-spatial-inspector .lv-spatial-counts > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+}
+.lv-spatial-inspector .lv-spatial-counts strong {
+  font-size: 1rem;
+}
+.lv-spatial-inspector .lv-spatial-result-header {
+  margin-top: 0;
+}
+.lv-spatial-inspector .lv-spatial-data {
+  margin: 7px 0;
+  gap: 4px 7px;
+}
+.lv-spatial-inspector .lv-spatial-color-legend {
+  margin-block: 6px;
+}
+.lv-spatial-inspector .lv-spatial-details {
+  margin-top: 5px;
+}
+.lv-spatial-inspector .lv-spatial-legend {
+  gap: 5px 10px;
+}
+@media (pointer: coarse) {
+  .lv-spatial-dialog .lv-spatial-title-row .lv-spatial-reset-icon {
+    width: 44px;
+    min-height: 44px;
+  }
+}
+@media (max-width: 680px), (max-height: 440px) {
+  .lv-spatial-export-footer {
+    padding-inline: 4px;
+  }
+}

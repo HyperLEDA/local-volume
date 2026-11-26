@@ -10,7 +10,9 @@ export type AtlasColorMode =
   | "theta"
   | "luminosityK"
   | "massHi"
-  | "hiToK";
+  | "hiToK"
+  | "density"
+  | "peculiar";
 export type AtlasNumericColorMode = Exclude<
   AtlasColorMode,
   "morphology" | "neutral"
@@ -53,6 +55,16 @@ export const ATLAS_COLOR_OPTIONS: readonly {
     label: "H I / K",
     title: "log(MHI/LKs), not a stellar mass fraction",
   },
+  {
+    value: "peculiar",
+    label: "Vpec",
+    title: "Nominal radial Local Group velocity residual, VLG − H₀D",
+  },
+  {
+    value: "density",
+    label: "Local density",
+    title: "Nominal catalogue sample number density; individual galaxies",
+  },
 ];
 const NUMERIC: Record<
   AtlasNumericColorMode,
@@ -65,6 +77,8 @@ const NUMERIC: Record<
   luminosityK: { label: "log Lₖ", unit: "log₁₀(L☉)", signed: false },
   massHi: { label: "log MHI", unit: "log₁₀(M☉)", signed: false },
   hiToK: { label: "log(MHI/Lₖ)", unit: "log₁₀(M☉/L☉)", signed: false },
+  peculiar: { label: "Radial Vpec, LG", unit: "km/s", signed: true },
+  density: { label: "Sample number density", unit: "Mpc⁻³", signed: false },
 };
 export function atlasNumericDefinition(mode: AtlasColorMode) {
   return mode === "morphology" || mode === "neutral" ? null : NUMERIC[mode];
@@ -97,7 +111,8 @@ export function atlasNumericValue(
   row: AtlasSpatialRow,
   mode: AtlasNumericColorMode,
 ): number | null {
-  if (isPhotometryColor(mode)) return null;
+  if (isPhotometryColor(mode) || mode === "density" || mode === "peculiar")
+    return null;
   // Distance uses exactly the spatial contract. Other fields retain the existing catalogue semantics.
   const value =
     mode === "distance"
@@ -121,6 +136,8 @@ export function buildAtlasColorEncoding(
   rows: readonly AtlasSpatialRow[],
   mode: AtlasColorMode,
   photometry: AtlasPhotometry | null = null,
+  densityValues?: ReadonlyMap<number, number>,
+  peculiarVelocityValues?: ReadonlyMap<number, number>,
 ): AtlasColorEncoding {
   const values = new Map<number, number>();
   const limits = new Map<number, number>();
@@ -131,7 +148,12 @@ export function buildAtlasColorEncoding(
   let max = -Infinity;
   for (const row of rows) {
     if (row.position === null) continue;
-    let value = atlasNumericValue(row, mode);
+    let value =
+      mode === "density"
+        ? (densityValues?.get(row.object.pgc) ?? null)
+        : mode === "peculiar"
+          ? (peculiarVelocityValues?.get(row.object.pgc) ?? null)
+          : atlasNumericValue(row, mode);
     if (isPhotometryColor(mode)) {
       if (
         !photometry ||
@@ -159,7 +181,7 @@ export function buildAtlasColorEncoding(
         continue;
       }
     }
-    if (value === null) continue;
+    if (value === null || !Number.isFinite(value)) continue;
     values.set(row.object.pgc, value);
     min = Math.min(min, value);
     max = Math.max(max, value);

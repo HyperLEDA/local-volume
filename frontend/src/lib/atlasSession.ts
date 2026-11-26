@@ -1,3 +1,16 @@
+import { decodeFof, type FofConfig } from "./spatialFof.ts";
+import { decodeAvoidance, type AvoidanceConfig } from "./spatialAvoidance.ts";
+import { decodeSpaceMode, type SpaceMode } from "./spatialRedshift.ts";
+import {
+  decodeDensityConfig,
+  DEFAULT_DENSITY_CONFIG,
+  type DensityConfig,
+} from "./spatialDensity.ts";
+import {
+  decodePeculiarConfig,
+  DEFAULT_PECULIAR_CONFIG,
+  type PeculiarVelocityConfig,
+} from "./spatialPeculiarVelocity.ts";
 import type { AtlasColorMode } from "./atlasColorEncoding.ts";
 import type { AtlasIntervalMode } from "./atlasDistanceIntervals.ts";
 import type { AtlasMarkerDensity, AtlasSizeMode } from "./atlasMarkerSize.ts";
@@ -28,6 +41,11 @@ import {
 } from "./atlasPopulationComparison.ts";
 
 export type AtlasPreferences = {
+  fof?: FofConfig;
+  avoidance?: AvoidanceConfig;
+  spaceMode?: SpaceMode;
+  density?: DensityConfig;
+  peculiar?: PeculiarVelocityConfig;
   comparison: PopulationComparison | null;
   population: AtlasPopulation;
   region: AtlasRegion | null;
@@ -119,7 +137,15 @@ export function decodeAtlasPreferences(
       : null;
   const region =
     displayMode === "galaxies" ? decodeAtlasRegion(r.region) : null;
+  const peculiar = decodePeculiarConfig(r.peculiar) ?? DEFAULT_PECULIAR_CONFIG;
   return {
+    fof: decodeFof(r.fof),
+    avoidance: decodeAvoidance(r.avoidance),
+    spaceMode:
+      displayMode === "galaxies" ? decodeSpaceMode(r.spaceMode) : "real",
+    peculiar:
+      displayMode === "groups" ? { ...peculiar, scope: "off" } : peculiar,
+    density: decodeDensityConfig(r.density) ?? DEFAULT_DENSITY_CONFIG,
     comparison:
       displayMode === "galaxies" ? decodeComparison(r.comparison) : null,
     population:
@@ -156,6 +182,9 @@ export function decodeAtlasPreferences(
         "luminosityK",
         "massHi",
         "hiToK",
+        ...(displayMode === "galaxies"
+          ? ["density" as const, "peculiar" as const]
+          : []),
       ],
       "morphology",
     ),

@@ -1,4 +1,16 @@
+import type { FofResult } from "./spatialFof.ts";
 import * as THREE from "three";
+import {
+  avoidanceGeometry,
+  DEFAULT_AVOIDANCE,
+  type AvoidanceConfig,
+} from "./spatialAvoidance.ts";
+import {
+  PECULIAR_NEGATIVE_COLOR,
+  PECULIAR_POSITIVE_COLOR,
+  type RadialArrow,
+} from "./spatialPeculiarVelocity.ts";
+import type { EnvironmentOverlay } from "./spatialEnvironmentOverlay.ts";
 import {
   composeSpatialImage,
   spatialExportRatio,
@@ -192,10 +204,23 @@ export function createAtlasRenderer(
   const groupMeshes = new Map<number, number>();
   const groupIds = new Set(displayedGroups.map((bubble) => bubble.pgc));
   const raycaster = new THREE.Raycaster();
+  let fofVisual: { rings: THREE.Points; links: THREE.LineSegments } | null =
+    null;
+  let velocityVisual: THREE.LineSegments<
+    THREE.BufferGeometry,
+    THREE.LineBasicMaterial
+  > | null = null;
+  let environmentVisual: {
+    group: THREE.Group;
+    shell: THREE.Group;
+    rings: THREE.Points;
+    link: THREE.LineSegments;
+  } | null = null;
   let halo: THREE.Sprite | null = null;
   let origin: THREE.Sprite | null = null;
   let grid: THREE.GridHelper | null = null;
   const guidePlane = new THREE.Group();
+  const guideAvoidance = new THREE.Group();
   const guideShells = new Map<number, THREE.LineSegments>();
   let start: { x: number; y: number; id: number } | null = null;
   let previousGroupTap: GroupTap | null = null;
@@ -217,6 +242,9 @@ export function createAtlasRenderer(
     resources.push(resource);
     return resource;
   }
+  const avoidanceSurface = own(new THREE.BufferGeometry());
+  const avoidanceLines = own(new THREE.BufferGeometry());
+  let avoidanceLatitude = DEFAULT_AVOIDANCE.latitudeDeg;
   function markerColor(point: AtlasSpatialPoint): THREE.Color {
     return new THREE.Color(
       color.comparisonColors?.get(point.object.pgc) ??
@@ -397,7 +425,7 @@ export function createAtlasRenderer(
       scale.textContent = `${formatSpatialUnits(bar)} Mpc`;
       scale.style.width = `${bar * pixels}px`;
     } else {
-      scale.textContent = "Perspective · scale varies with depth";
+      scale.textContent = "Perspective: scale varies with depth";
       scale.style.width = "auto";
     }
   }
@@ -461,7 +489,7 @@ export function createAtlasRenderer(
               }
             } else {
               context.fillText(
-                "Perspective · scale varies with depth",
+                "Perspective: scale varies with depth",
                 12,
                 height - 24,
               );
@@ -477,6 +505,104 @@ export function createAtlasRenderer(
 
   function schedule() {
     scheduler.schedule();
+  }
+
+  function setFofOverlay(result: Pick<FofResult, "nodes" | "links"> | null) {
+    const visual = fofVisual;
+    if (disposed || !visual) return;
+    const nodes = result?.nodes ?? [];
+    const links = result?.links ?? [];
+    const ringPositions = visual.rings.geometry.getAttribute("position");
+    const ringColors = visual.rings.geometry.getAttribute("color");
+    nodes.forEach((node, i) => {
+      ringPositions.setXYZ(i, ...node.point.position);
+      const shade = new THREE.Color(node.color);
+      ringColors.setXYZ(i, shade.r, shade.g, shade.b);
+    });
+    ringPositions.needsUpdate = true;
+    ringColors.needsUpdate = true;
+    visual.rings.geometry.setDrawRange(0, nodes.length);
+    visual.rings.visible = nodes.length > 0;
+    const positions = visual.links.geometry.getAttribute("position");
+    const colors = visual.links.geometry.getAttribute("color");
+    links.forEach((link, i) => {
+      positions.setXYZ(2 * i, ...link.a.position);
+      positions.setXYZ(2 * i + 1, ...link.b.position);
+      const shade = new THREE.Color(link.color);
+      colors.setXYZ(2 * i, shade.r, shade.g, shade.b);
+      colors.setXYZ(2 * i + 1, shade.r, shade.g, shade.b);
+    });
+    positions.needsUpdate = true;
+    colors.needsUpdate = true;
+    visual.links.geometry.setDrawRange(0, 2 * links.length);
+    visual.links.visible = links.length > 0;
+    schedule();
+  }
+
+  function setVelocityArrows(arrows: readonly RadialArrow[]) {
+    const visual = velocityVisual;
+    if (disposed || !visual) return;
+    const positions = visual.geometry.getAttribute("position");
+    const colors = visual.geometry.getAttribute("color");
+    let vertex = 0;
+    for (const arrow of arrows) {
+      if (arrow.segments.length !== 30 || vertex + 10 > positions.count)
+        continue;
+      const shade = new THREE.Color(
+        arrow.velocityKms < 0
+          ? PECULIAR_NEGATIVE_COLOR
+          : PECULIAR_POSITIVE_COLOR,
+      );
+      for (let i = 0; i < arrow.segments.length; i += 3) {
+        positions.setXYZ(
+          vertex,
+          arrow.segments[i],
+          arrow.segments[i + 1],
+          arrow.segments[i + 2],
+        );
+        colors.setXYZ(vertex, shade.r, shade.g, shade.b);
+        vertex += 1;
+      }
+    }
+    positions.needsUpdate = true;
+    colors.needsUpdate = true;
+    visual.geometry.setDrawRange(0, vertex);
+    visual.visible = vertex > 0;
+    schedule();
+  }
+
+  function setEnvironment(next: EnvironmentOverlay | null) {
+    const visual = environmentVisual;
+    if (disposed || !visual) return;
+    visual.group.visible = next !== null;
+    if (next) {
+      visual.shell.position.set(...next.centre);
+      visual.shell.scale.setScalar(next.radiusMpc);
+      const positions = visual.rings.geometry.getAttribute("position");
+      const colors = visual.rings.geometry.getAttribute("color");
+      const neighbours = next.neighbours.filter(
+        (point) => point.pgc !== next.nearest?.pgc,
+      );
+      const rings = next.nearest ? [...neighbours, next.nearest] : neighbours;
+      rings.forEach((point, i) => {
+        positions.setXYZ(i, ...point.position);
+        const shade = new THREE.Color(
+          point.pgc === next.nearest?.pgc ? "#e7aa49" : "#4db9bf",
+        );
+        colors.setXYZ(i, shade.r, shade.g, shade.b);
+      });
+      positions.needsUpdate = true;
+      colors.needsUpdate = true;
+      visual.rings.geometry.setDrawRange(0, rings.length);
+      visual.link.visible = next.nearest !== null;
+      if (next.nearest) {
+        const line = visual.link.geometry.getAttribute("position");
+        line.setXYZ(0, ...next.centre);
+        line.setXYZ(1, ...next.nearest.position);
+        line.needsUpdate = true;
+      }
+    }
+    schedule();
   }
 
   function stopFlight() {
@@ -873,6 +999,178 @@ export function createAtlasRenderer(
     }
     updateIntervals();
     const haloTexture = own(createMarkerTexture("halo"));
+    if (!groupedMode) {
+      const fofRings = own(new THREE.BufferGeometry());
+      const fofLinks = own(new THREE.BufferGeometry());
+      for (const [geometry, count] of [
+        [fofRings, points.length],
+        [fofLinks, 2 * points.length],
+      ] as const) {
+        geometry.setAttribute(
+          "position",
+          new THREE.Float32BufferAttribute(new Float32Array(count * 3), 3),
+        );
+        geometry.setAttribute(
+          "color",
+          new THREE.Float32BufferAttribute(new Float32Array(count * 3), 3),
+        );
+        geometry.setDrawRange(0, 0);
+      }
+      const componentRings = new THREE.Points(
+        fofRings,
+        own(
+          new THREE.PointsMaterial({
+            map: haloTexture,
+            size: 16,
+            sizeAttenuation: false,
+            vertexColors: true,
+            transparent: true,
+            opacity: 0.8,
+            depthWrite: false,
+            toneMapped: false,
+          }),
+        ),
+      );
+      const componentLinks = new THREE.LineSegments(
+        fofLinks,
+        own(
+          new THREE.LineBasicMaterial({
+            vertexColors: true,
+            transparent: true,
+            opacity: 0.65,
+            depthWrite: false,
+            toneMapped: false,
+          }),
+        ),
+      );
+      componentRings.frustumCulled = false;
+      componentLinks.frustumCulled = false;
+      componentRings.visible = false;
+      componentLinks.visible = false;
+      world.add(componentRings, componentLinks);
+      fofVisual = { rings: componentRings, links: componentLinks };
+      const velocityGeometry = own(new THREE.BufferGeometry());
+      velocityGeometry.setAttribute(
+        "position",
+        new THREE.Float32BufferAttribute(
+          new Float32Array(points.length * 30),
+          3,
+        ),
+      );
+      velocityGeometry.setAttribute(
+        "color",
+        new THREE.Float32BufferAttribute(
+          new Float32Array(points.length * 30),
+          3,
+        ),
+      );
+      velocityGeometry.setDrawRange(0, 0);
+      velocityVisual = new THREE.LineSegments(
+        velocityGeometry,
+        own(
+          new THREE.LineBasicMaterial({
+            vertexColors: true,
+            transparent: true,
+            opacity: 0.88,
+            depthWrite: false,
+            toneMapped: false,
+          }),
+        ),
+      );
+      velocityVisual.frustumCulled = false;
+      velocityVisual.visible = false;
+      world.add(velocityVisual);
+      const group = new THREE.Group();
+      const shell = new THREE.Group();
+      const surface = new THREE.Mesh(
+        own(new THREE.SphereGeometry(1, 32, 24)),
+        own(
+          new THREE.MeshBasicMaterial({
+            color: 0x4db9bf,
+            transparent: true,
+            opacity: 0.045,
+            depthWrite: false,
+            toneMapped: false,
+          }),
+        ),
+      );
+      const shellGeometry = own(new THREE.BufferGeometry());
+      shellGeometry.setAttribute(
+        "position",
+        new THREE.Float32BufferAttribute(
+          atlasShellSegments(2).map((value) => value / 2),
+          3,
+        ),
+      );
+      const outline = new THREE.LineSegments(
+        shellGeometry,
+        own(
+          new THREE.LineBasicMaterial({
+            color: 0x4db9bf,
+            transparent: true,
+            opacity: 0.62,
+            depthWrite: false,
+            toneMapped: false,
+          }),
+        ),
+      );
+      shell.add(surface, outline);
+      const ringGeometry = own(new THREE.BufferGeometry());
+      ringGeometry.setAttribute(
+        "position",
+        new THREE.Float32BufferAttribute(
+          new Float32Array(points.length * 3),
+          3,
+        ),
+      );
+      ringGeometry.setAttribute(
+        "color",
+        new THREE.Float32BufferAttribute(
+          new Float32Array(points.length * 3),
+          3,
+        ),
+      );
+      ringGeometry.setDrawRange(0, 0);
+      const rings = new THREE.Points(
+        ringGeometry,
+        own(
+          new THREE.PointsMaterial({
+            map: haloTexture,
+            size: 24,
+            sizeAttenuation: false,
+            vertexColors: true,
+            transparent: true,
+            depthWrite: false,
+            depthTest: false,
+            toneMapped: false,
+          }),
+        ),
+      );
+      rings.frustumCulled = false;
+      rings.renderOrder = 18;
+      const linkGeometry = own(new THREE.BufferGeometry());
+      linkGeometry.setAttribute(
+        "position",
+        new THREE.Float32BufferAttribute(new Float32Array(6), 3),
+      );
+      const link = new THREE.LineSegments(
+        linkGeometry,
+        own(
+          new THREE.LineBasicMaterial({
+            color: 0xe7aa49,
+            transparent: true,
+            opacity: 0.85,
+            depthWrite: false,
+            toneMapped: false,
+          }),
+        ),
+      );
+      link.frustumCulled = false;
+      group.add(shell, rings, link);
+      group.visible = false;
+      world.add(group);
+      environmentVisual = { group, shell, rings, link };
+    }
     halo = new THREE.Sprite(
       own(
         new THREE.SpriteMaterial({
@@ -970,6 +1268,50 @@ export function createAtlasRenderer(
     );
     guidePlane.visible = initial.guides.plane;
     world.add(guidePlane);
+    // Angular reference only: use scene extent, never add the guide to fit or picking.
+    const avoidance = avoidanceGeometry(
+      initial.frame,
+      avoidanceLatitude,
+      extent,
+    );
+    avoidanceSurface.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(avoidance.surfaces, 3),
+    );
+    avoidanceLines.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(avoidance.lines, 3),
+    );
+    const avoidanceMesh = new THREE.Mesh(
+      avoidanceSurface,
+      own(
+        new THREE.MeshBasicMaterial({
+          color: 0xa48bb9,
+          transparent: true,
+          opacity: 0.07,
+          depthWrite: false,
+          side: THREE.DoubleSide,
+          toneMapped: false,
+        }),
+      ),
+    );
+    const avoidanceOutline = new THREE.LineSegments(
+      avoidanceLines,
+      own(
+        new THREE.LineBasicMaterial({
+          color: 0xa48bb9,
+          transparent: true,
+          opacity: 0.6,
+          depthWrite: false,
+          toneMapped: false,
+        }),
+      ),
+    );
+    avoidanceMesh.renderOrder = -12;
+    avoidanceOutline.renderOrder = -11;
+    guideAvoidance.add(avoidanceMesh, avoidanceOutline);
+    guideAvoidance.visible = false;
+    world.add(guideAvoidance);
     const shellMaterial = own(
       new THREE.LineBasicMaterial({
         color: 0x789a87,
@@ -1060,6 +1402,9 @@ export function createAtlasRenderer(
     dispose,
     cameraState: captureCamera,
     exportImage,
+    setEnvironment,
+    setVelocityArrows,
+    setFofOverlay,
     select(pgc: number | null) {
       selected = pgc;
       updateIntervals();
@@ -1099,6 +1444,39 @@ export function createAtlasRenderer(
       for (const radius of ATLAS_SHELL_RADII) {
         const shell = guideShells.get(radius);
         if (shell) shell.visible = next.shells.includes(radius);
+      }
+      schedule();
+    },
+    setAvoidance(next: AvoidanceConfig) {
+      if (disposed) return;
+      guideAvoidance.visible = next.enabled;
+      if (next.enabled && next.latitudeDeg !== avoidanceLatitude) {
+        const geometry = avoidanceGeometry(
+          initial.frame,
+          next.latitudeDeg,
+          extent,
+        );
+        const surface = avoidanceSurface.getAttribute("position");
+        const lines = avoidanceLines.getAttribute("position");
+        for (let i = 0; i < geometry.surfaces.length; i += 3)
+          surface.setXYZ(
+            i / 3,
+            geometry.surfaces[i],
+            geometry.surfaces[i + 1],
+            geometry.surfaces[i + 2],
+          );
+        for (let i = 0; i < geometry.lines.length; i += 3)
+          lines.setXYZ(
+            i / 3,
+            geometry.lines[i],
+            geometry.lines[i + 1],
+            geometry.lines[i + 2],
+          );
+        surface.needsUpdate = true;
+        lines.needsUpdate = true;
+        avoidanceSurface.computeBoundingSphere();
+        avoidanceLines.computeBoundingSphere();
+        avoidanceLatitude = next.latitudeDeg;
       }
       schedule();
     },
