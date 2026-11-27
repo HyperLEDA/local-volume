@@ -24,6 +24,8 @@ export type AtlasGroupBubble = {
   verified: boolean;
   kind: AtlasKind;
   morphologyT: number | null;
+  /** Present only for the MW envelope: number of qualified satellites. */
+  radiusSampleCount?: number;
 };
 
 /** Display positions are not an input to physical separation or depth estimates. */
@@ -180,6 +182,112 @@ export type PhysicalGroupSnapshot = {
   catalogue_pgcs: number[];
   groups: (GroupSummary & { member_pgcs: number[] })[];
 };
+
+/** MW's centre is a nominal catalogue centre, not an extragalactic point.
+ * This envelope describes the full qualified member sample, not a halo or
+ * projected extent. Never add the centre to the scientific galaxy sample.
+ */
+export function buildAtlasMwGroupBubble(
+  rows: readonly AtlasSpatialRow[],
+  snapshot: PhysicalGroupSnapshot | null,
+  frame: ObserverFrame,
+  mode: AtlasDistanceMode,
+  localOnly: boolean,
+): AtlasGroupBubble | null {
+  const pgc = 5064336;
+  if (!snapshot || mode === "verified") return null;
+  const groups = snapshot.groups.filter((group) => group.root_pgc === pgc);
+  if (groups.length !== 1) return null;
+  const group = groups[0];
+  const roots = rows.filter((row) => row.object.pgc === pgc);
+  if (roots.length !== 1) return null;
+  const root = roots[0];
+  const evidence = root.evidence;
+  if (
+    group.definition !== "physical" ||
+    group.group_id !== -pgc ||
+    group.extent_kpc !== null ||
+    group.member_pgcs.length !== group.member_count ||
+    group.member_count < 3 ||
+    new Set(group.member_pgcs).size !== group.member_count ||
+    !group.member_pgcs.includes(pgc) ||
+    !evidence ||
+    evidence.pgc !== pgc ||
+    evidence.distance_origin === "GROUP_ASSIGNED" ||
+    evidence.distance_origin === "MODEL_INFERRED" ||
+    !validDistance(evidence.dist_mpc) ||
+    !validDistance(group.distance_mpc) ||
+    evidence.distance_formula_version !== group.source_version ||
+    typeof evidence.distance_computed_revision !== "number" ||
+    !Number.isSafeInteger(evidence.distance_computed_revision) ||
+    evidence.distance_computed_revision < 1
+  )
+    return null;
+  const d = evidence.dist_mpc;
+  if (localOnly && d > LOCAL_VIEW_RADIUS_MPC) return null;
+  if (Math.abs(group.distance_mpc - d) > 1e-7 * Math.max(1, d)) return null;
+  const { ra, dec } = root.object;
+  if (
+    ra === null ||
+    dec === null ||
+    group.root_ra === null ||
+    group.root_dec === null ||
+    !Number.isFinite(group.root_ra) ||
+    !Number.isFinite(group.root_dec) ||
+    Math.abs(((((group.root_ra - ra + 540) % 360) + 360) % 360) - 180) > 1e-6 ||
+    Math.abs(group.root_dec - dec) > 1e-6
+  )
+    return null;
+  const centre = observerCartesianMpc(root.object, d, frame);
+  if (!centre) return null;
+  const members = new Set(group.member_pgcs);
+  const covered = new Set(snapshot.catalogue_pgcs);
+  if (group.member_pgcs.some((id) => !covered.has(id))) return null;
+  let radius = 0;
+  let count = 0;
+  const identityCounts = new Map<number, number>();
+  for (const row of rows) {
+    const id = row.object.pgc;
+    identityCounts.set(id, (identityCounts.get(id) ?? 0) + 1);
+  }
+  for (const row of rows) {
+    const id = row.object.pgc;
+    if (
+      id === pgc ||
+      !members.has(id) ||
+      identityCounts.get(id) !== 1 ||
+      row.position === null ||
+      row.kind !== "individual" ||
+      row.evidence?.distance_lineage_status !== "REVIEW_READY" ||
+      !["VERIFIED", "NOT_REVIEWED"].includes(
+        row.evidence.distance_value_review_status ?? "",
+      ) ||
+      row.evidence.distance_formula_version !== group.source_version ||
+      row.evidence.distance_computed_revision !==
+        evidence.distance_computed_revision
+    )
+      continue;
+    const p = row.position;
+    const r = Math.hypot(p[0] - centre[0], p[1] - centre[1], p[2] - centre[2]);
+    if (!Number.isFinite(r)) continue;
+    radius = Math.max(radius, r);
+    count += 1;
+  }
+  if (count === 0 || !validDistance(radius)) return null;
+  return {
+    pgc,
+    groupId: group.group_id,
+    name: group.name,
+    position: centre,
+    radiusMpc: radius,
+    memberCount: group.member_count,
+    distanceMpc: d,
+    verified: false,
+    kind: "unknown",
+    morphologyT: root.object.morphology_t ?? null,
+    radiusSampleCount: count,
+  };
+}
 
 /** A complete, disjoint physical catalogue snapshot; invalid data fails closed. */
 export function validatePhysicalGroupSnapshot(

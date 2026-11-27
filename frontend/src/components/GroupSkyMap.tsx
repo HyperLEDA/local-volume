@@ -16,7 +16,10 @@ import { fetchObjects, type CatalogObject } from "../api/objects.ts";
 import { atlasBounds, type AtlasRange } from "../lib/atlasBounds.ts";
 import { popupObjectRoute } from "../lib/popupNavigation.ts";
 import { groupPopupRoute } from "../lib/groupBrowsing.ts";
-import { greatCircleVertices } from "../lib/mdConnection.ts";
+import {
+  greatCircleVertices,
+  visibleGreatCircleSegments,
+} from "../lib/mdConnection.ts";
 import { trimGroupEdge } from "../lib/groupEdgeTrim.ts";
 import {
   groupTidalEdges,
@@ -356,6 +359,7 @@ export function GroupSkyMap({
     if (!root || !isPositioned(root)) return;
 
     const portrait = miniature && previewVariant === "portrait";
+    const allSky = group.root_pgc === 5064336 && !portrait;
     const members = group.members.filter(isPositioned);
     const byPgc = new Map(members.map((member) => [member.pgc, member]));
     // Identical adopted angular framing to the individual object's map.
@@ -363,7 +367,9 @@ export function GroupSkyMap({
       ? Number.isFinite(portraitFov) && portraitFov > 0
         ? portraitFov
         : 1
-      : groupFullExtentFov(members, root);
+      : allSky
+        ? 360
+        : groupFullExtentFov(members, root);
     const rootRa = root.ra;
     const rootDec = root.dec;
     let cancelled = false;
@@ -377,6 +383,7 @@ export function GroupSkyMap({
     let observer: ResizeObserver | null = null;
     let unregisterEdgeUpdate: (() => void) | null = null;
     let interactionFrame: number | null = null;
+    let edgeFrame: number | null = null;
     let lastProjectionSignature:
       [number, number, number, number, number] | null = null;
     function scheduleInteractionUpdate(): void {
@@ -397,6 +404,7 @@ export function GroupSkyMap({
           ];
           const previous = lastProjectionSignature;
           if (
+            !allSky &&
             previous &&
             previous[0] === w &&
             previous[1] === h &&
@@ -419,7 +427,7 @@ export function GroupSkyMap({
     // Fit to what Aladin actually renders, after its first responsive resize.
     // On the interactive map this ceases as soon as the user starts navigating.
     function fitToMembers(): void {
-      if (cancelled || userInteracted || !view || portrait) return;
+      if (cancelled || userInteracted || !view || portrait || allSky) return;
       const width = element.clientWidth;
       const height = element.clientHeight;
       if (width < 80 || height < 80) return;
@@ -468,7 +476,7 @@ export function GroupSkyMap({
         cooFrame: "equatorial",
         target: `${rootRa} ${rootDec}`,
         fov: initialFov,
-        projection: "SIN",
+        projection: allSky ? "AIT" : "SIN",
         showReticle: false,
         showSimbadPointerControl: false,
         showFullscreenControl: false,
@@ -491,7 +499,8 @@ export function GroupSkyMap({
 
       // Build sky polygons once from SOURCE membership. Aladin owns their
       // projection, panning and zooming; React must not rebuild their outlines.
-      const celestial = miniature ? [] : buildCelestialSubgroups(group);
+      const celestial =
+        miniature || allSky ? [] : buildCelestialSubgroups(group);
       if (celestial.length > 0) {
         // Stage 03e: opacity-isolated native celestial contours.
         // The translucent fill never changes shared Canvas globalAlpha.
@@ -617,6 +626,11 @@ export function GroupSkyMap({
       const mapView = createdView as CaptureView;
       const scienceEdges = groupTidalEdges(members);
       function updateGroupEdges(): void {
+        // Direct redraws supersede a queued redraw; a delivered frame is safe to cancel.
+        if (edgeFrame !== null) {
+          window.cancelAnimationFrame(edgeFrame);
+          edgeFrame = null;
+        }
         if (cancelled || lines.size === 0) return;
         for (const overlay of lines.values()) overlay.removeAll();
         for (const edge of scienceEdges) {
@@ -631,11 +645,27 @@ export function GroupSkyMap({
             (ra, dec) => mapView.world2pix(ra, dec),
           );
           const overlay = lines.get(edge.tone);
-          if (overlay && clipped.length >= 2)
+          if (!overlay) continue;
+          if (allSky) {
+            for (const segment of visibleGreatCircleSegments(
+              clipped,
+              (ra, dec) => mapView.world2pix(ra, dec),
+              element.clientWidth,
+            )) {
+              overlay.add(drawingApi.polyline(segment));
+            }
+          } else if (clipped.length >= 2) {
             overlay.add(drawingApi.polyline(clipped));
+          }
         }
         for (const overlay of lines.values()) overlay.reportChange();
         scheduleInteractionUpdate();
+      }
+
+      // AIT seams move with the camera. Coalesce native line rebuilding on pan/zoom.
+      function scheduleEdgeUpdate(): void {
+        if (cancelled || edgeFrame !== null) return;
+        edgeFrame = window.requestAnimationFrame(updateGroupEdges);
       }
 
       // Close-up preview is the unannotated DSS2 field of the root galaxy.
@@ -673,8 +703,13 @@ export function GroupSkyMap({
         markerRadius = new Map(bounds);
         // Regenerate only when pixel scale changes. The native Aladin overlay
         // continues to track pan movements without a separate animated canvas.
-        mapView.on("zoomChanged", updateGroupEdges);
-        mapView.on("positionChanged", scheduleInteractionUpdate);
+        if (allSky) {
+          mapView.on("zoomChanged", scheduleEdgeUpdate);
+          mapView.on("positionChanged", scheduleEdgeUpdate);
+        } else {
+          mapView.on("zoomChanged", updateGroupEdges);
+          mapView.on("positionChanged", scheduleInteractionUpdate);
+        }
         unregisterEdgeUpdate = () => {
           mapView.off?.("zoomChanged");
           mapView.off?.("positionChanged");
@@ -801,6 +836,7 @@ export function GroupSkyMap({
       captureAbort.abort();
       observer?.disconnect();
       unregisterEdgeUpdate?.();
+      if (edgeFrame !== null) window.cancelAnimationFrame(edgeFrame);
       if (interactionFrame !== null)
         window.cancelAnimationFrame(interactionFrame);
       for (const timer of timers) window.clearTimeout(timer);
@@ -825,7 +861,11 @@ export function GroupSkyMap({
   return (
     <div
       className={`aladin-frame group-sky-map${miniature ? " group-sky-map--miniature" : ""}`}
-      aria-label={`DSS2 Color SIN projection of ${group.name}: ${group.member_count} galaxies and their main-disturber links`}
+      aria-label={
+        group.root_pgc === 5064336
+          ? `DSS2 Color all-sky map of ${group.name}: ${group.member_count} galaxies and their main-disturber links`
+          : `DSS2 Color SIN projection of ${group.name}: ${group.member_count} galaxies and their main-disturber links`
+      }
       onClickCapture={onPopupClick}
     >
       <div className="group-sky-image" ref={skyRef} />

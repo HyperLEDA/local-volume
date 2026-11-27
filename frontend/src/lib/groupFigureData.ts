@@ -1,4 +1,5 @@
 import type { GroupDetail, GroupMember } from "../api/groups.ts";
+import { buildMwRadialFigures } from "./mwRadialDiagnostics.ts";
 
 export type PlotPoint = {
   x: number;
@@ -58,6 +59,8 @@ export function projectedKpc(
   host: GroupMember,
   satellite: GroupMember,
 ): number | null {
+  // External-host projected radii are not defined for an internal observer.
+  if (host.pgc === 5064336) return null;
   const psi = separationRad(host, satellite);
   if (psi === null || !finite(host.dist_mpc) || host.dist_mpc <= 0) return null;
   return 1000 * host.dist_mpc * Math.sin(psi);
@@ -269,7 +272,7 @@ export function buildGroupFigures(group: GroupDetail): GroupFigure[] {
         );
   const dvBins = hist(deltaV, dvWidth);
 
-  return [
+  const figures: GroupFigure[] = [
     {
       key: "velocity-distance",
       title: "Velocity–distance diagram",
@@ -479,6 +482,18 @@ export function buildGroupFigures(group: GroupDetail): GroupFigure[] {
       subtitle: `${count(deltaV.length, total)}; ${dvWidth} km s⁻¹ bins; Poisson count errors`,
     },
   ];
+  // MW is an internal-observer system; retain native observational plots and
+  // replace external projected diagnostics with actual centre-relative radii.
+  return host.pgc === 5064336
+    ? [
+        ...figures.filter(
+          (figure) =>
+            figure.key === "velocity-distance" ||
+            figure.key === "luminosity-function",
+        ),
+        ...buildMwRadialFigures(group),
+      ]
+    : figures;
 }
 
 function csvCell(value: string | number | boolean | null): string {

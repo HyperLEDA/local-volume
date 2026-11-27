@@ -218,7 +218,7 @@ const ROWS: readonly PhysicalRow[] = [
           </>
         ),
         description:
-          "Tidal index set by the strongest neighboring galaxy; provisional from the available LV donor census",
+          "Tidal index set by the strongest neighboring galaxy; provisional LV census, using the LVGDB-calibrated effective K luminosity for the Milky Way",
         decimals: 2,
         value: (d) => d.theta1,
       },
@@ -230,7 +230,7 @@ const ROWS: readonly PhysicalRow[] = [
           </>
         ),
         description:
-          "Tidal index of the five dominant neighboring galaxies; provisional from the available LV donor census",
+          "Tidal index of the five dominant neighboring galaxies; provisional LV census, using the LVGDB-calibrated effective K luminosity for the Milky Way",
         decimals: 2,
         value: (d) => d.theta5,
       },
@@ -242,7 +242,7 @@ const ROWS: readonly PhysicalRow[] = [
           </>
         ),
         description:
-          "Local Ks luminosity density relative to the cosmic mean; provisional from the available LV donor census",
+          "Local Ks luminosity density relative to the cosmic mean; provisional LV census, using the LVGDB-calibrated effective K luminosity for the Milky Way",
         decimals: 2,
         value: (d) => d.thetaj,
       },
@@ -288,7 +288,13 @@ function Measurement({
           className="parameter-help-tooltip"
           role="tooltip"
         >
-          {field.description}
+          {record.physical_method === "MW_GLOBAL_LVGDB_TABLE2_JUST2015_V1" &&
+          (field.key === "mb" || field.key === "log-mhi")
+            ? "Adopted published LVGDB Table 2 value for the Milky Way, not calculated from the centre distance."
+            : record.physical_method === "MW_GLOBAL_LVGDB_TABLE2_JUST2015_V1" &&
+                (field.key === "mk" || field.key === "log-lk")
+              ? "Global K-band model of Just et al. (2015), M_K = −24.2 mag (estimated uncertainty 0.2 mag), using the LV solar zero point for luminosity. Not the tidal calibration."
+              : field.description}
         </span>
       </div>
       <div className="parameter-block-reading">

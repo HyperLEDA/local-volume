@@ -927,7 +927,10 @@ export function createAtlasRenderer(
         groupMeshes.set(mesh.id, bubble.pgc);
         focusTargets.set(bubble.pgc, {
           position: new THREE.Vector3(...bubble.position),
-          radius: Math.max(bubble.radiusMpc * 3, 1.2),
+          radius: Math.max(
+            bubble.radiusMpc * 3,
+            bubble.radiusSampleCount === undefined ? 1.2 : 0.02,
+          ),
         });
         groupNodes.push({ bubble, mesh, material });
       }

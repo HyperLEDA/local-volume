@@ -83,10 +83,11 @@ def test_missing_sfr_inputs_return_missing_not_zero() -> None:
     assert vals["log_sfr_fuv_msun_yr"] is None
 
 
-def test_milky_way_does_not_acquire_spurious_hi_mass_or_environment() -> None:
+def test_milky_way_global_hi_is_not_derived_from_observer_flux() -> None:
     raw = fixture_galaxy(5064336)
     vals = physical_from_observed(raw)
-    assert vals["log_mhi_msun"] is None
+    assert vals["log_mhi_msun"] == pytest.approx(9.47)
+    assert vals["physical_method"] == "MW_GLOBAL_LVGDB_TABLE2_JUST2015_V1"
     env = environment_from_prepared(raw, [])
     assert env["environment_coverage"] == "MW_GEOMETRY_EXCEPTION"
 

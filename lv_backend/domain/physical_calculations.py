@@ -14,7 +14,7 @@ from typing import Any
 from lv_backend.domain.physical_uncertainties import derived_adopted_uncertainties
 from lv_backend.domain.star_formation import log_sfr
 
-FORMULA_VERSION = "lv-physical-precomputed-2026-11-17-v2-uncertainties"
+FORMULA_VERSION = "lv-physical-precomputed-2026-11-27-v4-mw-global"
 M_K_SUN = 3.28
 A_KS_OVER_A_B = 0.085
 ARC_MIN_TO_RAD = math.pi / (180.0 * 60.0)
@@ -110,6 +110,44 @@ def corrected_a26_arcmin(
     return diameter_arcmin * 10**correction_dex
 
 
+def milky_way_physical(observed: Mapping[str, Any]) -> dict[str, object]:
+    """Global MW model: do not treat the centre distance as a flux distance.
+
+    Frozen LVGDB Table 2, line 1626 (SHA256 in docs/mw-global-physical.md):
+    M_B = -19.10 and log M_HI = 9.47. These are adopted published values.
+    Just et al. (2015), MNRAS 451, 149, section 3.5: M_K = -24.2 mag
+    (estimated uncertainty 0.2 mag; model extrapolation in 2MASS K).
+    Adopt the existing LV K-band solar zero point. This is independent of
+    MW_TIDAL_LOG_LK, which is intentionally not imported here.
+    """
+    _, _, distance_method = distance_and_modulus(observed)
+    mk = -24.2
+    return {
+        **derived_adopted_uncertainties(observed),
+        "a26_kpc": None,
+        "inclination_deg": None,
+        "vrot_kms": None,
+        "a_b_internal_mag": None,
+        "abs_b_mag": -19.1,
+        "abs_ks_mag": mk,
+        "mean_sb_b_mag_arcsec2": None,
+        "log_lks_lsun": 0.4 * (M_K_SUN - mk),
+        "log_m26_msun": None,
+        "log_mhi_msun": 9.47,
+        "log_mhi_limit_flag": None,
+        "log_sfr_halpha_msun_yr": None,
+        "log_sfr_fuv_msun_yr": None,
+        "log_sfr_halpha_upper_limit": False,
+        "log_sfr_fuv_upper_limit": False,
+        "ks_mag_used": None,
+        "ks_estimated": True,
+        "ks_method": "MW_GLOBAL_K_JUST2015_MODEL",
+        "distance_method": distance_method,
+        "internal_extinction_method": "not_applicable_mw_internal_observer",
+        "physical_method": "MW_GLOBAL_LVGDB_TABLE2_JUST2015_V1",
+    }
+
+
 def physical_from_observed(observed: Mapping[str, Any]) -> dict[str, object]:
     """Compute single-galaxy physical quantities from adopted observed inputs.
 
@@ -117,6 +155,8 @@ def physical_from_observed(observed: Mapping[str, Any]) -> dict[str, object]:
     (e.g. published M26) are never consulted. A missing W50 implies transparent
     gas-poor / low-linewidth approximation, explicitly flagged in the response.
     """
+    if observed.get("pgc") == 5064336:
+        return milky_way_physical(observed)
     distance, mu, distance_method = distance_and_modulus(observed)
     t = number(observed.get("morphology_t"))
     q = positive(observed.get("axis_ratio"))
@@ -175,7 +215,7 @@ def physical_from_observed(observed: Mapping[str, Any]) -> dict[str, object]:
     hi_limit = observed.get("hi21_limit")
     log_mhi: float | None = None
     hi_flag: str | None = None
-    if observed.get("pgc") != 5064336 and m21 is not None and distance is not None and hi_limit in (None, "", ">"):
+    if m21 is not None and distance is not None and hi_limit in (None, "", ">"):
         log_mhi = math.log10(2.356e5) + 2.0 * math.log10(distance) + 0.4 * (17.4 - m21)
         hi_flag = "<" if hi_limit == ">" else None
 

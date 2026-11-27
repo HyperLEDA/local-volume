@@ -99,7 +99,10 @@ export function GroupTidalUI({
   const [visibleSubgroup, setVisibleSubgroup] = useState<number | "all">("all");
   const members = group.members;
   // The membership footprint is immutable with respect to camera and cursor.
-  const celestialHalos = useMemo(() => buildCelestialSubgroups(group), [group]);
+  const celestialHalos = useMemo(
+    () => (group.root_pgc === 5064336 ? [] : buildCelestialSubgroups(group)),
+    [group],
+  );
 
   const drawn = useMemo(() => {
     // Aladin changes the projection in place. This key invalidates cached pixels.
@@ -140,10 +143,20 @@ export function GroupTidalUI({
       // This is only a keyboard/popover anchor, not a physical midpoint.
       const first = view.world2pix(a.ra, a.dec);
       const last = view.world2pix(b.ra, b.dec);
+      const segment = segments.reduce<[number, number][]>(
+        (best, current) => (current.length > best.length ? current : best),
+        [],
+      );
+      const mid = segment[Math.floor(segment.length / 2)];
+      const segmentAnchor =
+        group.root_pgc === 5064336 && segment.length
+          ? view.world2pix(mid[0], mid[1])
+          : null;
       const anchor: [number, number] =
-        first && last
+        segmentAnchor ??
+        (first && last
           ? [(first[0] + last[0]) / 2, (first[1] + last[1]) / 2]
-          : [width / 2, height / 2];
+          : [width / 2, height / 2]);
       edges.push({
         key: `${edge.memberPgc}:${edge.parentPgc}`,
         edge,
@@ -154,7 +167,7 @@ export function GroupTidalUI({
 
     // Aladin owns the celestial outlines; React only draws tidal hit targets.
     return { edges, halos: celestialHalos };
-  }, [members, view, revision, width, height, celestialHalos]);
+  }, [members, view, revision, width, height, celestialHalos, group.root_pgc]);
 
   useEffect(() => {
     setSelected(null);

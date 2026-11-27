@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import type { GroupDetail } from "../api/groups.ts";
 import { calculateGroupScience, validNumber } from "../lib/groupScience.ts";
+import { mwRadialSample, mwRadialSummary } from "../lib/mwRadialDiagnostics.ts";
 import "./physicalParameters.css";
 
 type Cell = {
@@ -199,6 +200,65 @@ export function GroupParameters({
       ),
     ],
   ];
+  const radial = mwRadialSummary(mwRadialSample(group));
+  const displayRows =
+    group.root_pgc === 5064336
+      ? [
+          ...rows
+            .map((fields) =>
+              fields.filter(
+                (field) =>
+                  ![
+                    "vmean",
+                    "sigma",
+                    "rmax",
+                    "rmean",
+                    "r50",
+                    "crossing",
+                    "morb",
+                  ].includes(field.key),
+              ),
+            )
+            .filter((fields) => fields.length),
+          [
+            cell(
+              "mw-n",
+              <>
+                N<sub>r</sub>
+              </>,
+              radial.n,
+              "Satellites with traceable individual catalogue distances and usable nominal Galactocentric radii.",
+            ),
+            cell(
+              "mw-rmax",
+              <>
+                r<sub>max</sub>
+              </>,
+              fmt(radial.maxKpc, 1),
+              "Largest nominal Galactocentric radius in this distance-selected sample; not a halo radius.",
+              "kpc",
+            ),
+          ],
+          [
+            cell(
+              "mw-rmean",
+              <>⟨r⟩</>,
+              fmt(radial.meanKpc, 1),
+              "Mean nominal Galactocentric radius of the distance-selected sample.",
+              "kpc",
+            ),
+            cell(
+              "mw-r50",
+              <>
+                r<sub>50</sub>
+              </>,
+              fmt(radial.medianKpc, 1),
+              "Median nominal Galactocentric radius of the distance-selected sample; not completeness corrected.",
+              "kpc",
+            ),
+          ],
+        ]
+      : rows;
   return (
     <section
       className="group-parameters object-params"
@@ -211,7 +271,7 @@ export function GroupParameters({
             <col key={i} />
           ))}
         </colgroup>
-        {rows
+        {displayRows
           .flatMap((fields) =>
             fields.length === 4
               ? [fields.slice(0, 2), fields.slice(2)]
