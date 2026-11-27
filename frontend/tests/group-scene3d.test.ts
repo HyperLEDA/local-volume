@@ -280,3 +280,50 @@ test("photometry, morphology and membership identity are retained without invent
   expect(scene.axes).toEqual(["east", "north", "outward_los"]);
   expect(scene.units).toBe("kpc");
 });
+
+test("MW centre uses full-sphere translated catalogue vectors, without projected assigned satellites", () => {
+  const mw = 5064336;
+  const centre = member(mw, {
+    group_id: -mw,
+    parent_md_pgc: null,
+    membership_status: "root",
+    dist_mpc: 0.008,
+    distance_origin: "UNKNOWN",
+  });
+  const satellite = member(2, {
+    group_id: -mw,
+    parent_md_pgc: mw,
+    ra: 180,
+    dist_mpc: 0.05,
+    e_distance_minus_mpc: null,
+    e_distance_plus_mpc: null,
+  });
+  const assigned = member(3, {
+    group_id: -mw,
+    parent_md_pgc: mw,
+    ra: 30,
+    dist_mpc: 0.05,
+    distance_origin: "GROUP_ASSIGNED",
+  });
+  const scene = buildGroupScene({
+    group_id: -mw,
+    root_pgc: mw,
+    definition: "physical",
+    members: [centre, satellite, assigned],
+  });
+  expect(scene.status).toBe("READY");
+  checkVec(scene.points[0].displayPositionKpc, [0, 0, 0]);
+  checkVec(scene.points[1].displayPositionKpc, [0, 0, -58]);
+  expect(scene.points[2].displayPositionKpc).toBeNull();
+  expect(scene.points[2].kind).toBe("DIRECTION_ONLY");
+  expect(scene.points[1].strictGeometryEligible).toBe(false);
+  expect(scene.displayExtentKpc).toBeCloseTo(58, 8);
+  expect(
+    buildGroupScene({
+      group_id: -mw,
+      root_pgc: mw,
+      definition: "physical",
+      members: [{ ...centre, distance_origin: "GROUP_ASSIGNED" }, satellite],
+    }).status,
+  ).toBe("CENTRE_UNAVAILABLE");
+});

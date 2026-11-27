@@ -17,7 +17,7 @@ def test_pipeline_exposes_propagated_uncertainties():
             "lvg_e_v_hel_kms": 9.5,
         }
     )
-    assert FORMULA_VERSION == "lv-physical-precomputed-2026-11-17-v2-uncertainties"
+    assert FORMULA_VERSION == "lv-physical-precomputed-2026-11-27-v4-mw-global"
     assert row["distance_mpc"] == pytest.approx(10**0.9)
     assert row["e_distance_minus_mpc"] is not None
     assert row["e_distance_plus_mpc"] is not None

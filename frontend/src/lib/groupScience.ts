@@ -72,7 +72,9 @@ export function calculateGroupScience(group: GroupDetail): GroupScience {
       })
     : [];
   const radii = projected.map((point) => point.rp);
-  const dispersion = sampleDispersion(speeds);
+  // Different sightlines cannot be treated as a common external LOS.
+  const dispersion =
+    group.root_pgc === 5064336 ? null : sampleDispersion(speeds);
   const directSatellites = host
     ? projected.filter(({ member }) => member.parent_md_pgc === host.pgc)
     : [];
@@ -119,7 +121,7 @@ export function calculateGroupScience(group: GroupDetail): GroupScience {
     nOrbitalTracers: velocities.length,
     nProjected: radii.length,
     meanIndependentD: arithmeticMean(independentD.map((m) => m.dist_mpc!)),
-    meanVelocity: arithmeticMean(speeds),
+    meanVelocity: group.root_pgc === 5064336 ? null : arithmeticMean(speeds),
     velocityDispersion: dispersion,
     meanProjectedKpc: arithmeticMean(radii),
     medianProjectedKpc: median(radii),

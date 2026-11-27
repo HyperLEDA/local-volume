@@ -154,8 +154,7 @@ function frameFor(member: SceneMember): Frame | null {
     los === null ||
     member.ra === null ||
     member.dec === null ||
-    !validDistance(member.dist_mpc) ||
-    member.pgc === MILKY_WAY_PGC
+    !validDistance(member.dist_mpc)
   )
     return null;
   const a = (member.ra % 360) * RAD;
@@ -273,10 +272,13 @@ function buildPoint(
     centre &&
     direction &&
     distanceMpc !== null &&
-    member.pgc !== MILKY_WAY_PGC
+    (member.pgc !== MILKY_WAY_PGC || centre.pgc === MILKY_WAY_PGC)
   ) {
     if (origin === "GROUP_ASSIGNED") {
-      position = projectedPosition(frame, direction);
+      position =
+        centre.pgc === MILKY_WAY_PGC
+          ? null
+          : projectedPosition(frame, direction);
       if (position !== null) kind = "ASSIGNED_PROJECTION";
     } else {
       position = cataloguePosition(frame, direction, distanceMpc);
@@ -347,7 +349,13 @@ export function buildGroupScene(group: SceneGroup): GroupScene {
     valid && roots.length === 1 && roots[0].pgc === group.root_pgc
       ? roots[0]
       : null;
-  const frame = root ? frameFor(root) : null;
+  const frame =
+    root &&
+    (root.pgc !== MILKY_WAY_PGC ||
+      (originOf(root) !== "GROUP_ASSIGNED" &&
+        originOf(root) !== "MODEL_INFERRED"))
+      ? frameFor(root)
+      : null;
   const centre: SceneCentre | null =
     root && frame
       ? {

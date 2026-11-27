@@ -7,6 +7,7 @@ import {
   atlasScopePoints,
   atlasVisiblePoints,
   buildAtlasGroupBubbles,
+  buildAtlasMwGroupBubble,
   buildAtlasSpatialRows,
   type AtlasDistanceMode,
   type AtlasKind,
@@ -42,6 +43,7 @@ import {
 } from "../lib/atlasSpatialRenderer.ts";
 import {
   atlasMdEdges,
+  atlasMwMdEdges,
   type AtlasLayers,
 } from "../lib/atlasScientificLayers.ts";
 import {
@@ -652,10 +654,24 @@ export default function SpatialAtlasView({
       ),
     [rows, colorMode, photometry, densityResult, velocityValues],
   );
-  const groups = useMemo(
-    () => buildAtlasGroupBubbles(points, groupCatalogue?.groups ?? []),
-    [points, groupCatalogue],
-  );
+  const groups = useMemo(() => {
+    const external = buildAtlasGroupBubbles(
+      points,
+      groupCatalogue?.groups ?? [],
+    );
+    const mw = buildAtlasMwGroupBubble(
+      rows,
+      groupCatalogue,
+      frame,
+      mode,
+      localOnly,
+    );
+    return mw === null
+      ? external
+      : [...external, mw].sort(
+          (a, b) => b.memberCount - a.memberCount || a.pgc - b.pgc,
+        );
+  }, [points, rows, groupCatalogue, frame, mode, localOnly]);
   const partition = useMemo(
     () => atlasFieldPartition(points, groupCatalogue),
     [points, groupCatalogue],
@@ -773,11 +789,14 @@ export default function SpatialAtlasView({
       ),
     [paired, baseRenderPoints, points],
   );
-  const mdEdges = useMemo(
-    () =>
-      displayMode === "galaxies" && !paired ? atlasMdEdges(filteredPoints) : [],
-    [displayMode, filteredPoints, paired],
-  );
+  const mdEdges = useMemo(() => {
+    if (displayMode !== "galaxies" || paired) return [];
+    const mw = groups.find((group) => group.pgc === 5064336) ?? null;
+    return [
+      ...atlasMdEdges(filteredPoints),
+      ...atlasMwMdEdges(filteredPoints, rows, mw),
+    ];
+  }, [displayMode, filteredPoints, paired, groups, rows]);
   const visibleGroups = layers.groups ? groups : [];
   const visiblePoints =
     displayMode === "groups" && !layers.field ? [] : renderPoints;
@@ -3338,8 +3357,21 @@ export default function SpatialAtlasView({
                       <dd>{currentGroup.memberCount}</dd>
                       <dt>Root distance [Mpc]</dt>
                       <dd>{display(currentGroup.distanceMpc)}</dd>
-                      <dt>Projected extent [kpc]</dt>
+                      <dt>
+                        {currentGroup.radiusSampleCount === undefined
+                          ? "Projected extent [kpc]"
+                          : "Maximum Galactocentric radius [kpc]"}
+                      </dt>
                       <dd>{display(currentGroup.radiusMpc * 1000)}</dd>
+                      {currentGroup.radiusSampleCount !== undefined ? (
+                        <>
+                          <dt>Satellites with qualified distances</dt>
+                          <dd>
+                            {currentGroup.radiusSampleCount} /{" "}
+                            {currentGroup.memberCount - 1}
+                          </dd>
+                        </>
+                      ) : null}
                     </dl>
                     <ActiveColorValue encoding={color} pgc={currentGroup.pgc} />
                     <div className="lv-spatial-card-actions">
@@ -3391,7 +3423,11 @@ export default function SpatialAtlasView({
                           </>
                         )}
                         <dt>Root distance class</dt>
-                        <dd>{KIND_LABELS[currentGroup.kind]}</dd>
+                        <dd>
+                          {currentGroup.radiusSampleCount === undefined
+                            ? KIND_LABELS[currentGroup.kind]
+                            : "Nominal Galactic centre"}
+                        </dd>
                         <dt>Verified root position</dt>
                         <dd>{currentGroup.verified ? "Yes" : "No"}</dd>
                         {axisNames.map((axis, i) => (
@@ -3970,6 +4006,15 @@ export default function SpatialAtlasView({
                         (projected extent)
                       </span>
                     ) : null}
+                    {layers.groups &&
+                    visibleGroups.some(
+                      (group) => group.radiusSampleCount !== undefined,
+                    ) ? (
+                      <span>
+                        <i className="lv-spatial-key-sphere" /> MW: nominal
+                        Galactocentric sample envelope, not a halo radius
+                      </span>
+                    ) : null}
                     {layers.field ? <span>○ Field galaxy</span> : null}
                   </>
                 ) : (
@@ -4011,7 +4056,14 @@ export default function SpatialAtlasView({
                     </i>
                     Catalogue MD links: {mdEdges.length}
                   </span>
-                  <span>Individual distance endpoints only</span>
+                  <span>
+                    {mdEdges.some(
+                      (edge) =>
+                        edge.memberPgc === 5064336 || edge.mdPgc === 5064336,
+                    )
+                      ? "Individual distances + nominal MW centre"
+                      : "Individual distance endpoints only"}
+                  </span>
                 </div>
               ) : null}
               {sizeMode !== "fixed" ? (

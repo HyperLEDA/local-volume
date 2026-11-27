@@ -6,6 +6,7 @@ from lv_backend.data import groups as data_groups
 from lv_backend.data.storage import Storage
 from lv_backend.domain.distance_evidence import apply_distance_evidence
 from lv_backend.domain.physical_calculations import FORMULA_VERSION
+from lv_backend.domain.tidal_calculations import MW_PGC, MW_TIDAL_LOG_LK
 
 
 def _number(value: object) -> float | None:
@@ -37,7 +38,8 @@ def _summary(
     root_dist = _number(row["root_dist_mpc"])
     extent = None
     if (
-        root_ra is not None
+        root_pgc != MW_PGC
+        and root_ra is not None
         and root_dec is not None
         and root_dist is not None
         and root_dist > 0
@@ -126,7 +128,9 @@ def _live_components(rows: list[dict[str, object]], definition: str) -> dict[int
         if len(cycle) == 1:
             parents[cycle[0]] = None
             continue
-        luminosities = [(_number(by_pgc[node]["log_lks_lsun"]), node) for node in cycle]
+        luminosities = [
+            (MW_TIDAL_LOG_LK if node == MW_PGC else _number(by_pgc[node]["log_lks_lsun"]), node) for node in cycle
+        ]
         if any(lum is None for lum, _ in luminosities):
             rejected.update(cycle)
             continue

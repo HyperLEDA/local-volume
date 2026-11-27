@@ -1,7 +1,8 @@
 """Local-volume-only environment estimators (candidate, incomplete census).
 
 Equations 12–14 of Karachentsev, Makarov & Kaisina (2013), AJ 145, 101.
-Values are **not** a reproduction of published full-neighborhood indices.
+The MW effective K luminosity is a frozen LVGDB tidal calibration, not
+independent photometry. See docs/mw-tidal-calibration.md.
 """
 
 from __future__ import annotations
@@ -15,6 +16,11 @@ from lv_backend.domain.physical_calculations import distance_and_modulus, number
 TIDAL_C = 10.96
 GLOBAL_K_DENSITY = 4.28e8  # L_Ksun / Mpc^3; Jones et al. (2006).
 SPHERE_1MPC_VOLUME = 4.0 * math.pi / 3.0
+MW_PGC = 5064336
+SCIENCE_HOLD_PGC = 2807149
+# Median from 71 published MW MD rows in the audited frozen Table 2 snapshot.
+# Freeze the calibration; never refit it during a normal catalogue refresh.
+MW_TIDAL_LOG_LK = 10.553407183824561
 
 
 def cartesian(ra_deg: float, dec_deg: float, distance_mpc: float) -> tuple[float, float, float]:
@@ -31,83 +37,31 @@ def coordinates(row: Mapping[str, Any]) -> tuple[float, float, float] | None:
     distance, _, _ = distance_and_modulus(row)
     if ra is None or dec is None or distance is None or not 0 <= ra < 360 or not -90 <= dec <= 90:
         return None
+    if row.get("pgc") == MW_PGC:
+        # The observed catalogue row is the Galactic centre, not an external
+        # integrated source. Refuse implausible centre geometry instead of
+        # treating MW as a distant external galaxy or putting it at the Sun.
+        if not 0.005 <= distance <= 0.015:
+            return None
+        centre = cartesian(266.4168, -29.00781, 1.0)
+        direction = cartesian(ra, dec, 1.0)
+        if math.dist(centre, direction) > 2 * math.sin(math.radians(1.0) / 2):
+            return None
     return cartesian(ra, dec, distance)
-
-
-def environment_from_observed(target: Mapping[str, Any], donors: Sequence[Mapping[str, Any]]) -> dict[str, object]:
-    """Estimate MD / theta from **available** LV donors only.
-
-    Missing outside-volume giants, galaxies lacking reliable distances or
-    luminosities, and Milky Way Galactocentric geometry cannot be recovered
-    from a local lv.objects/lv.observed table. Results must remain marked
-    provisional; no external identifiers or catalog values are invented.
-    """
-    result: dict[str, object] = {
-        "md_pgc": None,
-        "md_name": None,
-        "theta1": None,
-        "theta5": None,
-        "thetaj": None,
-        "environment_coverage": "INCOMPLETE_LV_ONLY",
-        "environment_donors_used": 0,
-        "environment_neighbors_1mpc": 0,
-    }
-    target_xyz = coordinates(target)
-    if target_xyz is None:
-        result["environment_coverage"] = "TARGET_GEOMETRY_MISSING"
-        return result
-    pgc = target.get("pgc")
-    neighbors: list[tuple[float, int, str, float, float]] = []
-    for donor in donors:
-        donor_pgc = donor.get("pgc")
-        if donor_pgc == pgc or donor_pgc == 5064336 or not isinstance(donor_pgc, int):
-            # MW's Sun-centered RA/Dec do not describe its galactocentric position.
-            continue
-        xyz = coordinates(donor)
-        if xyz is None:
-            continue
-        log_lk = physical_from_observed(donor)["log_lks_lsun"]
-        if not isinstance(log_lk, float):
-            continue
-        r = math.dist(target_xyz, xyz)
-        if r <= 0:
-            continue
-        strength = log_lk - 3.0 * math.log10(r)
-        neighbors.append((strength, donor_pgc, str(donor.get("name") or donor_pgc), r, log_lk))
-    result["environment_donors_used"] = len(neighbors)
-    if not neighbors:
-        return result
-
-    neighbors.sort(key=lambda item: (-item[0], item[1]))
-    strongest, best_pgc, best_name, _, _ = neighbors[0]
-    result["md_pgc"] = best_pgc
-    result["md_name"] = best_name
-    result["theta1"] = strongest - TIDAL_C
-    if len(neighbors) >= 5:
-        weighted = math.fsum(10 ** (item[0] - strongest) for item in neighbors[:5])
-        result["theta5"] = strongest + math.log10(weighted) - TIDAL_C
-
-    luminosities = [10 ** item[4] for item in neighbors if item[3] <= 1.0]
-    result["environment_neighbors_1mpc"] = len(luminosities)
-    # Never fill 2013's artificial -3.0 placeholder for a zero-neighbor region:
-    # zero known neighbors does not mean zero true neighbors with incomplete coverage.
-    if luminosities:
-        result["thetaj"] = math.log10(math.fsum(luminosities) / (SPHERE_1MPC_VOLUME * GLOBAL_K_DENSITY))
-    return result
 
 
 def prepared_environment_donors(
     rows: Sequence[Mapping[str, Any]],
     physical: Sequence[Mapping[str, Any]],
 ) -> list[tuple[int, str, tuple[float, float, float], float]]:
-    """Build one shared in-memory donor census for a full catalog refresh."""
+    """Build one shared donor census; MW uses the explicit tidal calibration."""
     donors: list[tuple[int, str, tuple[float, float, float], float]] = []
     for row, computed in zip(rows, physical, strict=True):
         pgc = row.get("pgc")
-        if not isinstance(pgc, int) or pgc in (5064336, 2807149):
-            continue  # The Milky Way needs Galactocentric rather than Sun-centered geometry.
+        if not isinstance(pgc, int) or pgc == SCIENCE_HOLD_PGC:
+            continue
         position = coordinates(row)
-        log_lk = computed.get("log_lks_lsun")
+        log_lk = MW_TIDAL_LOG_LK if pgc == MW_PGC else computed.get("log_lks_lsun")
         if position is None or not isinstance(log_lk, float) or not math.isfinite(log_lk):
             continue
         donors.append((pgc, str(row.get("name") or pgc), position, log_lk))
@@ -128,12 +82,11 @@ def environment_from_prepared(
         "environment_donors_used": 0,
         "environment_neighbors_1mpc": 0,
     }
-    if target.get("pgc") == 5064336:
-        result["environment_coverage"] = "MW_GEOMETRY_EXCEPTION"
-        return result
     xyz = coordinates(target)
     if xyz is None:
-        result["environment_coverage"] = "TARGET_GEOMETRY_MISSING"
+        result["environment_coverage"] = (
+            "MW_GEOMETRY_EXCEPTION" if target.get("pgc") == MW_PGC else "TARGET_GEOMETRY_MISSING"
+        )
         return result
     strengths: list[tuple[float, int, float, float]] = []
     for other_pgc, _name, donor_xyz, log_lk in donors:
@@ -158,4 +111,20 @@ def environment_from_prepared(
         log_lmax = max(within_1mpc)
         luminosity = 10**log_lmax * math.fsum(10 ** (v - log_lmax) for v in within_1mpc)
         result["thetaj"] = math.log10(luminosity / (SPHERE_1MPC_VOLUME * GLOBAL_K_DENSITY))
+    return result
+
+
+def environment_from_observed(target: Mapping[str, Any], donors: Sequence[Mapping[str, Any]]) -> dict[str, object]:
+    """Compatibility entry point; use the same donor and environment policies."""
+    if coordinates(target) is None:
+        return {**environment_from_prepared(target, []), "md_name": None}
+    prepared = prepared_environment_donors(
+        donors,
+        [
+            {} if row.get("pgc") in (MW_PGC, SCIENCE_HOLD_PGC, target.get("pgc")) else physical_from_observed(row)
+            for row in donors
+        ],
+    )
+    result = environment_from_prepared(target, prepared)
+    result["md_name"] = next((name for pgc, name, _, _ in prepared if pgc == result["md_pgc"]), None)
     return result
